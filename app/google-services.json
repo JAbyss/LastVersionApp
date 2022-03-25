@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "268595925740",
+    "project_id": "petapp-7a8d6",
+    "storage_bucket": "petapp-7a8d6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:268595925740:android:201016536e2bbf500acbc9",
+        "android_client_info": {
+          "package_name": "com.foggyskies.petapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "268595925740-sa3vf592s8c5vli753493j2c7vtrj6o3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDp2du2D3u17U1zEro_s8d9Ux2C64VpUWU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "268595925740-sa3vf592s8c5vli753493j2c7vtrj6o3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
