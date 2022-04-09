@@ -31,7 +31,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.RightMenu(
     onClick: (String) -> Unit
@@ -89,7 +88,7 @@ fun BoxScope.RightMenu(
         }
     }
 
-    var list = listOf(
+    val list = listOf(
         "Пользователи",
         "Беседы",
         "Друзья",

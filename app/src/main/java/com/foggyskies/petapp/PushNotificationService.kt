@@ -96,8 +96,6 @@ class PushNotificationService() : LifecycleService() {
 
     var count = 0
 
-
-
     companion object {
         var notificationsList = mutableListOf<Notification>()
         var isServiceStarted = true
@@ -145,34 +143,11 @@ class PushNotificationService() : LifecycleService() {
                 delay(1000)
             }
         }
-
-
-
-//        CoroutineScope(Dispatchers.IO).launch {
-//
-//        }
     }
 
     suspend fun notifySystem(){
         try {
             delay(3000)
-
-//            if (isInternet.value){
-//                Log.e("LIVEDATA", "Все работает")
-//
-//            } else {
-//                Log.e("LIVEDATA", "Нихуя не работает")
-//            }
-
-//            val connection_live_data = ConnectionLiveData(applicationContext)
-
-//            connection_live_data.observeForever {
-//                if (it){
-//                    Log.e("LIVEDATA", "Все работает")
-//                } else {
-//                    Log.e("LIVEDATA", "Нихуя не работает")
-//                }
-//            }
 
             Token = applicationContext.getSharedPreferences(
                 "Token",
@@ -248,8 +223,6 @@ class PushNotificationService() : LifecycleService() {
                 ?.filter { it is Frame.Text }
                 ?.map {
                     val string = (it as? Frame.Text)?.readText() ?: ""
-//                    var json  = Json.parseToJsonElement(string)
-
                     val json = Json.decodeFromString<Notification>(string)
                     json
                 } ?: flow {}
@@ -267,14 +240,6 @@ class PushNotificationService() : LifecycleService() {
         val channelId = "2"
         val channelName = "chat_notification"
 
-
-//        val item = Json.encodeToString(FormattedChatDC(
-//            id = "623b884bdc7f3934fb392ad3",
-//            idCompanion = "623b884bdc7f3934fb392ad3",
-//            nameChat = "Kalterfad",
-//            image = "",
-//            lastMessage = ""
-//        ))
         val item =
             if (SinglUserNotification)
                 Json.encodeToString(
@@ -318,7 +283,6 @@ class PushNotificationService() : LifecycleService() {
 
             val channel =
                 NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
-//            channel.setSound(null, null)
             manager.createNotificationChannel(channel)
 
             builder = NotificationCompat.Builder(applicationContext, channelId)
@@ -336,8 +300,6 @@ class PushNotificationService() : LifecycleService() {
                 .setContentText(desc)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-
-//                .setSound(null)
         }
         Log.e("SERVICE", "6")
 
@@ -347,11 +309,6 @@ class PushNotificationService() : LifecycleService() {
     override fun onBind(intent: Intent): IBinder? {
         return super.onBind(intent)
     }
-
-//    override fun onBind(intent: Intent?): IBinder? {
-//        super.onBind(intent!!)
-//        return null
-//    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)

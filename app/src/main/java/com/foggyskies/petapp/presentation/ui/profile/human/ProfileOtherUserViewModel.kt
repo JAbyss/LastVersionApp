@@ -5,13 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.entity.CircularSelector
-import com.foggyskies.petapp.presentation.ui.home.entity.SwipableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 
 class ProfileOtherUserViewModel: ViewModel() {
 
-    val swipableMenu = SwipableMenu()
+    val swipableMenu = SwappableMenu()
 
     val circularSelector = CircularSelector()
 

@@ -52,11 +52,6 @@ fun OnBoardScreen() {
         mutableStateOf(0)
     }
 
-    var x_start = 0
-    var x_end = 0
-
-    var scope = rememberCoroutineScope()
-
     val list_pages = listOf(
         PagesDC(
             header = "Joyfulness",
@@ -76,16 +71,11 @@ fun OnBoardScreen() {
     )
 
     val context = LocalContext.current
-
-//    HorizontalPager(count = ) {
-//
-//    }
     var isScrolling by remember {
         mutableStateOf(true)
     }
     val pagerState = rememberPagerState()
     Box(
-//        horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)

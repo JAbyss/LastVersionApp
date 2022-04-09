@@ -52,10 +52,7 @@ import kotlinx.coroutines.launch
 //    }
 //}
 
-@ExperimentalCoilApi
 @SuppressLint("CoroutineCreationDuringComposition")
-@ExperimentalFoundationApi
-@ExperimentalMaterialApi
 @Composable
 fun SwipeableImages(
     viewModel: AdsHomelessViewModel,

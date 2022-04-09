@@ -1,8 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.adhomeless
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
@@ -12,7 +10,6 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
@@ -37,7 +34,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,22 +41,17 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.AdHomelessEntity
-import com.foggyskies.petapp.presentation.ui.adhomeless.entity.AdHomelessPetEntity
-import com.foggyskies.petapp.presentation.ui.adhomeless.entity.GenderPet
 import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
-import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwipableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-@ExperimentalAnimationApi
-@ExperimentalFoundationApi
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AdsHomelessScreen(
@@ -75,17 +66,17 @@ fun AdsHomelessScreen(
     val backHolder = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     viewModel.swipableMenu.listIcon = listOf(
-        ItemSwipableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
+        ItemSwappableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
             backHolder?.onBackPressed()
         }),
-        ItemSwipableMenu(Image = R.drawable.ic_menu_profile, onValueSelected = {
+        ItemSwappableMenu(Image = R.drawable.ic_menu_profile, onValueSelected = {
             nav_controller.navigate("Profile")
         }),
-        ItemSwipableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
+        ItemSwappableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
             R.drawable.ic_menu_home_1,
             R.drawable.ic_menu_home_2,
             R.drawable.ic_menu_home_3,
-        ), isAnimatable = true, onValueSelected = {
+        ), isAnimate = true, onValueSelected = {
             nav_controller.navigate("Home")
         }),
     )
@@ -233,8 +224,6 @@ fun AdsHomelessScreen(
     }
 }
 
-@ExperimentalMaterialApi
-@ExperimentalFoundationApi
 @Composable
 fun OneLinearAdHomelessView(
     viewModel: AdsHomelessViewModel,

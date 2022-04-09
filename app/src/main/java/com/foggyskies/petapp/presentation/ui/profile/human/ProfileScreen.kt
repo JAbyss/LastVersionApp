@@ -63,9 +63,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@ExperimentalFoundationApi
-@ExperimentalCoilApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 fun ProfileScreen(
     nav_controller: NavHostController,
@@ -212,7 +210,6 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .padding(10.dp)
                                 .fillMaxWidth(0.9f)
-//                        .align(Center)
                         ) {
 
                             // Аватарка
@@ -362,7 +359,6 @@ fun ProfileScreen(
                         LazyRow {
                             itemsIndexed(items_list) { index, item ->
                                 Row {
-//                    Spacer(modifier = Modifier.height(40.dp))
                                     PetsWidget(
                                         onClickPetCard = { name, image ->
                                             viewModel.stateProfile = StateProfile.PET
@@ -558,7 +554,6 @@ fun BoxScope.PetBottomMenu() {
         ) else DpOffset.Zero
     )
 
-//    AnimatedVisibility(visible = isExpandMenu) {
     if (isExpandMenu)
         Button(
             onClick = { /*TODO*/ },
@@ -582,8 +577,6 @@ fun BoxScope.PetBottomMenu() {
                     .size(30.dp)
             )
         }
-//    }
-//    AnimatedVisibility(visible = isExpandMenu) {
     if (isExpandMenu)
 
         Button(
@@ -608,7 +601,6 @@ fun BoxScope.PetBottomMenu() {
                     .size(30.dp)
             )
         }
-//    }
     Button(
         onClick = {
             isExpandMenu = !isExpandMenu
@@ -749,7 +741,6 @@ fun PetCard(
                 modifier = Modifier
                     .padding(start = 15.dp, top = 10.dp)
             )
-//            Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = item.breed,
                 fontSize = 16.sp,
@@ -769,7 +760,6 @@ fun DashBoardComposition(
 ) {
 
     val list_dashboard = mapOf(
-//        "Способ оплаты" to R.drawable.ic_wallet_svgrepo_com,
         "Настройки" to R.drawable.ic_privacy,
         "Мои контакты" to R.drawable.ic_link
     )

@@ -1,10 +1,7 @@
 package com.foggyskies.petapp.presentation.ui.home
 
-//import com.foggyskies.petapp.presentation.ui.home.animations.ShowCaseView
-
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.VibrationEffect.createOneShot
@@ -22,17 +19,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.Bottom
-import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.TopCenter
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -47,20 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.MainSocketViewModel
-import com.foggyskies.petapp.PushNotificationService
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.globalviews.*
-import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwipableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import com.foggyskies.petapp.presentation.ui.home.views.RightMenu
-import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 import kotlinx.coroutines.launch
 
-
-@ExperimentalMaterialApi
-@ExperimentalComposeUiApi
-@ExperimentalAnimationApi
-@ExperimentalFoundationApi
 @Composable
 fun HomeViewModel.HomeScreen(
     nav_controller: NavHostController? = null,
@@ -71,21 +55,19 @@ fun HomeViewModel.HomeScreen(
 
     val displayMetrics = LocalContext.current.resources.displayMetrics
 
-
     swipableMenu.listIcon = listOf(
-        ItemSwipableMenu(Image = R.drawable.ic_menu_profile),
-        ItemSwipableMenu(Image = R.drawable.ic_menu_ads),
-        ItemSwipableMenu(Image = R.drawable.ic_gamepad),
+        ItemSwappableMenu(Image = R.drawable.ic_menu_profile),
+        ItemSwappableMenu(Image = R.drawable.ic_menu_ads),
+        ItemSwappableMenu(Image = R.drawable.ic_gamepad),
     )
 
     swipableMenu.density = displayMetrics.density
     swipableMenu.sizeScreen =
-        Size(width = displayMetrics.widthPixels.toFloat(), height = displayMetrics.heightPixels.toFloat())
+        Size(
+            width = displayMetrics.widthPixels.toFloat(),
+            height = displayMetrics.heightPixels.toFloat()
+        )
     density = displayMetrics.density
-
-//    LaunchedEffect(key1 = Unit){
-//        msViewModel.createMainSocket()
-//    }
 
     Box(
         modifier =
@@ -212,7 +194,7 @@ fun HomeViewModel.HomeScreen(
         ) {
             RightMenu(
                 onClick = { itemMenu ->
-                    when(itemMenu){
+                    when (itemMenu) {
                         "Пользователи" -> {
                             searchUsersSwitch()
                             msViewModel.connectToSearchUsers()
@@ -240,25 +222,29 @@ fun HomeViewModel.HomeScreen(
         ) {
             ChatsScreen(nav_controller, this@HomeScreen, msViewModel)
         }
-//        ChatsScreen(nav_controller)
         AnimatedVisibility(
             visible = isUsersMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
-            SearchUsersScreen(nav_controller = nav_controller, viewModel = this@HomeScreen, msViewModel)
+            SearchUsersScreen(
+                nav_controller = nav_controller,
+                viewModel = this@HomeScreen,
+                msViewModel
+            )
         }
         AnimatedVisibility(
             visible = isFriendsMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
-            FriendsScreen(nav_controller = nav_controller!!, viewModel = this@HomeScreen,
+            FriendsScreen(
+                nav_controller = nav_controller!!, viewModel = this@HomeScreen,
                 msViewModel = msViewModel
             )
         }
         AnimatedVisibility(
-            visible = true,
+            visible = msViewModel.isNotifyVisible,
             modifier = Modifier
                 .align(TopCenter)
         ) {
@@ -298,8 +284,6 @@ fun StoriesCompose(modifier: Modifier) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val windowMetrics: WindowMetrics =
                 (context as Activity).windowManager.currentWindowMetrics
-//            val insets: Insets = windowMetrics.windowInsets
-//                .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
             windowMetrics.bounds.width()
         } else {
             display_metrics.widthPixels
@@ -329,7 +313,6 @@ fun StoriesCompose(modifier: Modifier) {
                         .clip(CircleShape)
                         .size(
                             ((width_config - 15 * 6) / 4).dp
-//                            55.dp
                         )
                 )
             }
@@ -339,8 +322,7 @@ fun StoriesCompose(modifier: Modifier) {
     }
 }
 
-
-@ExperimentalFoundationApi
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhotosFeed(viewModel: HomeViewModel) {
 
@@ -364,7 +346,6 @@ fun PhotosFeed(viewModel: HomeViewModel) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
         modifier = Modifier
-//            .padding(bottom = 60.dp)
             .pointerInput(Unit) {
                 detectHorizontalDragGestures { change, dragAmount ->
                     var newX = change.position.x
@@ -375,8 +356,6 @@ fun PhotosFeed(viewModel: HomeViewModel) {
                         context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
                     val canVibrate = vibrator?.hasVibrator()
                     if (dragAmount <= -50 && newY - oldY <= 10) {
-//                        viewModel.isVisiblePhotoWindow = true
-
                         if (canVibrate == true) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 // API 26
@@ -427,75 +406,6 @@ fun PhotosFeed(viewModel: HomeViewModel) {
                     }
                     .testTag("clickBTN$index")
             )
-
         }
     }
 }
-
-@Composable
-fun BottomNavigation(
-    map_item: Map<String, Int>,
-    onClick: (String) -> Unit,
-    modifier: Modifier,
-    isTextVisible: Boolean = true
-) {
-
-    var nowSelected by remember {
-        mutableStateOf("Главная")
-    }
-
-    Box(
-        modifier = modifier
-    ) {
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .height(60.dp)
-                .background(Color(0xFF47456D))
-                .align(BottomCenter)
-        ) {
-
-            map_item.forEachKeys { key, value, _ ->
-                Button(
-                    onClick = {
-                        onClick(key)
-                        nowSelected = key
-                    },
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(vertical = 3.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = if (nowSelected == key) Color(0xFFB27F8F) else Color.Transparent
-                    ),
-                    elevation = ButtonDefaults.elevation(
-                        defaultElevation = 0.dp
-                    ),
-                    modifier = Modifier
-                        .offset(y = if (nowSelected == key) (-20).dp else 0.dp)
-                        .weight(1f)
-                        .height(60.dp)
-                        .align(Bottom)
-                ) {
-                    Column(
-                        horizontalAlignment = CenterHorizontally,
-                    ) {
-                        Icon(
-                            painter = painterResource(id = value),
-                            contentDescription = null,
-                            modifier = Modifier,
-                            Color(0xFFBDBDBD)
-
-                        )
-                        if (isTextVisible)
-                            Text(
-                                text = key,
-                                color = Color(0xFF828282)
-                            )
-                    }
-                }
-            }
-        }
-    }
-
-}
-

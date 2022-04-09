@@ -1,5 +1,5 @@
 import android.annotation.SuppressLint
-import android.graphics.Paint
+import android.graphics.Paint as OldPaint
 import android.graphics.Typeface
 import android.widget.Toast
 import androidx.compose.animation.core.Animatable
@@ -11,7 +11,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint as ComposePaint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -41,8 +43,6 @@ fun SegmentProgressBar(
     scope.launch {
         animateIndicator(0, selectedItem.value, animatesColors)
     }
-
-
     val maxCount = 4
 
     Canvas(
@@ -113,9 +113,18 @@ fun SegmentProgressBar(
         repeat(maxCount) {
             drawSegment(maxCount, it, color = animatesColors[it])
         }
+        val paintForCircle = ComposePaint()
+        paintForCircle.color = Color.White
+        val centerOffset = Offset(center.x, -center.y * 2)
+        drawCircle(
+            color = Color.White,
+            center = centerOffset,
+            radius = 55f,
+            alpha = 0.9f
+        )
         drawIntoCanvas {
-            val paint = Paint()
-            paint.textAlign = Paint.Align.CENTER
+            val paint = OldPaint()
+            paint.textAlign = OldPaint.Align.CENTER
             paint.textSize = 64f
             paint.color = 0xff000000.toInt()
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)

@@ -1,9 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.globalviews
 
-//import com.foggyskies.petapp.presentation.ui.home.animations.ShowCaseView
-
 import android.annotation.SuppressLint
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -23,18 +20,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.foggyskies.petapp.extendfun.forEachComposable
-import com.foggyskies.petapp.extendfun.forEachRepeatable
 import com.foggyskies.petapp.presentation.ui.home.entity.CircularSelector
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
-import com.foggyskies.petapp.presentation.ui.home.entity.SwipableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import kotlinx.coroutines.delay
 
-@ExperimentalAnimationApi
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun CircularTouchMenu(
-    param: SwipableMenu,
+    param: SwappableMenu,
     circularSelector: CircularSelector
 ) {
 
@@ -146,7 +140,7 @@ fun CircularTouchMenu(
                     param.offsetStartDp.x + (param.listOffsetsForCircle[index - 1].x / param.density).dp - centerIcon,
                     param.offsetStartDp.y + (param.listOffsetsForCircle[index - 1].y / param.density).dp - centerIcon
                 )
-                if (item.isAnimatable) {
+                if (item.isAnimate) {
                     repeat(item.animationImages.size) { index ->
 
                         var degrees = 0f

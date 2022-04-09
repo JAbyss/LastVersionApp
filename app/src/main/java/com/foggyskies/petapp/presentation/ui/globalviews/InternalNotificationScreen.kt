@@ -19,7 +19,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,26 +41,24 @@ import kotlin.math.roundToInt
 fun IndicatorLine(
     viewModel: MainSocketViewModel,
     item: NotificationWithVisilble,
-    timer: HashMap<NotificationWithVisilble, MutableState<Int>>
+    timer: HashMap<NotificationWithVisilble, MutableState<Int>>,
+    timerMax: Int = 250
 ) {
 
-    val TIMER_MAX = 1000
-
     fun reset() {
-        timer[item]?.value = TIMER_MAX
+        timer[item]?.value = timerMax
     }
 
     LaunchedEffect(key1 = viewModel.listNotifications.size) {
-//        while (timer[item]?.value != 0) {
-//            timer[item]?.value = timer[item]?.value?.minus(1)!!
-//            delay(10)
-//        }
+        while (timer[item]?.value != 0) {
+            timer[item]?.value = timer[item]?.value?.minus(1)!!
+            delay(10)
+        }
         if (timer[item]?.value == 0) {
             item.isVisible.value = false
             delay(300)
             viewModel.listNotifications.remove(item)
             timer.remove(item)
-//            viewModel.de
         }
         reset()
     }
@@ -69,7 +66,7 @@ fun IndicatorLine(
     Canvas(modifier = Modifier.fillMaxWidth()) {
 
         val width = derivedStateOf {
-            (size.width / TIMER_MAX) * timer[item]?.value!!
+            (size.width / timerMax) * timer[item]?.value!!
         }
 
         drawLine(
@@ -89,7 +86,6 @@ fun OneNotificationMessage(
     nav_controller: NavHostController,
     timerMap: HashMap<NotificationWithVisilble, MutableState<Int>>
 ) {
-
     Box(
         modifier = Modifier
             .clickable {
@@ -99,7 +95,6 @@ fun OneNotificationMessage(
     ) {
         Column(
             modifier = Modifier
-//                .clip(RoundedCornerShape(15.dp))
                 .align(Alignment.CenterStart)
         ) {
             Row() {
@@ -160,10 +155,7 @@ fun OneNotificationMessage(
     }
 }
 
-data class AnimationClass(
-    var item: Notification,
-    var isVisible: MutableState<Boolean>
-)
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -173,30 +165,16 @@ fun InternalNotificationScreen(
     msViewModel: MainSocketViewModel,
     nav_controller: NavHostController
 ) {
-
-    val width = 96.dp
     val squareSize = 480.dp
 
     val swipeableState = rememberSwipeableState(0)
     val sizePx = with(LocalDensity.current) { -squareSize.toPx() }
     val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
 
-    val context = LocalContext.current
-
-
-    val item = Notification(
-        id = "wdwaf",
-        idUser = "fawfwfafwf",
-        title = "3235fawf",
-        description = "Привет",
-        image = "faf",
-        status = "hthrt"
-    )
-
     data class OldListInfo<T>(
         var equalItemsList: MutableList<T>,
         var newItemsList: MutableList<T>,
-        var depricatedItemsList: MutableList<T>
+        var deprecatedItemsList: MutableList<T>
     )
 
     fun <T> checkOldListByNewList(
@@ -220,7 +198,7 @@ fun InternalNotificationScreen(
         val result = OldListInfo(
             newItemsList = newItemsList,
             equalItemsList = equalItemsList,
-            depricatedItemsList = depricatedItemsList
+            deprecatedItemsList = depricatedItemsList
         )
 
         return result
@@ -246,7 +224,7 @@ fun InternalNotificationScreen(
             if (msViewModel.listNotifications.isNotEmpty()) {
                 if (!map_queue.containsKey(msViewModel.listNotifications[0])) {
                     val timer = remember {
-                        mutableStateOf(1000)
+                        mutableStateOf(250)
                     }
                     map_queue[msViewModel.listNotifications[0]] = timer
                 }
@@ -264,7 +242,7 @@ fun InternalNotificationScreen(
             if (msViewModel.listNotifications.size >= 2) {
                 if (!map_queue.containsKey(msViewModel.listNotifications[1])) {
                     val timer = remember {
-                        mutableStateOf(1000)
+                        mutableStateOf(250)
                     }
                     map_queue[msViewModel.listNotifications[1]] = timer
                 }
@@ -282,7 +260,7 @@ fun InternalNotificationScreen(
             if (msViewModel.listNotifications.size >= 3) {
                 if (!map_queue.containsKey(msViewModel.listNotifications[2])) {
                     val timer = remember {
-                        mutableStateOf(1000)
+                        mutableStateOf(250)
                     }
                     map_queue[msViewModel.listNotifications[2]] = timer
                 }

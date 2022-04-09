@@ -1,8 +1,8 @@
 package com.foggyskies.petapp.presentation.ui.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
@@ -19,7 +19,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -27,20 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.home.animations.ShowCaseProperty
-import kotlinx.coroutines.delay
-import kotlin.math.absoluteValue
-import kotlin.math.max
 
-@ExperimentalComposeUiApi
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.PhotoScreen(
     viewModel: HomeViewModel
@@ -78,7 +68,6 @@ fun BoxScope.PhotoScreen(
                     .graphicsLayer(
                         scaleX = if (scale < 1f) 1f else scale,
                         scaleY = if (scale < 1f) 1f else scale,
-//                    rotationZ = rotation,
                         translationX = offset.x,
                         translationY = offset.y
                     )
@@ -89,13 +78,11 @@ fun BoxScope.PhotoScreen(
                                 offset += pan
                             scale *= zoom
                         }
-
                     }
                     .pointerInput(true) {
 
                         detectTapGestures(
                             onDoubleTap = {
-//                                AnimationLike()
                                 viewModel.doubleTapLike()
                                 isLiked = !isLiked
                             },
@@ -110,8 +97,6 @@ fun BoxScope.PhotoScreen(
                             }
                         )
                     }
-
-
             )
             androidx.compose.animation.AnimatedVisibility(
                 visible = viewModel.isVisibleLikeAnimation,
@@ -131,7 +116,6 @@ fun BoxScope.PhotoScreen(
 
                 animatables.forEachIndexed { index, animatable ->
                     LaunchedEffect(animatable) {
-//                        delay(index + 1000L)
                         animatable.animateTo(
                             targetValue = 1f,
                             animationSpec = animationSpec
@@ -147,13 +131,6 @@ fun BoxScope.PhotoScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .align(Alignment.Center)
-//                .pointerInput(target) {
-//                    detectTapGestures { tapOffset ->
-//                        if (targetRect.contains(tapOffset)) {
-//                            onShowCaseCompleted()
-//                        }
-//                    }
-//                }
                             .graphicsLayer(alpha = 0.99f)
                     ) {
 
@@ -162,7 +139,6 @@ fun BoxScope.PhotoScreen(
                                     drawCircle(
                                         color = Color.White,
                                         radius = maxDimension * dy * 2f,
-//                                        center = it,
                                         alpha = 1 - dy
                                     )
                             }
@@ -186,13 +162,6 @@ fun BoxScope.PhotoScreen(
 
             }
         }
-//        Image(
-//            painter = painterResource(id = R.drawable.image_dog_for_preview),
-//            contentDescription = null,
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -233,9 +202,7 @@ fun BoxScope.PhotoScreen(
                 ) {
 
                     Button(
-                        onClick = {
-
-                        },
+                        onClick = {},
                         shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = Color.White
@@ -247,27 +214,16 @@ fun BoxScope.PhotoScreen(
                         modifier = Modifier
                             .padding(end = 7.dp)
                             .size(40.dp)
-//                            .onGloballyPositioned { coordinates ->
-//                                targets["dwdadad"] = ShowCaseProperty(
-//                                    0,
-//                                    coordinates,
-//                                    "User Profile",
-//                                    "You can click here to update profile image"
-//                                )
-//                            }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_share),
                             contentDescription = null,
                             modifier = Modifier,
                             Color.Black
-//                            Color(0xFF4DC95B)
                         )
                     }
                     Button(
-                        onClick = {
-
-                        },
+                        onClick = {},
                         shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = Color.White
@@ -285,10 +241,8 @@ fun BoxScope.PhotoScreen(
                             contentDescription = null,
                             modifier = Modifier,
                             Color.Black
-//                            Color(0xFF4DC95B)
                         )
                     }
-//                    Spacer(modifier = Modifier.width(10.dp))
                     Button(
                         onClick = {
                             isLiked = !isLiked

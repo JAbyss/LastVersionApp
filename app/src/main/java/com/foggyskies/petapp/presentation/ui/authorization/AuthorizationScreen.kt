@@ -44,7 +44,7 @@ enum class StateAuthorization {
 }
 
 
-@ExperimentalAnimationApi
+
 @Composable
 fun AuthorizationScreen(
     nav_controller: NavHostController,
@@ -110,7 +110,6 @@ fun AuthorizationScreen(
 }
 
 @SuppressLint("CoroutineCreationDuringComposition")
-@ExperimentalAnimationApi
 @Composable
 fun BoxScope.AuthBottomSheet(
     nav_controller: NavHostController,

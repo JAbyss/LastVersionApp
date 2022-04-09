@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModel
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.entity.CircularSelector
-import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwipableMenu
-import com.foggyskies.petapp.presentation.ui.home.entity.SwipableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 
 enum class StateProfile {
     HUMAN, PET
@@ -18,7 +18,7 @@ enum class StateProfile {
 
 class HumanProfileViewModel : ViewModel() {
 
-    val swipableMenu = SwipableMenu()
+    val swipableMenu = SwappableMenu()
 
     val circularSelector = CircularSelector()
 
@@ -40,19 +40,19 @@ class HumanProfileViewModel : ViewModel() {
             nameProfile = USERNAME
             isVisibleInfoUser = true
             swipableMenu.listIcon = listOf(
-                ItemSwipableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
+                ItemSwappableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
 //                    backHolder?.onBackPressed()
                 }),
-                ItemSwipableMenu(Image = R.drawable.ic_menu_ads),
+                ItemSwappableMenu(Image = R.drawable.ic_menu_ads),
 
-                ItemSwipableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
+                ItemSwappableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
                     R.drawable.ic_menu_home_1,
                     R.drawable.ic_menu_home_2,
                     R.drawable.ic_menu_home_3,
-                ), isAnimatable = true, onValueSelected = {
+                ), isAnimate = true, onValueSelected = {
 //                    nav_controller.navigate("Home")
                 }),
-                ItemSwipableMenu(Image = R.drawable.ic_menu_logout),
+                ItemSwappableMenu(Image = R.drawable.ic_menu_logout),
                 )
             swipableMenu.itemsOffset = listOf(
                 Offset(x = 10f, y = -70f),
@@ -63,18 +63,18 @@ class HumanProfileViewModel : ViewModel() {
         } else {
 
             swipableMenu.listIcon = listOf(
-                ItemSwipableMenu(Image = R.drawable.ic_menu_vack),
-                ItemSwipableMenu(Image = R.drawable.ic_menu_ads),
+                ItemSwappableMenu(Image = R.drawable.ic_menu_vack),
+                ItemSwappableMenu(Image = R.drawable.ic_menu_ads),
 
-                ItemSwipableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
+                ItemSwappableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
                     R.drawable.ic_menu_home_1,
                     R.drawable.ic_menu_home_2,
                     R.drawable.ic_menu_home_3,
-                ), isAnimatable = true, onValueSelected = {
+                ), isAnimate = true, onValueSelected = {
 //                    nav_controller.navigate("Home")
                 }),
-                ItemSwipableMenu(Image = R.drawable.ic_photo_svgrepo_com),
-                ItemSwipableMenu(Image = R.drawable.ic_video),
+                ItemSwappableMenu(Image = R.drawable.ic_photo_svgrepo_com),
+                ItemSwappableMenu(Image = R.drawable.ic_video),
             )
             swipableMenu.itemsOffset = listOf(
                 Offset(x = 10f, y = -70f),

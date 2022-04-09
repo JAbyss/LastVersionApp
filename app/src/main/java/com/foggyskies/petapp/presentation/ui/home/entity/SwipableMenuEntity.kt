@@ -9,19 +9,18 @@ import com.foggyskies.petapp.R
 import kotlinx.coroutines.delay
 
 enum class SideScreen {
-    TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT, ABROAD
+    TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT
 }
 
-data class ItemSwipableMenu(
+data class ItemSwappableMenu(
     var Image: Int,
-    var isAnimatable: Boolean = false,
+    var isAnimate: Boolean = false,
     var animationImages: List<Int> = emptyList(),
     var onValueSelected: () -> Unit = {}
 )
 
-class SwipableMenu() {
+class SwappableMenu() {
 
-    //    var swipableMenuEntity by mutableStateOf(SwipableMenuEntity())
     var sizeScreen by mutableStateOf(Size(0f, 0f))
 
     var offsetStart by mutableStateOf(Offset.Zero)
@@ -37,15 +36,11 @@ class SwipableMenu() {
         Offset(x = -70f, y = 10f),
     ))
 
-    val listItems by derivedStateOf {
+    private val listItems by derivedStateOf {
         itemsOffset.map {
             Offset(x = it.x * density, y = it.y * density)
         }
     }
-
-//    val listItemsOffset by derivedStateOf {
-//        listItems.
-//    }
 
     private val sideScreen by derivedStateOf {
 
@@ -63,7 +58,7 @@ class SwipableMenu() {
 
     val listOffsetsForCircle by derivedStateOf {
 
-        var a = listItems.map { item ->
+        val a = listItems.map { item ->
             var x: Float = 0f
             var y: Float = 0f
             when (sideScreen) {
@@ -83,6 +78,7 @@ class SwipableMenu() {
                     x = item.x
                     y = -item.y
                 }
+                else -> {}
             }
             Offset(x, y)
         }
@@ -101,9 +97,9 @@ class SwipableMenu() {
 
     var listIcon by mutableStateOf(
         listOf(
-            ItemSwipableMenu(Image = R.drawable.ic_sleep),
-            ItemSwipableMenu(Image = R.drawable.ic_walk),
-            ItemSwipableMenu(Image = R.drawable.ic_gamepad)
+            ItemSwappableMenu(Image = R.drawable.ic_sleep),
+            ItemSwappableMenu(Image = R.drawable.ic_walk),
+            ItemSwappableMenu(Image = R.drawable.ic_gamepad)
         )
     )
 

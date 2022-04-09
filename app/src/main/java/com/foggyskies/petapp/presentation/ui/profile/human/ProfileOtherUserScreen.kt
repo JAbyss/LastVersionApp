@@ -184,7 +184,6 @@ fun ProfileOtherUserScreen(
                             modifier = Modifier
                                 .padding(10.dp)
                                 .fillMaxWidth(0.9f)
-//                        .align(Center)
                         ) {
 
                             // Аватарка
@@ -263,7 +262,6 @@ fun ProfileOtherUserScreen(
                                                 )
                                             }
                                         }
-
                                 }
                                 Spacer(modifier = Modifier.height(5.dp))
                                 // Статус виджет
@@ -352,14 +350,12 @@ fun ProfileOtherUserScreen(
                 ),
             )
 
-
             item {
                 AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.HUMAN) {
                     Column() {
                         LazyRow {
                             itemsIndexed(items_list) { index, item ->
                                 Row {
-//                    Spacer(modifier = Modifier.height(40.dp))
                                     PetsWidget(
                                         onClickPetCard = { name, image ->
                                             viewModel.stateProfile = StateProfile.PET
@@ -374,13 +370,6 @@ fun ProfileOtherUserScreen(
                                 }
                             }
                         }
-//                        Spacer(modifier = Modifier.height(30.dp))
-//                        DashBoardComposition(
-//                            viewModel,
-//                            modifier = Modifier
-//                                .fillMaxWidth(0.8f)
-//                                .align(CenterHorizontally)
-//                        )
                     }
                 }
             }
@@ -519,14 +508,6 @@ fun ProfileOtherUserScreen(
             )
         }
 
-//        AnimatedVisibility(
-//            visible = viewModel.stateProfile == StateProfile.PET,
-//            modifier = Modifier
-//                .padding(bottom = 5.dp)
-//                .align(BottomCenter)
-//        ) {
-//            PetBottomMenu()
-//        }
         if (viewModel.swipableMenu.isTappedScreen)
             CircularTouchMenu(param = viewModel.swipableMenu, viewModel.circularSelector)
     }
@@ -554,7 +535,6 @@ fun BoxScope.PetBottomMenu() {
         ) else DpOffset.Zero
     )
 
-//    AnimatedVisibility(visible = isExpandMenu) {
     if (isExpandMenu)
         Button(
             onClick = { /*TODO*/ },
@@ -578,8 +558,7 @@ fun BoxScope.PetBottomMenu() {
                     .size(30.dp)
             )
         }
-//    }
-//    AnimatedVisibility(visible = isExpandMenu) {
+
     if (isExpandMenu)
 
         Button(
@@ -604,7 +583,6 @@ fun BoxScope.PetBottomMenu() {
                     .size(30.dp)
             )
         }
-//    }
     Button(
         onClick = {
             isExpandMenu = !isExpandMenu
@@ -697,8 +675,6 @@ fun PetsWidget(
         viewModel
     )
     Spacer(modifier = Modifier.width(20.dp))
-//        }
-//    }
 }
 
 @ExperimentalCoilApi
@@ -745,7 +721,6 @@ fun PetCard(
                 modifier = Modifier
                     .padding(start = 15.dp, top = 10.dp)
             )
-//            Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = item.breed,
                 fontSize = 16.sp,
@@ -765,7 +740,6 @@ fun DashBoardComposition(
 ) {
 
     val list_dashboard = mapOf(
-//        "Способ оплаты" to R.drawable.ic_wallet_svgrepo_com,
         "Настройки" to R.drawable.ic_privacy,
         "Мои контакты" to R.drawable.ic_link
     )

@@ -2,7 +2,6 @@ package com.foggyskies.petapp.presentation.ui.globalviews
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,11 +32,8 @@ import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalComposeUiApi::class)
 @SuppressLint("MutatingSharedPrefs")
-@ExperimentalComposeUiApi
-@ExperimentalFoundationApi
-@ExperimentalMaterialApi
-@ExperimentalAnimationApi
 @Composable
 fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
@@ -47,13 +43,9 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
     val scope = rememberCoroutineScope()
 
-    val search_value_1 = remember {
+    val search_value = remember {
         mutableStateOf("")
     }
-
-//    val now_filtered_items_1 = remember {
-//        mutableStateOf(emptyList<DishDC>())
-//    }
 
     val context = LocalContext.current
 
@@ -69,10 +61,6 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                 .clip(RoundedCornerShape(20.dp))
                 .fillMaxWidth(1f)
                 .background(Color.White)
-                .onGloballyPositioned {
-//                    HeightHome += it.size.height
-                }
-
         ) {
 
             Row(
@@ -92,31 +80,19 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                 )
 
                 TextField(
-                    value = search_value_1.value,
+                    value = search_value.value,
                     onValueChange = {
-                        search_value_1.value = it
-                        if (search_value_1.value.isBlank()) {
+                        search_value.value = it
+                        if (search_value.value.isBlank()) {
                             scope.launch {
                                 delay(3000)
-                                if (search_value_1.value.isBlank()) {
-//                                    isFocusedSearch.value = false
+                                if (search_value.value.isBlank()) {
                                     focus_manager.clearFocus()
                                 }
                             }
                         } else {
-                            msViewModel.sendMessage(search_value_1.value)
-
-//                                val response =
-//                                    LocusServer.getDishWithFilter(name = search_value_1.value)
-//
-//                                if (response.isSuccessful) {
-//
-//                                    CoroutineScope(Dispatchers.Main).launch {
-//                                        now_filtered_items_1.value = response.body()!!
-//                                    }
-//                                }
+                            msViewModel.sendMessage(search_value.value)
                             }
-
                     },
                     label = {
                         Text(
@@ -149,7 +125,7 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                                                 .edit()
                                                 .putString(
                                                     USER_VALUES,
-                                                    "\"${search_value_1.value}\""
+                                                    "\"${search_value.value}\""
                                                 )
                                                 .apply()
                                         string.split("\" ").size < 5 -> {
@@ -161,7 +137,7 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                                                 .edit()
                                                 .putString(
                                                     USER_VALUES,
-                                                    "$string \"${search_value_1.value}\""
+                                                    "$string \"${search_value.value}\""
                                                 )
                                                 .apply()
                                         }
@@ -176,7 +152,7 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                                                 .edit()
                                                 .putString(
                                                     USER_VALUES,
-                                                    "$formated_sting \"${search_value_1.value}\""
+                                                    "$formated_sting \"${search_value.value}\""
                                                 )
                                                 .apply()
                                         }
@@ -191,26 +167,8 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                     ),
                     modifier = Modifier
                         .weight(8f)
-                        .onFocusEvent { state ->
-//                            isFocusedSearch.value = state.isFocused
-                        }
-//                    .fillMaxWidth(0.9f)
                 )
-
-//                Icon(
-//                    painter = painterResource(id = R.drawable.icon_micro),
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .size(24.dp)
-//                        .weight(1f)
-////                    .width(16.8.dp)
-////                    .height(24.dp)
-//                        .padding(end = 6.dp),
-//                    Color(0xFF898989)
-//                )
-
             }
-
         }
 
         val list_tag = mutableListOf<String>()
@@ -221,38 +179,5 @@ fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
                 if (mutable_set?.isNotEmpty() == true)
                     list_tag.addAll(mutable_set!!.split(regex = ".(?<=\"\\s)".toRegex()))
             }
-//        AnimatedVisibility(visible = isFocusedSearch.value) {
-//            TagRow(
-//                tags = list_tag
-//            ) {
-//                search_value_1.value = it
-//                scope.launch {
-//
-//                    val response =
-//                        LocusServer.getDishWithFilter(name = it)
-//
-//                    if (response.isSuccessful) {
-//
-//                        CoroutineScope(Dispatchers.Main).launch {
-//                            now_filtered_items_1.value = response.body()!!
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
-//        AnimatedVisibility(
-//            visible = isFocusedSearch.value
-//        ) {
-
-//            FoodLazyList(
-//                nav_controller = nav_controller,
-//                state = state,
-//                now_filtered_items = now_filtered_items_1,
-//                order_list = order_list
-//            )
-
-//        }
     }
-
 }

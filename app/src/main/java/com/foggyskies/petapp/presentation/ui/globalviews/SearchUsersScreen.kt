@@ -40,6 +40,7 @@ import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.globalmodel.AnimatedVisibleDC
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
 import io.ktor.client.*
@@ -69,9 +70,13 @@ data class CreateChat(
     var idUserSecond: String
 )
 
-@ExperimentalAnimationApi
 @Composable
-fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
+fun OneItemUser(
+    item: UsersSearch,
+    nav_controller: NavHostController?,
+    viewModel: HomeViewModel,
+    msViewModel: MainSocketViewModel
+) {
 
     val recomposition = currentRecomposeScope
 
@@ -90,7 +95,6 @@ fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel
                     )
                     .clickable {
                     }
-//                    .align(Ve)
                     .background(Color.White)
             ) {
                 Spacer(modifier = Modifier.width(15.dp))
@@ -137,7 +141,6 @@ fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel
                 }
             }
             val scope = rememberCoroutineScope()
-            Log.e("AAAAAA", item.awaitAccept.toString())
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -185,23 +188,13 @@ fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel
     }
 }
 
-@kotlinx.serialization.Serializable
-data class IdUserReceiver(
-    val id: String
-)
-
-data class TestClass(
-    var item: UsersSearch,
-    var isVisible: MutableState<Boolean>
-)
-
 @SuppressLint("UnrememberedMutableState")
-@ExperimentalAnimationApi
-@ExperimentalMaterialApi
-@ExperimentalFoundationApi
-@ExperimentalComposeUiApi
 @Composable
-fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
+fun BoxScope.SearchUsersScreen(
+    nav_controller: NavHostController?,
+    viewModel: HomeViewModel,
+    msViewModel: MainSocketViewModel
+) {
 
     Box(
         modifier = Modifier
@@ -225,10 +218,8 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
             modifier = Modifier.align(Alignment.Center)
         ) {
 
-
             SearchBar(viewModel, msViewModel)
 
-//            if (localListUsers.isNotEmpty())
             Spacer(modifier = Modifier.height(30.dp))
 
             Box(
@@ -236,13 +227,12 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .fillMaxWidth(0.9f)
-//                    .background(Color.White)
             ) {
 
                 val listUsers = msViewModel.users
 
                 var localListUsers by remember {
-                    mutableStateOf(mutableListOf<TestClass>())
+                    mutableStateOf(mutableListOf<AnimatedVisibleDC<UsersSearch>>())
                 }
 
                 val previos = remember { mutableListOf<Int>(0, 0) }
@@ -257,13 +247,12 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
 
                             if (previos[0] != 0 && previos[1] == 0) {
                                 localListUsers.forEach {
-//                                delay(50L)
                                     it.isVisible.value = false
                                 }
                                 localListUsers = mutableListOf()
                             } else if (previos[0] > previos[1]) {
-                                val newList = mutableListOf<TestClass>()
-                                var listForRemove = mutableListOf<TestClass>()
+                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                                var listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
                                 localListUsers.forEachIndexed { index, item ->
                                     if (!listUsers.value.users.contains(item.item)) {
                                         item.isVisible.value = false
@@ -277,8 +266,8 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
                                 localListUsers = newList
                             } else if (previos[0] != 0 && previos[0] < previos[1]) {
                                 val listForSave = mutableListOf<UsersSearch>()
-                                val listForSave_2 = mutableListOf<TestClass>()
-                                val listForRemove = mutableListOf<TestClass>()
+                                val listForSave_2 = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                                val listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
                                 localListUsers.forEachIndexed { index, item ->
                                     if (listUsers.value.users.contains(item.item)) {
                                         listForSave.add(item.item)
@@ -291,10 +280,10 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
                                 }
                                 if (listForRemove.isNotEmpty())
                                     localListUsers.removeAll(listForRemove)
-                                val newList = mutableListOf<TestClass>()
+                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
                                 listUsers.value.users.forEach { item ->
                                     if (!listForSave.contains(item)) {
-                                        val newItem = TestClass(
+                                        val newItem = AnimatedVisibleDC<UsersSearch>(
                                             item = item,
                                             isVisible = mutableStateOf(false)
                                         )
@@ -306,9 +295,9 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
                                 }
                                 localListUsers = newList
                             } else {
-                                val newList = mutableListOf<TestClass>()
+                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
                                 listUsers.value.users.forEach { item_1 ->
-                                    val newItem = TestClass(
+                                    val newItem = AnimatedVisibleDC<UsersSearch>(
                                         item = item_1,
                                         isVisible = mutableStateOf(false)
                                     )

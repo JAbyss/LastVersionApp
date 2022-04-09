@@ -143,23 +143,12 @@ fun SplashScreen(nav_controller: NavHostController) {
                     modifier = Modifier
                         .align(Alignment.Center)
                 )
-//                Icon(
-//                    painter = painterResource(id = R.drawable.ic_helmet),
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .offset(x = 5.dp)
-//                        .size(35.dp)
-//                        .align(Alignment.Center),
-//                    Color.White
-//                )
             }
             Text(
                 text = "Foggy Skies production",
                 color = Color.White,
-//            fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
                 modifier = Modifier
-//                    .align(Alignment.Center)
             )
         }
 

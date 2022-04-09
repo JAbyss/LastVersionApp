@@ -51,11 +51,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
-    @ExperimentalMaterialApi
-    @ExperimentalCoilApi
-    @ExperimentalComposeUiApi
-    @ExperimentalAnimationApi
-    @ExperimentalFoundationApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ISAPPLIFE = true
@@ -76,11 +72,8 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
-//            PetAppTheme {
-            // A surface container using the 'background' color from the theme
             Surface(color = MaterialTheme.colors.background) {
                 LoadingApp()
-//                }
             }
         }
     }
@@ -90,10 +83,6 @@ class MainActivity : ComponentActivity() {
         ISAPPLIFE = false
         Log.e("FLAGGGGGGG", "SETTTTTTTTTTTTTTTTTTTTTTT $ISAPPLIFE")
     }
-//    override fun onPause() {
-//
-//        super.onPause()
-//    }
 
     companion object {
         var USERNAME = ""
@@ -114,11 +103,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@ExperimentalMaterialApi
-@ExperimentalCoilApi
-@ExperimentalComposeUiApi
-@ExperimentalAnimationApi
-@ExperimentalFoundationApi
 @Composable
 fun LoadingApp() {
     val uri = "https://www.example.com"
@@ -146,8 +130,6 @@ fun LoadingApp() {
             val viewModel =
                 viewModelProvider["AuthorizationViewModel", (AuthorizationViewModel::class.java)]
 
-//            viewModelProvider["HomeViewModel", (HomeViewModel::class.java)]
-
             AuthorizationScreen(nav_controller, viewModel)
         }
         composable("Home") {
@@ -171,7 +153,6 @@ fun LoadingApp() {
             }),
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/itemChat={itemChat}token={token}" })
         ) {
-//            it.arguments?.getString("itemChat")
             val Token = it.arguments?.getString("token")
             if (Token != null) {
                 TOKEN = Token
@@ -204,14 +185,5 @@ fun LoadingApp() {
                 mainSocketViewModel
             )
         }
-//        composable("OnBoard"){
-//            OnBoardScreen()
-//        }
     }
-
-//    DisposableEffect(key1 = Unit) {
-//        onDispose {
-//            mainSocketViewModel.onCleared()
-//        }
-//    }
 }

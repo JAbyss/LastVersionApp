@@ -51,6 +51,10 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+enum class StateFriendScreen {
+    FRIENDS, REQUESTS
+}
+
 @Composable
 fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
     Box(
@@ -95,7 +99,6 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                         color = Color(0xFF20B6F6)
                     )
                 }
-
             Spacer(modifier = Modifier.width(20.dp))
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -177,9 +180,7 @@ fun OneItemRequest(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-
-            }
+            .clickable {}
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -247,8 +248,6 @@ fun OneItemRequest(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .size(30.dp)
-//                modifier = Modifier
-//                    .align(Alignment.CenterEnd)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_cancel),
@@ -262,7 +261,6 @@ fun OneItemRequest(
                 onClick = {
                     msViewModel.sendAction("acceptRequestFriend|${item.id}")
                 },
-//                    viewModel.listRequests.remove(item)
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color.White
@@ -273,8 +271,6 @@ fun OneItemRequest(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .size(30.dp)
-//            modifier = Modifier
-//                .align(Alignment.CenterEnd)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_add_user),
@@ -288,16 +284,12 @@ fun OneItemRequest(
     }
 }
 
-enum class StateFriendScreen {
-    FRIENDS, REQUESTS
-}
-
-
-@ExperimentalAnimationApi
 @Composable
-fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, msViewModel: MainSocketViewModel) {
-
-
+fun FriendsScreen(
+    viewModel: HomeViewModel,
+    nav_controller: NavHostController,
+    msViewModel: MainSocketViewModel
+) {
     var stateFriendsScreen by remember { mutableStateOf(StateFriendScreen.FRIENDS) }
 
     Box(
@@ -313,7 +305,6 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
                     indication = null
                 ) {
                     viewModel.friendMenuSwitch()
-//                        viewModel.disconnect()
                 }
         )
         Column(
@@ -328,8 +319,6 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
                 modifier = Modifier.align(End)
             ) {
                 Box(
-//                        modifier = Modifier
-//                            .align(End)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_add_user),
@@ -348,12 +337,7 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
                                             StateFriendScreen.REQUESTS
                                         else -> stateFriendsScreen = StateFriendScreen.FRIENDS
                                     }
-//                                stateFriendsScreen.changeState()
-//                            }
                             }
-//                        .clickable {
-//
-//                        }
                     )
                     Box(
                         modifier = Modifier
@@ -369,7 +353,6 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier
-//                            .padding(3.dp)
                                 .align(Center)
                         )
                     }
@@ -386,9 +369,7 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
                     .background(Color.White)
             ) {
 
-
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-
 
                     itemsIndexed(msViewModel.listFriends) { index, item ->
                         androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.FRIENDS) {
@@ -414,7 +395,6 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, m
     }
 }
 
-@ExperimentalAnimationApi
 @Composable
 fun AnimationLoad(
     delayStart: Long = 0,

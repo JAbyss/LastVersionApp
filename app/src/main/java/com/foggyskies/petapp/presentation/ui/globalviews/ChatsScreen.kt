@@ -1,6 +1,5 @@
 package com.foggyskies.petapp.presentation.ui.globalviews
 
-import android.os.Bundle
 import android.os.Parcelable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,7 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,29 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.get
 import coil.compose.rememberImagePainter
-import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
-import io.ktor.client.*
-import io.ktor.client.engine.android.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.request.*
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
-//@Serializable
-//data class ChatPreviewEntity(
-//    var idChat: String,
-//    var chatName: String,
-//    var image: String,
-//    var lastMessage: String
-//)
 
 @Serializable
 @Parcelize
@@ -63,9 +47,7 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
             .fillMaxWidth()
             .clickable {
                val string = Json.encodeToString(item)
-//                Bundle_1.putSerializable("itemChat", item)
                 nav_controller?.navigate("Chat/$string")
-//                nav_controller?.navigate("Chat")
             }
     ) {
         Row(
@@ -138,11 +120,9 @@ fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeView
                 .background(Color.White)
         ) {
             LazyColumn(
-//                reverseLayout = true,
                 modifier = Modifier
                     .padding(5.dp)
             ) {
-
                 items(msViewModel.listChats) { item ->
                     OneItemChat(item, nav_controller)
                 }

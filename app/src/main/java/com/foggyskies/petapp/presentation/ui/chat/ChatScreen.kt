@@ -57,8 +57,6 @@ import kotlinx.coroutines.launch
 import java.lang.Exception
 
 
-@ExperimentalComposeUiApi
-@ExperimentalAnimationApi
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
@@ -328,8 +326,7 @@ fun HeaderChat(viewModel: ChatViewModel, item: FormattedChatDC) {
     }
 }
 
-@ExperimentalComposeUiApi
-@ExperimentalAnimationApi
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun BottomAppBar(
     viewModel: ChatViewModel,

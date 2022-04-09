@@ -163,9 +163,6 @@ class MainSocketViewModel : ViewModel() {
                 ?.filter { it is Frame.Text }
                 ?.map {
                     val string = (it as? Frame.Text)?.readText() ?: ""
-//                    var json  = Json.parseToJsonElement(string)
-
-//                    val json = Json.decodeFromString<List<UsersSearch>>(string)
                     string
                 } ?: flow {}
         } catch (e: Exception) {
@@ -189,10 +186,7 @@ class MainSocketViewModel : ViewModel() {
             }.use {
                 idUser = it.post<String>("http://${MainActivity.MAINENDPOINT}/createMainSocket") {
                     this.headers["Auth"] = MainActivity.TOKEN
-//                    parameter("idUser", "62333996647f7366746c563a")
                 }
-//
-
             }
 
             val client = HttpClient(CIO) {
@@ -348,6 +342,10 @@ class MainSocketViewModel : ViewModel() {
 
     var selectedMuteBatItem = mutableStateOf(0)
 
+    val isNotifyVisible by derivedStateOf {
+        listNotifications.isNotEmpty()
+    }
+
     var listValuesMute = listOf(
         "1ч",
         "4ч",
@@ -362,8 +360,6 @@ class MainSocketViewModel : ViewModel() {
             mainSocket?.send("INR|N")
         }
     }
-
-
 }
 
 fun <T> checkOldListByNewList(oldList: MutableList<T>, newList: MutableList<T>): OldListInfo<T> {
