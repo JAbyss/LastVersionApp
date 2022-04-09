@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import kotlinx.coroutines.delay
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
 @ExperimentalMaterialApi
 @ExperimentalAnimationApi
 @Composable
-fun SearchBar(viewModel: HomeViewModel) {
+fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
     val focus_manager = LocalFocusManager.current
 
@@ -103,7 +104,7 @@ fun SearchBar(viewModel: HomeViewModel) {
                                 }
                             }
                         } else {
-                           viewModel.sendMessage(search_value_1.value)
+                            msViewModel.sendMessage(search_value_1.value)
 
 //                                val response =
 //                                    LocusServer.getDishWithFilter(name = search_value_1.value)

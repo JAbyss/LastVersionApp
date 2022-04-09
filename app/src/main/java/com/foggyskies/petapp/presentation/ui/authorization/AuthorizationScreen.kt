@@ -118,8 +118,7 @@ fun BoxScope.AuthBottomSheet(
 //    animationHeight: Float
 ) {
 
-    var context = LocalContext.current
-
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier

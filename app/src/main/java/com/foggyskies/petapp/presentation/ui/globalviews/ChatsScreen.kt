@@ -25,6 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.get
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
@@ -34,6 +35,8 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 //@Serializable
 //data class ChatPreviewEntity(
@@ -59,10 +62,9 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                var Bundle_1 = Bundle()
-                Bundle_1.putParcelable("itemChat", item)
+               val string = Json.encodeToString(item)
 //                Bundle_1.putSerializable("itemChat", item)
-                nav_controller?.navigate(nav_controller.graph["Chat"].id, Bundle_1)
+                nav_controller?.navigate("Chat/$string")
 //                nav_controller?.navigate("Chat")
             }
     ) {
@@ -113,7 +115,7 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
 }
 
 @Composable
-fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeViewModel) {
+fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
     Box() {
 
@@ -141,7 +143,7 @@ fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeView
                     .padding(5.dp)
             ) {
 
-                items(viewModel.listChats) { item ->
+                items(msViewModel.listChats) { item ->
                     OneItemChat(item, nav_controller)
                 }
             }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,12 +46,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.PushNotificationService
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.globalviews.ChatsScreen
-import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
-import com.foggyskies.petapp.presentation.ui.globalviews.FriendsScreen
-import com.foggyskies.petapp.presentation.ui.globalviews.SearchUsersScreen
+import com.foggyskies.petapp.presentation.ui.globalviews.*
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwipableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import com.foggyskies.petapp.presentation.ui.home.views.RightMenu
@@ -62,7 +62,10 @@ import kotlinx.coroutines.launch
 @ExperimentalAnimationApi
 @ExperimentalFoundationApi
 @Composable
-fun HomeViewModel.HomeScreen(nav_controller: NavHostController? = null) {
+fun HomeViewModel.HomeScreen(
+    nav_controller: NavHostController? = null,
+    msViewModel: MainSocketViewModel
+) {
 
     val context = LocalContext.current
 
@@ -80,9 +83,9 @@ fun HomeViewModel.HomeScreen(nav_controller: NavHostController? = null) {
         Size(width = displayMetrics.widthPixels.toFloat(), height = displayMetrics.heightPixels.toFloat())
     density = displayMetrics.density
 
-    LaunchedEffect(key1 = Unit){
-        createMainSocket()
-    }
+//    LaunchedEffect(key1 = Unit){
+//        msViewModel.createMainSocket()
+//    }
 
     Box(
         modifier =
@@ -212,16 +215,16 @@ fun HomeViewModel.HomeScreen(nav_controller: NavHostController? = null) {
                     when(itemMenu){
                         "Пользователи" -> {
                             searchUsersSwitch()
-                            connectToSearchUsers()
+                            msViewModel.connectToSearchUsers()
                         }
                         "Беседы" -> {
                             chatsMenuSwitch()
-                            sendAction("getChats|")
+                            msViewModel.sendAction("getChats|")
                         }
                         "Друзья" -> {
                             friendMenuSwitch()
-                            sendAction("getFriends|")
-                            sendAction("getRequestsFriends|")
+                            msViewModel.sendAction("getFriends|")
+                            msViewModel.sendAction("getRequestsFriends|")
 
                         }
                     }
@@ -235,7 +238,7 @@ fun HomeViewModel.HomeScreen(nav_controller: NavHostController? = null) {
             modifier = Modifier
                 .align(Center)
         ) {
-            ChatsScreen(nav_controller, this@HomeScreen)
+            ChatsScreen(nav_controller, this@HomeScreen, msViewModel)
         }
 //        ChatsScreen(nav_controller)
         AnimatedVisibility(
@@ -243,14 +246,31 @@ fun HomeViewModel.HomeScreen(nav_controller: NavHostController? = null) {
             modifier = Modifier
                 .align(Center)
         ) {
-            SearchUsersScreen(nav_controller = nav_controller, viewModel = this@HomeScreen)
+            SearchUsersScreen(nav_controller = nav_controller, viewModel = this@HomeScreen, msViewModel)
         }
         AnimatedVisibility(
             visible = isFriendsMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
-            FriendsScreen(nav_controller = nav_controller!!, viewModel = this@HomeScreen)
+            FriendsScreen(nav_controller = nav_controller!!, viewModel = this@HomeScreen,
+                msViewModel = msViewModel
+            )
+        }
+        AnimatedVisibility(
+            visible = true,
+            modifier = Modifier
+                .align(TopCenter)
+        ) {
+            InternalNotificationScreen(
+                this@HomeScreen,
+                modifier = Modifier
+                    .padding(top = 30.dp)
+                    .fillMaxWidth(0.9f)
+                    .align(TopCenter),
+                msViewModel,
+                nav_controller!!
+            )
         }
     }
 }

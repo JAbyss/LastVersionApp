@@ -44,6 +44,7 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
@@ -69,7 +70,8 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     nav_controller: NavHostController,
     viewModel: HumanProfileViewModel,
-    viewModelHome: HomeViewModel
+    viewModelHome: HomeViewModel,
+    msViewModel: MainSocketViewModel
 ) {
 
     val context = LocalContext.current
@@ -78,11 +80,6 @@ fun ProfileScreen(
 
     val backHandler = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-//    viewModel.swipableMenu.listIcon = listOf(
-//        R.drawable.ic_menu_vack,
-//        R.drawable.ic_walk,
-//        R.drawable.ic_gamepad
-//    )
 
     BackHandler {
         if (viewModel.stateProfile == StateProfile.PET) {
@@ -131,9 +128,9 @@ fun ProfileScreen(
                                     nav_controller?.navigate("Chat")
                                 }
                                 3 -> {
-                                    viewModelHome.sendAction("logOut")
+                                    msViewModel.sendAction("logOut")
                                     viewModelHome.viewModelScope.launch {
-                                        viewModelHome.mainSocket?.close()
+                                        msViewModel.mainSocket?.close()
                                     }
                                     TOKEN = ""
                                     USERNAME = ""

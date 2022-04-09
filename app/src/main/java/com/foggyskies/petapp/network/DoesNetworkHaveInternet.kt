@@ -18,7 +18,7 @@ object DoesNetworkHaveInternet {
         return try{
             Log.d(TAG, "PINGING google.")
             val socket = socketFactory.createSocket() ?: throw IOException("Socket is null.")
-            socket.connect(InetSocketAddress("8.8.8.8", 53), 1500)
+            socket.connect(InetSocketAddress("8.8.8.8", 53), 5000)
             socket.close()
             Log.d(TAG, "PING success.")
             true

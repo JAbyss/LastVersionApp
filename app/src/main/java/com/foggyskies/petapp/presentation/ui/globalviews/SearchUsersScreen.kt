@@ -38,6 +38,7 @@ import androidx.navigation.get
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
@@ -70,7 +71,7 @@ data class CreateChat(
 
 @ExperimentalAnimationApi
 @Composable
-fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel: HomeViewModel) {
+fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
     val recomposition = currentRecomposeScope
 
@@ -148,7 +149,7 @@ fun OneItemUser(item: UsersSearch, nav_controller: NavHostController?, viewModel
                         Button(
                             onClick = {
                                 scope.launch {
-                                    viewModel.sendAction("addFriend|${item.id}")
+                                    msViewModel.sendAction("addFriend|${item.id}")
                                     item.awaitAccept = true
                                     recomposition.invalidate()
                                 }
@@ -200,7 +201,7 @@ data class TestClass(
 @ExperimentalFoundationApi
 @ExperimentalComposeUiApi
 @Composable
-fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: HomeViewModel) {
+fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
 
     Box(
         modifier = Modifier
@@ -214,8 +215,8 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
+                    msViewModel.disconnect()
                     viewModel.searchUsersSwitch()
-                    viewModel.disconnect()
                 }
         )
 
@@ -225,7 +226,7 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
         ) {
 
 
-            SearchBar(viewModel)
+            SearchBar(viewModel, msViewModel)
 
 //            if (localListUsers.isNotEmpty())
             Spacer(modifier = Modifier.height(30.dp))
@@ -238,7 +239,7 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
 //                    .background(Color.White)
             ) {
 
-                val listUsers = viewModel.users
+                val listUsers = msViewModel.users
 
                 var localListUsers by remember {
                     mutableStateOf(mutableListOf<TestClass>())
@@ -333,7 +334,7 @@ fun BoxScope.SearchUsersScreen(nav_controller: NavHostController?, viewModel: Ho
 
                             androidx.compose.animation.AnimatedVisibility(visible = item.isVisible.value) {
                                 Column() {
-                                    OneItemUser(item.item, nav_controller, viewModel)
+                                    OneItemUser(item.item, nav_controller, viewModel, msViewModel)
                                     if (index != localListUsers.lastIndex)
                                         Spacer(modifier = Modifier.height(5.dp))
                                 }

@@ -34,6 +34,7 @@ import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
@@ -47,6 +48,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
@@ -135,9 +138,10 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                                 idCompanion = item.id,
                                 image = item.image
                             )
-                            val Bundle_1 = Bundle()
-                            Bundle_1.putParcelable("itemChat", formattedChat)
-                            nav_controller?.navigate(nav_controller.graph["Chat"].id, Bundle_1)
+                            var str = Json.encodeToString(formattedChat)
+//                            val Bundle_1 = Bundle()
+//                            Bundle_1.putParcelable("itemChat", formattedChat)
+                            nav_controller?.navigate("Chat/$str")
                         }
                     }
                 }
@@ -167,7 +171,8 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
 fun OneItemRequest(
     item: UserIUSI,
     nav_controller: NavHostController?,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    msViewModel: MainSocketViewModel
 ) {
     Box(
         modifier = Modifier
@@ -255,7 +260,7 @@ fun OneItemRequest(
             Spacer(modifier = Modifier.width(5.dp))
             Button(
                 onClick = {
-                    viewModel.sendAction("acceptRequestFriend|${item.id}")
+                    msViewModel.sendAction("acceptRequestFriend|${item.id}")
                 },
 //                    viewModel.listRequests.remove(item)
                 shape = RoundedCornerShape(20.dp),
@@ -290,7 +295,7 @@ enum class StateFriendScreen {
 
 @ExperimentalAnimationApi
 @Composable
-fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController) {
+fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController, msViewModel: MainSocketViewModel) {
 
 
     var stateFriendsScreen by remember { mutableStateOf(StateFriendScreen.FRIENDS) }
@@ -319,7 +324,7 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController) {
         ) {
 
             AnimatedVisibility(
-                visible = viewModel.listRequests.isNotEmpty(),
+                visible = msViewModel.listRequests.isNotEmpty(),
                 modifier = Modifier.align(End)
             ) {
                 Box(
@@ -337,7 +342,7 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController) {
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
-                                if (viewModel.listRequests.size != 0)
+                                if (msViewModel.listRequests.size != 0)
                                     when (stateFriendsScreen) {
                                         StateFriendScreen.FRIENDS -> stateFriendsScreen =
                                             StateFriendScreen.REQUESTS
@@ -359,7 +364,7 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController) {
                     ) {
 
                         Text(
-                            text = viewModel.listRequests.size.toString(),
+                            text = msViewModel.listRequests.size.toString(),
                             fontSize = 12.sp,
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold,
@@ -385,21 +390,21 @@ fun FriendsScreen(viewModel: HomeViewModel, nav_controller: NavHostController) {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
 
 
-                    itemsIndexed(viewModel.listFriends) { index, item ->
+                    itemsIndexed(msViewModel.listFriends) { index, item ->
                         androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.FRIENDS) {
-                            AnimationLoad(index = index) {
+                            AnimationLoad(index = index, delayItems = 100) {
                                 Column() {
                                     OneItemFriend(item, nav_controller)
-                                    if (index != viewModel.listFriends.lastIndex)
+                                    if (index != msViewModel.listFriends.lastIndex)
                                         Spacer(modifier = Modifier.height(5.dp))
                                 }
                             }
                         }
                     }
 
-                    itemsIndexed(viewModel.listRequests) { _, item ->
+                    itemsIndexed(msViewModel.listRequests) { _, item ->
                         androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.REQUESTS) {
-                            OneItemRequest(item, nav_controller, viewModel)
+                            OneItemRequest(item, nav_controller, viewModel, msViewModel)
                         }
                     }
                 }

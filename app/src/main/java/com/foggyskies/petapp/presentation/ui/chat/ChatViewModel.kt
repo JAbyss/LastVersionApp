@@ -43,6 +43,13 @@ data class ChatState(
 
 class ChatViewModel : ViewModel() {
 
+    override fun onCleared() {
+        viewModelScope.launch {
+            super.onCleared()
+            socket?.close()
+        }
+    }
+
     var heightHeaderAppBar by mutableStateOf(0)
 
     var heightBottomAppBar by mutableStateOf(0)

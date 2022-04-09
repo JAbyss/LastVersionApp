@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
+import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.entity.CircularSelector
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwipableMenu
@@ -31,12 +32,12 @@ class HumanProfileViewModel : ViewModel() {
 
     var stateProfile by mutableStateOf(StateProfile.HUMAN)
     var imageProfile by mutableStateOf("http://194.67.93.244/media/petap/test_avatar.jpg")
-    var nameProfile by mutableStateOf("JAbyss")
+    var nameProfile by mutableStateOf(USERNAME)
 
     val a by derivedStateOf {
         if (stateProfile == StateProfile.HUMAN) {
             imageProfile = "http://194.67.93.244/media/petap/test_avatar.jpg"
-            nameProfile = "JAbyss"
+            nameProfile = USERNAME
             isVisibleInfoUser = true
             swipableMenu.listIcon = listOf(
                 ItemSwipableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
