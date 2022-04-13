@@ -47,11 +47,8 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import com.foggyskies.petapp.presentation.ui.profile.entity.PetCardEntity
-import com.foggyskies.petapp.presentation.ui.profile.human.HumanProfileViewModel
-import com.foggyskies.petapp.presentation.ui.profile.human.StateProfile
 import com.foggyskies.petapp.presentation.ui.profile.human.views.CircularStatuses
 import com.foggyskies.petapp.presentation.ui.profile.human.views.MyLinkCard
-import com.foggyskies.petapp.presentation.ui.profile.human.views.StatusWidget
 import com.foggyskies.petapp.presentation.ui.profile.human.views.StoriesProfile
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.customui.animation.animateDpOffsetAsState
@@ -63,7 +60,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileOtherUserScreen(
     nav_controller: NavHostController,
-    viewModel: HumanProfileViewModel
+    viewModel: ProfileViewModel
 ) {
 
     val context = LocalContext.current
@@ -647,7 +644,7 @@ fun PetsWidget(
     onClickPetCard: (String, String) -> Unit,
     index: Int,
     item: PetCardEntity,
-    viewModel: HumanProfileViewModel
+    viewModel: ProfileViewModel
 ) {
 
     if (index == 0) {
@@ -682,7 +679,7 @@ fun PetsWidget(
 fun PetCard(
     item: PetCardEntity,
     onClickPetCard: (String, String) -> Unit,
-    viewModel: HumanProfileViewModel
+    viewModel: ProfileViewModel
 ) {
     Box(
         modifier = Modifier
@@ -735,7 +732,7 @@ fun PetCard(
 
 @Composable
 fun DashBoardComposition(
-    viewModel: HumanProfileViewModel,
+    viewModel: ProfileViewModel,
     modifier: Modifier
 ) {
 

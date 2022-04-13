@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.profile.human.HumanProfileViewModel
+import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.customui.animation.animateDpOffsetAsState
 import kotlinx.coroutines.delay
@@ -116,7 +116,7 @@ fun StatusWidget(
     value: String,
     icon: Int,
     onClick: () -> Unit,
-    viewModel: HumanProfileViewModel
+    viewModel: ProfileViewModel
 ) {
     val default_list_status = mapOf(
         "Сплю" to R.drawable.ic_sleep,

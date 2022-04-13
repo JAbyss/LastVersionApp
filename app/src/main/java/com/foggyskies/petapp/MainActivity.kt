@@ -7,14 +7,10 @@ import android.util.Log
 import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +21,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import coil.annotation.ExperimentalCoilApi
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
@@ -39,14 +34,11 @@ import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.home.HomeScreen
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
-import com.foggyskies.petapp.presentation.ui.onboard.OnBoardScreen
 import com.foggyskies.petapp.presentation.ui.profile.ProfileScreen
-import com.foggyskies.petapp.presentation.ui.profile.human.HumanProfileViewModel
+import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.registation.AuthorizationViewModel
 import com.foggyskies.petapp.presentation.ui.splash.SplashScreen
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.AuthorizationScreen
-import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
@@ -98,7 +90,7 @@ class MainActivity : ComponentActivity() {
         192.168.0.88:2525
          */
 
-        val MAINENDPOINT = "192.168.0.11:2525"
+        val MAINENDPOINT = "192.168.0.88:2525"
         lateinit var isNetworkAvailable: State<Boolean>
     }
 }
@@ -175,7 +167,7 @@ fun LoadingApp() {
         }
         composable("Profile") {
             val viewModel =
-                viewModelProvider["ProfileViewModel", (HumanProfileViewModel::class.java)]
+                viewModelProvider["ProfileViewModel", (ProfileViewModel::class.java)]
             val viewModelHome = viewModelProvider["HomeViewModel", (HomeViewModel::class.java)]
 
             ProfileScreen(

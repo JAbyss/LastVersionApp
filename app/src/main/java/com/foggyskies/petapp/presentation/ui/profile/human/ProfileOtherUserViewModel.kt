@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.profile.human
 
+import androidx.annotation.IntRange
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,5 +34,4 @@ class ProfileOtherUserViewModel: ViewModel() {
     }
 
     var isVisibleInfoUser by mutableStateOf(true)
-
 }

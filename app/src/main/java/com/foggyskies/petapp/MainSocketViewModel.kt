@@ -8,6 +8,8 @@ import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
+import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileDC
+import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
@@ -171,6 +173,8 @@ class MainSocketViewModel : ViewModel() {
         }
     }
 
+    var listPagesProfile = mutableListOf<PageProfileFormattedDC>()
+
     fun createMainSocket() {
         viewModelScope.launch {
 
@@ -254,6 +258,10 @@ class MainSocketViewModel : ViewModel() {
                         "getInternalNotification" to {
                             val json = Json.decodeFromString<Notification>(formatted)
                             listNotifications.add(json.toNWV())
+                        },
+                        "getPagesProfile" to {
+                            val json = Json.decodeFromString<List<PageProfileFormattedDC>>(formatted)
+                            listPagesProfile = json.toMutableList()
                         }
                     )
                     map_actions[action]?.invoke()
@@ -286,58 +294,58 @@ class MainSocketViewModel : ViewModel() {
      */
 
     val listNotifications = mutableStateListOf<NotificationWithVisilble>(
-        NotificationWithVisilble(
-            id = "пцупупуыуп",
-            idUser = "rtjtyrjty",
-            title = "Kalteesfxx crfad",
-            description = "Приветbcg",
-            image = "",
-            status = "sbhfdnb"
-        ),
-        NotificationWithVisilble(
-            id = "jyk454",
-            idUser = "dwfwagesghdbff",
-            title = "Kalbcdfterfad",
-            description = "Приветnmvg",
-            image = "",
-            status = "sgesgsg"
-        ),
-        NotificationWithVisilble(
-            id = "hsdhrh4554h",
-            idUser = "dwgsegsfwaf",
-            title = "Kalgsghdfhdterfad",
-            description = "Приветbnvc",
-            image = "",
-            status = "ewewwe435"
-        ), NotificationWithVisilble(
-            id = "hreherh55e",
-            idUser = "dwfwsegsegsegaf",
-            title = "esgsegsegse",
-            description = "Приветjkj",
-            image = "",
-            status = "dsvcbxfbr"
-        ), NotificationWithVisilble(
-            id = "wdhehe545yhe5waf",
-            idUser = "dsgssegwfwaf",
-            title = "gsdgdbcx bcv",
-            description = "Приветb j",
-            image = "",
-            status = "gshsgdsbdsb"
-        ), NotificationWithVisilble(
-            id = "hdeh54eh543",
-            idUser = "dwfwagreghrehf",
-            title = "egsgeegere",
-            description = "Приветkkkkv",
-            image = "",
-            status = "gedhsgvsds"
-        ), NotificationWithVisilble(
-            id = "hdeh54eh543",
-            idUser = "dwfwagreghrehf",
-            title = "egsgeegere",
-            description = "Приветkkkkv",
-            image = "",
-            status = "gedhsgvsds"
-        )
+//        NotificationWithVisilble(
+//            id = "пцупупуыуп",
+//            idUser = "rtjtyrjty",
+//            title = "Kalteesfxx crfad",
+//            description = "Приветbcg",
+//            image = "",
+//            status = "sbhfdnb"
+//        ),
+//        NotificationWithVisilble(
+//            id = "jyk454",
+//            idUser = "dwfwagesghdbff",
+//            title = "Kalbcdfterfad",
+//            description = "Приветnmvg",
+//            image = "",
+//            status = "sgesgsg"
+//        ),
+//        NotificationWithVisilble(
+//            id = "hsdhrh4554h",
+//            idUser = "dwgsegsfwaf",
+//            title = "Kalgsghdfhdterfad",
+//            description = "Приветbnvc",
+//            image = "",
+//            status = "ewewwe435"
+//        ), NotificationWithVisilble(
+//            id = "hreherh55e",
+//            idUser = "dwfwsegsegsegaf",
+//            title = "esgsegsegse",
+//            description = "Приветjkj",
+//            image = "",
+//            status = "dsvcbxfbr"
+//        ), NotificationWithVisilble(
+//            id = "wdhehe545yhe5waf",
+//            idUser = "dsgssegwfwaf",
+//            title = "gsdgdbcx bcv",
+//            description = "Приветb j",
+//            image = "",
+//            status = "gshsgdsbdsb"
+//        ), NotificationWithVisilble(
+//            id = "hdeh54eh543",
+//            idUser = "dwfwagreghrehf",
+//            title = "egsgeegere",
+//            description = "Приветkkkkv",
+//            image = "",
+//            status = "gedhsgvsds"
+//        ), NotificationWithVisilble(
+//            id = "hdeh54eh543",
+//            idUser = "dwfwagreghrehf",
+//            title = "egsgeegere",
+//            description = "Приветkkkkv",
+//            image = "",
+//            status = "gedhsgvsds"
+//        )
     )
 
     var selectedMuteBatItem = mutableStateOf(0)

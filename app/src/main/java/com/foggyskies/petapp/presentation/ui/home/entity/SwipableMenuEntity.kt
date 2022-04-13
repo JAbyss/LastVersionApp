@@ -1,12 +1,22 @@
 package com.foggyskies.petapp.presentation.ui.home.entity
 
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
+import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.R
+import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 enum class SideScreen {
     TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT
@@ -131,6 +141,108 @@ class SwappableMenu() {
         isMenuOpen = true
         delay(300)
         isMenuOpen = false
+    }
+
+    fun Modifier.touchMenuListener(){
+//        pointerInput(Unit) {
+//            var offset = Offset.Zero
+//
+//            detectDragGesturesAfterLongPress(
+//                onDragStart = {
+//                    offset = it
+//                    onDragStart(it)
+//                    offset = swipableMenu.offsetStartDp
+//                    circularSelector.radius = viewModel.swipableMenu.radiusMenu
+//                },
+//                onDragEnd = {
+//
+//                    val listDistance = viewModel.swipableMenu.listOffsetGlobal.map {
+//                        (it - offset).getDistance()
+//                    }
+//                    val minDistance = listDistance.minOrNull()
+//
+//                    if (minDistance!! < viewModel.swipableMenu.radiusCircle) {
+//                        when (listDistance.indexOf(minDistance)) {
+//                            0 -> {
+//                                backHandler?.onBackPressed()
+//                            }
+//                            1 -> {
+//                                nav_controller?.navigate("AdsHomeless")
+//                            }
+//                            2 -> {
+//                                nav_controller?.navigate("Chat")
+//                            }
+//                            3 -> {
+//                                msViewModel.sendAction("logOut")
+//                                viewModelHome.viewModelScope.launch {
+//                                    msViewModel.mainSocket?.close()
+//                                }
+//                                MainActivity.TOKEN = ""
+//                                MainActivity.USERNAME = ""
+//                                context
+//                                    .getSharedPreferences(
+//                                        "Token",
+//                                        Context.MODE_PRIVATE
+//                                    )
+//                                    .edit()
+//                                    .clear()
+//                                    .apply()
+//                                context
+//                                    .getSharedPreferences(
+//                                        "User",
+//                                        Context.MODE_PRIVATE
+//                                    )
+//                                    .edit()
+//                                    .clear()
+//                                    .apply()
+//                                nav_controller.navigate("Authorization") {
+//                                    popUpTo("Home") {
+//                                        inclusive = true
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        Toast
+//                            .makeText(
+//                                context,
+//                                "SELECTED ${listDistance.indexOf(minDistance)}",
+//                                Toast.LENGTH_SHORT
+//                            )
+//                            .show()
+//                        Log.e("SELECTOR", "SELECTED ${listDistance.indexOf(minDistance)}")
+//                    }
+//                    viewModel.swipableMenu.isTappedScreen = false
+//                    viewModel.viewModelScope.launch {
+//                        viewModel.swipableMenu.menuClosing()
+//                    }
+//                    viewModel.circularSelector.selectedTarget = StateCS.IDLE
+//                },
+//                onDrag = { change, dragAmount ->
+//                    offset = change.position
+//
+//                    val listDistance = viewModel.swipableMenu.listOffsetGlobal.map {
+//                        (it - offset).getDistance()
+//                    }
+//                    val minDistance = listDistance.minOrNull()
+//
+//                    if (minDistance!! < viewModel.swipableMenu.radiusCircle) {
+//                        viewModel.circularSelector.size =
+//                            viewModel.swipableMenu.radiusCircle
+//                        viewModel.circularSelector.selectedTargetOffset =
+//                            viewModel.swipableMenu.listOffsetsForCircle[listDistance.indexOf(
+//                                minDistance
+//                            )]
+//                        viewModel.circularSelector.selectedTarget = StateCS.SELECTED
+//                    } else {
+//                        viewModel.circularSelector.selectedTarget = StateCS.IDLE
+//                        viewModel.circularSelector.offset =
+//                            viewModel.swipableMenu.offsetStartDp
+//                        viewModel.circularSelector.size =
+//                            viewModel.swipableMenu.radiusMenu
+//                    }
+//                }
+//            )
+//        }
     }
 }
 
