@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
+import com.foggyskies.petapp.presentation.ui.profile.human.UserMode
 
 @Composable
 fun PetsWidget(
@@ -20,7 +21,7 @@ fun PetsWidget(
     viewModel: ProfileViewModel
 ) {
 
-    if (index == 0) {
+    if (index == 0 && viewModel.userMode == UserMode.OWNER) {
         Box(
             modifier = Modifier
                 .height(300.dp)

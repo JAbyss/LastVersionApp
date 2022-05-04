@@ -4,11 +4,12 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.foggyskies.petapp.domain.dao.ChatDao
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
+import com.foggyskies.petapp.presentation.ui.home.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
-import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileDC
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.koin.java.KoinJavaComponent.inject
 
 data class FormattedItem<T>(
     var item: T,
@@ -36,6 +38,7 @@ data class OldListInfo<T>(
     var depricatedItemsList: MutableList<T>
 )
 
+//@HiltViewModel
 class MainSocketViewModel : ViewModel() {
 
 //    public override fun onCleared() {
@@ -45,6 +48,13 @@ class MainSocketViewModel : ViewModel() {
 //            socket?.close()
 //        }
 //    }
+
+
+//    var db: ChatDB? = null
+
+    val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+
+    var chatDao: ChatDao? = null
 
     var mainSocket: WebSocketSession? = null
 
@@ -231,6 +241,18 @@ class MainSocketViewModel : ViewModel() {
                         },
                         "getChats" to {
                             val json = Json.decodeFromString<List<FormattedChatDC>>(formatted)
+                            val needAddItems: List<FormattedChatDC> = json - listChats
+                            val deletedItems = listChats - json
+//                            val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+                            viewModelScope.launch {
+                                repositoryChatDB.updateChats(needAddItems, deletedItems)
+//                                needAddItems.forEach {
+//                                    chatDao?.insertChat(it.toChat())
+//                                }
+//                                deletedItems.forEach {
+//                                    chatDao?.deleteChat(it.toChat())
+//                                }
+                            }
                             listChats = json.toMutableList()
                         },
                         "getRequestsFriends" to {
@@ -260,7 +282,8 @@ class MainSocketViewModel : ViewModel() {
                             listNotifications.add(json.toNWV())
                         },
                         "getPagesProfile" to {
-                            val json = Json.decodeFromString<List<PageProfileFormattedDC>>(formatted)
+                            val json =
+                                Json.decodeFromString<List<PageProfileFormattedDC>>(formatted)
                             listPagesProfile = json.toMutableList()
                         }
                     )

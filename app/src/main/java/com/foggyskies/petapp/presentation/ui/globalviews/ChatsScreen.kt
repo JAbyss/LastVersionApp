@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.globalviews
 
+import android.os.Bundle
 import android.os.Parcelable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,10 +22,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
+import androidx.navigation.get
+import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
+import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainSocketViewModel
+import com.foggyskies.petapp.data.Chat
+import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -38,7 +48,17 @@ data class FormattedChatDC(
     var idCompanion: String,
     var image: String,
     var lastMessage: String = ""
-) : Parcelable
+) : Parcelable{
+    fun toChat(): Chat {
+        return Chat(
+            idChat = id,
+            companionId = idCompanion,
+            companionName = nameChat,
+            imageCompanion = image,
+            lastMessage = lastMessage,
+        )
+    }
+}
 
 @Composable
 fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
@@ -47,7 +67,8 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
             .fillMaxWidth()
             .clickable {
                val string = Json.encodeToString(item)
-                nav_controller?.navigate("Chat/$string")
+                val b = bundleOf("itemChat" to string)
+                nav_controller?.navigate(nav_controller.graph[NavTree.ChatSec.name].id, b)
             }
     ) {
         Row(
@@ -58,14 +79,14 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
             Spacer(modifier = Modifier.width(15.dp))
 
             if (item.image != "")
-                Image(
-                    painter = rememberImagePainter(data = item.image),
+                AsyncImage(
+                    model = "http://$MAINENDPOINT/${item.image}",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .padding(vertical = 10.dp)
                         .clip(CircleShape)
-                        .size(70.dp)
+                        .size(45.dp)
                 )
             else
                 Box(
@@ -97,7 +118,7 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
 }
 
 @Composable
-fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
+fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeMVIModel, msViewModel: MainSocketViewModel) {
 
     Box() {
 
@@ -108,7 +129,8 @@ fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeView
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ){
-                    viewModel.chatsMenuSwitch()
+                    viewModel.menuHelper.changeVisibilityMenu(MENUS.CHATS)
+//                    viewModel.chatsMenuSwitch()
                 }
         )
 

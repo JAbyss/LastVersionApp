@@ -20,10 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.registation.LoginUserDC
 import com.foggyskies.petapp.presentation.ui.registation.authorization_save
 import com.foggyskies.petapp.presentation.ui.registation.signInRequest
@@ -55,8 +57,8 @@ fun SplashScreen(nav_controller: NavHostController) {
         ).getString("Token", "").toString()
 
         if (TOKEN.isNullOrBlank()) {
-            nav_controller.navigate("Authorization") {
-                popUpTo("Splash") {
+            nav_controller.navigate(NavTree.Authorization.name) {
+                popUpTo(NavTree.Splash.name) {
                     inclusive = true
                 }
             }
@@ -71,6 +73,11 @@ fun SplashScreen(nav_controller: NavHostController) {
                 "User",
                 Context.MODE_PRIVATE
             ).getString("password", "").toString()
+
+            IDUSER = context.getSharedPreferences(
+                "User",
+                Context.MODE_PRIVATE
+            ).getString("idUser", "").toString()
             if (isNetworkAvailable.value) {
 
                 HttpClient(Android) {
@@ -79,7 +86,7 @@ fun SplashScreen(nav_controller: NavHostController) {
                     }
                     expectSuccess = false
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 3000
+                        requestTimeoutMillis = 30000
                     }
                 }.use {
                     val response =
@@ -91,19 +98,25 @@ fun SplashScreen(nav_controller: NavHostController) {
                             )
                         }
                     if (!response.status.isSuccess()) {
-                        nav_controller.navigate("Authorization") {
-                            popUpTo("Splash") {
+                        nav_controller.navigate(NavTree.Authorization.name) {
+                            popUpTo(NavTree.Splash.name) {
                                 inclusive = true
                             }
                         }
                     } else {
-                        TOKEN = response.readText()
+                        val responseText = response.readText().split("|")
+                        TOKEN = responseText[0]
+                        IDUSER = responseText[1]
                         context.getSharedPreferences(
                             "Token",
                             Context.MODE_PRIVATE
                         ).edit().putString("Token", TOKEN).apply()
-                        nav_controller.navigate("Home") {
-                            popUpTo("Splash") {
+                        context.getSharedPreferences(
+                            "User",
+                            Context.MODE_PRIVATE
+                        ).edit().putString("idUser", IDUSER).apply()
+                        nav_controller.navigate(NavTree.Home.name) {
+                            popUpTo(NavTree.Splash.name) {
                                 inclusive = true
                             }
                         }

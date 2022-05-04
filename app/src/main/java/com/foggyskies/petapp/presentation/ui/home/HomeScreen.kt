@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.home
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Build
@@ -9,16 +10,19 @@ import android.os.Vibrator
 import android.util.Log
 import android.view.WindowMetrics
 import android.widget.Toast
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
@@ -37,28 +41,61 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import coil.ImageLoader
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
+import coil.disk.DiskCache
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
+import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.globalviews.*
+import com.foggyskies.petapp.presentation.ui.globalviews.ChatsScreen
+import com.foggyskies.petapp.presentation.ui.globalviews.FriendsScreen
+import com.foggyskies.petapp.presentation.ui.globalviews.InternalNotificationScreen
+import com.foggyskies.petapp.presentation.ui.globalviews.SearchUsersScreen
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import com.foggyskies.petapp.presentation.ui.home.views.RightMenu
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import kotlinx.coroutines.launch
+import java.io.File
+import kotlin.io.path.Path
 
 @Composable
-fun HomeViewModel.HomeScreen(
+fun HomeMVIModel.HomeScreen(
     nav_controller: NavHostController? = null,
     msViewModel: MainSocketViewModel
 ) {
-
     val context = LocalContext.current
+
+    LaunchedEffect(key1 = Unit) {
+//        getPosts()
+        getContent()
+//        getChats(msViewModel.chatDao!!, msViewModel)
+    }
+
 
     val displayMetrics = LocalContext.current.resources.displayMetrics
 
     swipableMenu.listIcon = listOf(
-        ItemSwappableMenu(Image = R.drawable.ic_menu_profile),
-        ItemSwappableMenu(Image = R.drawable.ic_menu_ads),
-        ItemSwappableMenu(Image = R.drawable.ic_gamepad),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_profile,
+            offset = Offset(x = 10f, y = -70f)
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_ads,
+            offset = Offset(x = -50f, y = -45f)
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_gamepad,
+            offset = Offset(x = -70f, y = 10f),
+        ),
     )
 
     swipableMenu.density = displayMetrics.density
@@ -67,7 +104,11 @@ fun HomeViewModel.HomeScreen(
             width = displayMetrics.widthPixels.toFloat(),
             height = displayMetrics.heightPixels.toFloat()
         )
-    density = displayMetrics.density
+//    density = displayMetrics.density
+    swipableMenu.navController = nav_controller!!
+    SideEffect {
+        Log.e("УТЕЧКА", "ИДЕТ УТЕЧКА")
+    }
 
     Box(
         modifier =
@@ -81,17 +122,17 @@ fun HomeViewModel.HomeScreen(
 
                     detectDragGesturesAfterLongPress(
                         onDragStart = {
-                            if (isReadyMenu) {
+                            if (swipableMenu.isReadyMenu) {
                                 offset = it
                                 swipableMenu.onDragStart(it)
-                                circularSelector.offset =
+                                swipableMenu.startOffsetCS =
                                     swipableMenu.offsetStartDp
-                                circularSelector.radius =
+                                swipableMenu.radius =
                                     swipableMenu.radiusMenu
                             }
                         },
                         onDragEnd = {
-                            if (isReadyMenu) {
+                            if (swipableMenu.isReadyMenu) {
 
                                 val listDistance = swipableMenu.listOffsetGlobal.map {
                                     (it - offset).getDistance()
@@ -101,13 +142,13 @@ fun HomeViewModel.HomeScreen(
                                 if (minDistance!! < swipableMenu.radiusCircle) {
                                     when (listDistance.indexOf(minDistance)) {
                                         0 -> {
-                                            nav_controller?.navigate("Profile")
+                                            nav_controller?.navigate(NavTree.Profile.name)
                                         }
                                         1 -> {
-                                            nav_controller?.navigate("AdsHomeless")
+                                            nav_controller?.navigate(NavTree.AdsHomeless.name)
                                         }
                                         2 -> {
-                                            nav_controller?.navigate("Chat")
+                                            nav_controller?.navigate(NavTree.Home.name)
                                         }
                                     }
                                     Toast
@@ -126,11 +167,11 @@ fun HomeViewModel.HomeScreen(
                                 viewModelScope.launch {
                                     swipableMenu.menuClosing()
                                 }
-                                circularSelector.selectedTarget = StateCS.IDLE
+                                swipableMenu.selectedTarget = StateCS.IDLE
                             }
                         },
                         onDrag = { change, dragAmount ->
-                            if (isReadyMenu) {
+                            if (swipableMenu.isReadyMenu) {
 
                                 offset = change.position
 
@@ -140,18 +181,18 @@ fun HomeViewModel.HomeScreen(
                                 val minDistance = listDistance.minOrNull()
 
                                 if (minDistance!! < swipableMenu.radiusCircle) {
-                                    circularSelector.size =
+                                    swipableMenu.sizeCS =
                                         swipableMenu.radiusCircle
-                                    circularSelector.selectedTargetOffset =
+                                    swipableMenu.selectedTargetOffset =
                                         swipableMenu.listOffsetsForCircle[listDistance.indexOf(
                                             minDistance
                                         )]
-                                    circularSelector.selectedTarget = StateCS.SELECTED
+                                    swipableMenu.selectedTarget = StateCS.SELECTED
                                 } else {
-                                    circularSelector.selectedTarget = StateCS.IDLE
-                                    circularSelector.offset =
+                                    swipableMenu.selectedTarget = StateCS.IDLE
+                                    swipableMenu.startOffsetCS =
                                         swipableMenu.offsetStartDp
-                                    circularSelector.size =
+                                    swipableMenu.sizeCS =
                                         swipableMenu.radiusMenu
                                 }
                             }
@@ -176,18 +217,26 @@ fun HomeViewModel.HomeScreen(
             PhotosFeed(this@HomeScreen)
         }
         AnimatedVisibility(
-            visible = isVisiblePhotoWindow,
+            visible = menuHelper.getMenuVisibleValue(MENUS.POST).value,
+//                    isVisiblePhotoWindow,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier
                 .align(Center)
                 .testTag("Photos")
-
         ) {
-            PhotoScreen(this@HomeScreen)
+            postScreenHandler.PostScreen(
+                onLongPress = {
+                    swipableMenu.isReadyMenu = false
+                    menuHelper.changeVisibilityMenu(MENUS.POST)
+//                    isVisiblePhotoWindow = false
+                    photoScreenClosed()
+                }
+            )
         }
         AnimatedVisibility(
-            visible = isRightMenuOpen,
+            visible = menuHelper.getMenuVisibleValue(MENUS.RIGHT).value,
+//            isRightMenuOpen,
             exit = slideOutHorizontally(),
             modifier = Modifier
                 .align(CenterEnd)
@@ -196,15 +245,22 @@ fun HomeViewModel.HomeScreen(
                 onClick = { itemMenu ->
                     when (itemMenu) {
                         "Пользователи" -> {
-                            searchUsersSwitch()
+                            menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
+                                menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
+                            })
+//                            searchUsersSwitch()
                             msViewModel.connectToSearchUsers()
                         }
                         "Беседы" -> {
-                            chatsMenuSwitch()
-                            msViewModel.sendAction("getChats|")
+                            menuHelper.changeVisibilityMenu(MENUS.CHATS)
+//                            chatsMenuSwitch()
+//                            val a = FeedReaderDbHelper(context)
+                            getChats(msViewModel)
+//                            msViewModel.sendAction("getChats|")
                         }
                         "Друзья" -> {
-                            friendMenuSwitch()
+                            menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+//                            friendMenuSwitch()
                             msViewModel.sendAction("getFriends|")
                             msViewModel.sendAction("getRequestsFriends|")
 
@@ -214,16 +270,18 @@ fun HomeViewModel.HomeScreen(
             )
         }
         if (swipableMenu.isTappedScreen)
-            CircularTouchMenu(param = swipableMenu, circularSelector)
+            swipableMenu.CircularTouchMenu(param = swipableMenu)
         AnimatedVisibility(
-            visible = isChatsMenuOpen,
+            visible = menuHelper.getMenuVisibleValue(MENUS.CHATS).value,
+//            isChatsMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
             ChatsScreen(nav_controller, this@HomeScreen, msViewModel)
         }
         AnimatedVisibility(
-            visible = isUsersMenuOpen,
+            visible = menuHelper.getMenuVisibleValue(MENUS.SEARCHUSERS).value,
+//            isUsersMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
@@ -234,7 +292,8 @@ fun HomeViewModel.HomeScreen(
             )
         }
         AnimatedVisibility(
-            visible = isFriendsMenuOpen,
+            visible = menuHelper.getMenuVisibleValue(MENUS.FRIENDS).value,
+//            isFriendsMenuOpen,
             modifier = Modifier
                 .align(Center)
         ) {
@@ -249,7 +308,6 @@ fun HomeViewModel.HomeScreen(
                 .align(TopCenter)
         ) {
             InternalNotificationScreen(
-                this@HomeScreen,
                 modifier = Modifier
                     .padding(top = 30.dp)
                     .fillMaxWidth(0.9f)
@@ -322,29 +380,19 @@ fun StoriesCompose(modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun PhotosFeed(viewModel: HomeViewModel) {
 
-    val test_list = listOf(
-        "123",
-        "321",
-        "123",
-        "123",
-        "321",
-        "123",
-        "123",
-        "321",
-        "123",
-        "123",
-        "321",
-        "123",
-    )
+@OptIn(ExperimentalCoilApi::class)
+@SuppressLint("CoroutineCreationDuringComposition")
+@NonRestartableComposable
+@Composable
+fun PhotosFeed(viewModel: HomeMVIModel) {
 
     val context = LocalContext.current
 
-    LazyVerticalGrid(
-        cells = GridCells.Fixed(2),
+    val state = viewModel.state.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    LazyColumn(
         modifier = Modifier
             .pointerInput(Unit) {
                 detectHorizontalDragGestures { change, dragAmount ->
@@ -368,8 +416,10 @@ fun PhotosFeed(viewModel: HomeViewModel) {
                                 vibrator.vibrate(100)
                             }
                         }
-                        viewModel.isRightMenuOpen = true
-                        viewModel.isReadyMenu = false
+                        viewModel.menuHelper.setVisibilityMenu(MENUS.RIGHT, true)
+//                        viewModel.isRightMenuOpen = true
+                        viewModel.swipableMenu.isReadyMenu = false
+//                        viewModel.isReadyMenu = false
                     } else if (dragAmount >= 50) {
 
                         if (canVibrate == true) {
@@ -384,28 +434,155 @@ fun PhotosFeed(viewModel: HomeViewModel) {
                                 vibrator.vibrate(100)
                             }
                         }
-                        viewModel.isRightMenuOpen = false
-                        viewModel.isReadyMenu = true
+                        viewModel.menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
+
+                        viewModel.swipableMenu.isReadyMenu = true
+
+//                        viewModel.isRightMenuOpen = false
+//                        viewModel.isReadyMenu = true
                     }
                 }
             }
     ) {
 
-        itemsIndexed(test_list) { index, item ->
 
-            Image(
-                painter = painterResource(id = R.drawable.image_dog),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(7.dp)
-                    .clickable {
-                        if (!viewModel.swipableMenu.isMenuOpen) {
-                            viewModel.swipableMenu.isReadyMenu = false
-                            viewModel.isVisiblePhotoWindow = true
-                        }
+        items(state.value.postsList.windowed(2, 2, true)) { item ->
+//                Log.e("ЧТО не так", viewModel.listContents.size.toString())
+            Row {
+                if (item.isNotEmpty()) {
+//                    var data = loader.diskCache?.get(item[0].item.address)?.data
+//                    val request = if (data != null) {
+//                        ImageRequest.Builder(context)
+//                            .diskCacheKey(item[0].item.address)
+//                            .build()
+//                    } else {
+                    var a = loader.diskCache?.get(item[0].item.address)?.data
+                    val request = if (a != null) {
+                        val b = a?.toFile()
+                         ImageRequest.Builder(context)
+                            .data(b)
+//                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                            .diskCachePolicy(CachePolicy.READ_ONLY)
+                            .diskCacheKey(item[0].item.address)
+                            .crossfade(true)
+                            .build()
+                    } else {
+                        ImageRequest.Builder(context)
+//                            .data(b)
+                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(item[0].item.address)
+                            .crossfade(true)
+                            .build()
                     }
-                    .testTag("clickBTN$index")
-            )
+//                    }
+                    loader.enqueue(request)
+
+
+//                    var bb = loader.diskCache?.get(item[0].item.address)?.data
+//                    loader.enqueue(bb)
+//                    ImageRequest.Builder(LocalContext.current)
+//                        .data("http://$MAINENDPOINT/${item[0].item.address}")
+//                        .crossfade(true)
+//                        .diskCachePolicy(CachePolicy.ENABLED)// it's the same even removing comments
+//                        .build()
+                    AsyncImage(
+                        model = request,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(7.dp)
+                            .clickable {
+                                if (!viewModel.swipableMenu.isMenuOpen) {
+//                                    viewModel.postScreenHandler.selectedPost = item[0]
+                                    viewModel.viewModelScope.launch {
+
+                                        viewModel.postScreenHandler.selectPost(
+                                            item[0],
+                                            action = {
+                                                viewModel.swipableMenu.isReadyMenu = false
+
+                                                viewModel.menuHelper.setVisibilityMenu(
+                                                    MENUS.POST,
+                                                    true
+                                                )
+//                                                viewModel.isVisiblePhotoWindow = true
+                                            }
+                                        )
+//                                        viewModel.postScreenHandler.selectedPage = viewModel.listContents
+                                    }
+                                }
+                            }
+                            .weight(1f)
+                    )
+                }
+                if (item.size > 1) {
+
+//                    scope.launch {
+//
+//                        val loader = ImageLoader(context)
+//                        val request = ImageRequest.Builder(context)
+//                            .data("http://$MAINENDPOINT/${item[1].item.address}")
+//                            .allowHardware(false) // Disable hardware bitmaps.
+//                            .build()
+//                        val result = request.context.imageLoader.execute(request)
+//                        var _imageDrawable = result.drawable
+//                        // Converting it to bitmap and using it to calculate the palette
+//                        val bitmap = _imageDrawable?.toBitmap()
+//
+////                        val result = (loader.execute(request) as SuccessResult).drawable
+////                        val bitmap = (result as BitmapDrawable).bitmap
+//                        print("")
+//                    }
+                    var a = loader.diskCache?.get(item[0].item.address)?.data
+                    val request = if (a != null) {
+                        val b = a?.toFile()
+                        ImageRequest.Builder(context)
+                            .data(b)
+//                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                            .diskCachePolicy(CachePolicy.READ_ONLY)
+                            .diskCacheKey(item[0].item.address)
+                            .crossfade(true)
+                            .build()
+                    } else {
+                        ImageRequest.Builder(context)
+//                            .data(b)
+                            .data("http://$MAINENDPOINT/${item[1].item.address}")
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(item[0].item.address)
+                            .crossfade(true)
+
+                            .build()
+                    }
+//                    }
+                    loader.enqueue(request)
+                    AsyncImage(
+                        model = request,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(7.dp)
+                            .clickable {
+                                if (!viewModel.swipableMenu.isMenuOpen) {
+                                    viewModel.viewModelScope.launch {
+
+                                        viewModel.postScreenHandler.selectPost(
+                                            item[1],
+                                            action = {
+                                                viewModel.swipableMenu.isReadyMenu = false
+                                                viewModel.menuHelper.setVisibilityMenu(
+                                                    MENUS.POST,
+                                                    true
+                                                )
+//                                                viewModel.isVisiblePhotoWindow = true
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            .weight(1f)
+                    )
+                }
+            }
         }
     }
 }
+

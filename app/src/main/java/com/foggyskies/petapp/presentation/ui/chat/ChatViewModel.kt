@@ -1,13 +1,26 @@
 package com.foggyskies.petapp.presentation.ui.chat
 
-import androidx.compose.runtime.*
+import android.content.Context
+import android.graphics.BitmapFactory
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.imageLoader
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import com.foggyskies.petapp.GalleryHandler
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMainEntity
+import com.foggyskies.petapp.domain.db.ChatDB
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.home.RepositoryChatDB
+import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
@@ -17,11 +30,15 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.java.KoinJavaComponent.inject
 
 enum class StateTextField {
     EMPTY, WRITING
@@ -35,7 +52,7 @@ data class ChatState(
     var messages: List<ChatMessage> = emptyList(),
     var isLoading: Boolean = false
 ) {
-    fun clear(){
+    fun clear() {
         messages = emptyList()
         isLoading = false
     }
@@ -49,6 +66,12 @@ class ChatViewModel : ViewModel() {
             socket?.close()
         }
     }
+
+    var db: ChatDB? = null
+
+    var chatEntity: FormattedChatDC? = null
+
+    val galleryHandler = GalleryHandler()
 
     var heightHeaderAppBar by mutableStateOf(0)
 
@@ -80,18 +103,28 @@ class ChatViewModel : ViewModel() {
     var visibleButtonDown by mutableStateOf(false)
 
     var countUnreadMessage by mutableStateOf(0)
+    val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
 
-    fun connectToChat(idChat: String) {
+
+    fun connectToChat(idChat: String, context: Context) {
+        db?.apply {
+            createTable(idChat)
+            _state.value = state.value.copy(
+                messages = loadFiftyMessages(idChat).asReversed()
+            )
+        }
+
         viewModelScope.launch {
             HttpClient(Android) {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
-                install(HttpTimeout){
-                    requestTimeoutMillis = 3000
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30000
                 }
             }.use {
-                var a = it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
+                var a =
+                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
 //                _state.value = state.value.copy(
 //                    messages = messages
 //                )
@@ -104,12 +137,36 @@ class ChatViewModel : ViewModel() {
             }
             observeMessages()
                 .onEach { message ->
-                    val newList = state.value.messages.toMutableList().apply {
-                        add(0, message)
+//                    ChatMessage
+                    if (!_state.value.messages.contains(message)) {
+
+                        val newList = state.value.messages.toMutableList().apply {
+                            add(0, message)
+                        }
+                        viewModelScope.launch {
+
+//                    val newImages = message.listImages.map {
+//                            val image = ImageRequest.Builder(context)
+//                                .data("http://${MainActivity.MAINENDPOINT}/${it}")
+//                                .crossfade(true)
+//                                .diskCachePolicy(CachePolicy.ENABLED)// it's the same even removing comments
+//                                .build()
+//                            val result = image.context.imageLoader.execute(image)
+//                            val _imageDrawable = result.drawable
+//                            // Converting it to bitmap and using it to calculate the palette
+//                            val bitmap = _imageDrawable?.toBitmap()
+//                            val string64 = encodeToBase64(bitmap!!)
+//                            val formattedString = "{\"$it\": \"$string64\"}"
+//                            formattedString
+//                        }
+                            repositoryChatDB.insertMessage(idChat, message)
+                        }
+
+
+                        _state.value = state.value.copy(
+                            messages = newList
+                        )
                     }
-                    _state.value = state.value.copy(
-                        messages = newList
-                    )
                 }.launchIn(viewModelScope)
         }
     }
@@ -123,6 +180,10 @@ class ChatViewModel : ViewModel() {
                 ?.map {
                     val json = (it as? Frame.Text)?.readText() ?: ""
                     val chatMessage = Json.decodeFromString<ChatMessage>(json)
+//                    db?.insertMessages(
+//                        chatEntity?.id!!,
+//                        message = chatMessage.copy(listImages = emptyList())
+//                    )
                     chatMessage
                 } ?: flow {}
         } catch (e: Exception) {
@@ -131,9 +192,10 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    fun sendMessage(message: String) {
+    fun sendMessage(message: MessageDC) {
         viewModelScope.launch {
-            socket?.send(message)
+            val json = Json.encodeToString(message)
+            socket?.send(json)
         }
     }
 
@@ -144,4 +206,55 @@ class ChatViewModel : ViewModel() {
             _state.value.clear()
         }
     }
+
+    val listImageAddress = mutableListOf<String>()
+
+    fun addImageToMessage(message: String, callBack: () -> Unit) {
+        viewModelScope.launch {
+
+            galleryHandler.selectedItems.forEach {
+
+                val bm = BitmapFactory.decodeFile(it)
+                val string64 = encodeToBase64(bm)
+
+                HttpClient(Android) {
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
+//                expectSuccess = false
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 300000
+                    }
+                }.use {
+
+                    val response =
+                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/addImageToMessage") {
+                            headers["Auth"] = MainActivity.TOKEN
+//                        headers["Content-Type"] = "text/plain"
+                            parameter("idChat", chatEntity?.id)
+                            body = string64
+                        }
+                    if (response.status.isSuccess()) {
+                        listImageAddress.add(response.readText())
+//                        imageProfile = humanPhoto
+                    }
+                }
+            }
+            sendMessage(
+                MessageDC(
+                    listImages = listImageAddress.toList(),
+                    message = message
+                )
+            )
+            listImageAddress.clear()
+            galleryHandler.selectedItems = emptyList()
+            callBack()
+        }
+    }
 }
+
+@Serializable
+data class MessageDC(
+    var listImages: List<String> = emptyList(),
+    var message: String
+)

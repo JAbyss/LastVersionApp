@@ -11,11 +11,11 @@ enum class StateCS{
     IDLE, SELECTED
 }
 
-class CircularSelector {
+open class CircularSelector {
 
     var selectedTarget by mutableStateOf(StateCS.IDLE)
 
-    var size by mutableStateOf(0f)
+    var sizeCS by mutableStateOf(0f)
 
     val widthArcs by derivedStateOf {
        if (selectedTarget == StateCS.IDLE)
@@ -26,8 +26,7 @@ class CircularSelector {
 
     var radius by mutableStateOf(0f)
 
-
-    var offset by mutableStateOf(DpOffset.Zero)
+    var startOffsetCS by mutableStateOf(DpOffset.Zero)
 
     var selectedTargetOffset by mutableStateOf(Offset.Zero)
 

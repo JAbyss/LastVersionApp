@@ -41,8 +41,10 @@ import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.globalmodel.AnimatedVisibleDC
+import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -73,8 +75,6 @@ data class CreateChat(
 @Composable
 fun OneItemUser(
     item: UsersSearch,
-    nav_controller: NavHostController?,
-    viewModel: HomeViewModel,
     msViewModel: MainSocketViewModel
 ) {
 
@@ -192,7 +192,7 @@ fun OneItemUser(
 @Composable
 fun BoxScope.SearchUsersScreen(
     nav_controller: NavHostController?,
-    viewModel: HomeViewModel,
+    viewModel: HomeMVIModel,
     msViewModel: MainSocketViewModel
 ) {
 
@@ -209,7 +209,8 @@ fun BoxScope.SearchUsersScreen(
                     indication = null
                 ) {
                     msViewModel.disconnect()
-                    viewModel.searchUsersSwitch()
+                    viewModel.menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS)
+//                    viewModel.searchUsersSwitch()
                 }
         )
 
@@ -218,7 +219,7 @@ fun BoxScope.SearchUsersScreen(
             modifier = Modifier.align(Alignment.Center)
         ) {
 
-            SearchBar(viewModel, msViewModel)
+            SearchBar(msViewModel)
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -323,7 +324,7 @@ fun BoxScope.SearchUsersScreen(
 
                             androidx.compose.animation.AnimatedVisibility(visible = item.isVisible.value) {
                                 Column() {
-                                    OneItemUser(item.item, nav_controller, viewModel, msViewModel)
+                                    OneItemUser(item.item, msViewModel)
                                     if (index != localListUsers.lastIndex)
                                         Spacer(modifier = Modifier.height(5.dp))
                                 }

@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -212,7 +214,7 @@ suspend fun signInRequest(
         }
         expectSuccess = false
         install(HttpTimeout) {
-            requestTimeoutMillis = 3000
+            requestTimeoutMillis = 30000
         }
     }.use {
         val response = it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/auth") {
@@ -233,13 +235,13 @@ suspend fun signInRequest(
                 context,
                 login.value,
                 password.value,
-                token = response.receive()
+                token = response.readText()
             )
             CoroutineScope(Dispatchers.Main).launch {
                 list_fields.forEach {
                     it.value.value = ""
                 }
-                nav_controller.navigate("Home")
+                nav_controller.navigate(NavTree.Home.name)
             }
         }
     }
@@ -266,8 +268,10 @@ fun authorization_save(
         .putString("username", username)
         .putString("password", password)
         .apply()
-    TOKEN = token
+    val values = token.split("|")
+    TOKEN = values[0]
     USERNAME = username
+    IDUSER = values[1]
 }
 
 fun logOut(

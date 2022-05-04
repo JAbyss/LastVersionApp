@@ -31,6 +31,7 @@ import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.Notification
 import com.foggyskies.petapp.NotificationWithVisilble
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
@@ -160,7 +161,6 @@ fun OneNotificationMessage(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun InternalNotificationScreen(
-    viewModel: HomeViewModel,
     modifier: Modifier,
     msViewModel: MainSocketViewModel,
     nav_controller: NavHostController

@@ -2,7 +2,9 @@ package com.foggyskies.petapp.presentation.ui.adhomeless
 
 import android.content.Context
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -45,9 +47,9 @@ import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.AdHomelessEntity
-import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -66,19 +68,31 @@ fun AdsHomelessScreen(
     val backHolder = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     viewModel.swipableMenu.listIcon = listOf(
-        ItemSwappableMenu(Image = R.drawable.ic_menu_vack, onValueSelected = {
-            backHolder?.onBackPressed()
-        }),
-        ItemSwappableMenu(Image = R.drawable.ic_menu_profile, onValueSelected = {
-            nav_controller.navigate("Profile")
-        }),
-        ItemSwappableMenu(Image = R.drawable.ic_menu_home_1, animationImages = listOf(
-            R.drawable.ic_menu_home_1,
-            R.drawable.ic_menu_home_2,
-            R.drawable.ic_menu_home_3,
-        ), isAnimate = true, onValueSelected = {
-            nav_controller.navigate("Home")
-        }),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_vack, onValueSelected = {
+                backHolder?.onBackPressed()
+            },
+            offset = Offset(x = 10f, y = -70f)
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_profile, onValueSelected = {
+                nav_controller.navigate(NavTree.Profile.name)
+            },
+            offset = Offset(x = -50f, y = -45f)
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_home_1,
+            animationImages = listOf(
+                R.drawable.ic_menu_home_1,
+                R.drawable.ic_menu_home_2,
+                R.drawable.ic_menu_home_3,
+            ),
+            isAnimate = true,
+            onValueSelected = {
+                nav_controller.navigate(NavTree.Home.name)
+            },
+            offset = Offset(x = -70f, y = 10f),
+        ),
     )
 
     val displayMetrics = LocalContext.current.resources.displayMetrics
@@ -100,7 +114,8 @@ fun AdsHomelessScreen(
                     onDragStart = {
                         offset = it
                         viewModel.swipableMenu.onDragStart(it)
-                        viewModel.circularSelector.offset = viewModel.swipableMenu.offsetStartDp
+                        viewModel.circularSelector.startOffsetCS =
+                            viewModel.swipableMenu.offsetStartDp
                         viewModel.circularSelector.radius = viewModel.swipableMenu.radiusMenu
                     },
                     onDragEnd = {
@@ -111,7 +126,8 @@ fun AdsHomelessScreen(
                             val minDistance = listDistance.minOrNull()
 
                             if (minDistance!! < viewModel.swipableMenu.radiusCircle) {
-                                viewModel.swipableMenu.listIcon[listDistance.indexOf(minDistance)].onValueSelected()
+                                //TODO
+//                                viewModel.swipableMenu.listIcon[listDistance.indexOf(minDistance)].onValueSelected(nav_controller)
                             }
                             viewModel.swipableMenu.isTappedScreen = false
                             viewModel.viewModelScope.launch {
@@ -129,7 +145,7 @@ fun AdsHomelessScreen(
                         val minDistance = listDistance.minOrNull()
 
                         if (minDistance!! < viewModel.swipableMenu.radiusCircle) {
-                            viewModel.circularSelector.size =
+                            viewModel.circularSelector.sizeCS =
                                 viewModel.swipableMenu.radiusCircle
                             viewModel.circularSelector.selectedTargetOffset =
                                 viewModel.swipableMenu.listOffsetsForCircle[listDistance.indexOf(
@@ -138,9 +154,9 @@ fun AdsHomelessScreen(
                             viewModel.circularSelector.selectedTarget = StateCS.SELECTED
                         } else {
                             viewModel.circularSelector.selectedTarget = StateCS.IDLE
-                            viewModel.circularSelector.offset =
+                            viewModel.circularSelector.startOffsetCS =
                                 viewModel.swipableMenu.offsetStartDp
-                            viewModel.circularSelector.size =
+                            viewModel.circularSelector.sizeCS =
                                 viewModel.swipableMenu.radiusMenu
                         }
                     }
@@ -220,7 +236,7 @@ fun AdsHomelessScreen(
             }
         )
         if (viewModel.swipableMenu.isTappedScreen && !viewModel.isFullSizeImage)
-            CircularTouchMenu(param = viewModel.swipableMenu, viewModel.circularSelector)
+            viewModel.swipableMenu.CircularTouchMenu(param = viewModel.swipableMenu)
     }
 }
 

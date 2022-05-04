@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -35,7 +36,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalComposeUiApi::class)
 @SuppressLint("MutatingSharedPrefs")
 @Composable
-fun SearchBar(viewModel: HomeViewModel, msViewModel: MainSocketViewModel) {
+fun SearchBar(msViewModel: MainSocketViewModel) {
 
     val focus_manager = LocalFocusManager.current
 

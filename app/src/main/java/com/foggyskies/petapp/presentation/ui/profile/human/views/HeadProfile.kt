@@ -1,46 +1,65 @@
 package com.foggyskies.petapp.presentation.ui.profile.human.views
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import android.content.Context
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberImagePainter
+import coil.compose.*
+import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.profile.human.StateProfile
+import com.foggyskies.petapp.presentation.ui.profile.human.UserMode
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
-fun LazyListScope.HeadProfile(viewModel: ProfileViewModel, state: LazyListState) {
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalAnimationApi::class,
+    ExperimentalMaterialApi::class
+)
+fun LazyListScope.HeadProfile(
+    viewModel: ProfileViewModel,
+    state: LazyListState,
+    context: Context,
+    stateSheet: ModalBottomSheetState
+) {
+
+//    val context = LocalContext.current
 
     stickyHeader {
+
         Spacer(modifier = Modifier.height(20.dp))
         AnimatedVisibility(visible = viewModel.isVisibleInfoUser || state.firstVisibleItemIndex == 0) {
-
+            val scope = rememberCoroutineScope()
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
@@ -52,16 +71,22 @@ fun LazyListScope.HeadProfile(viewModel: ProfileViewModel, state: LazyListState)
                         .padding(10.dp)
                         .fillMaxWidth(0.9f)
                 ) {
-
                     // Аватарка
                     AnimatedContent(targetState = viewModel.imageProfile) { targetImage ->
-                        Image(
-                            painter = rememberImagePainter(data = "http://${MainActivity.MAINENDPOINT}/images/$targetImage"),
+                        AsyncImage(
+                            model = "http://${MainActivity.MAINENDPOINT}/$targetImage",
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .size(100.dp)
+                                .clickable {
+                                    if (viewModel.userMode == UserMode.OWNER)
+                                        scope.launch {
+                                            viewModel.profileHandler.getCameraImages(context)
+                                            stateSheet.show()
+                                        }
+                                }
                         )
                     }
                     Spacer(modifier = Modifier.width(30.dp))
@@ -132,7 +157,8 @@ fun LazyListScope.HeadProfile(viewModel: ProfileViewModel, state: LazyListState)
                                 value = viewModel.nowSelectedStatus,
                                 icon = R.drawable.ic_sleep,
                                 onClick = {
-                                    viewModel.isStatusClicked = !viewModel.isStatusClicked
+                                    if (viewModel.userMode == UserMode.OWNER)
+                                        viewModel.isStatusClicked = !viewModel.isStatusClicked
                                 },
                                 viewModel
                             )

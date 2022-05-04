@@ -41,6 +41,7 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileDC
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
+import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 
 @Composable
@@ -50,76 +51,50 @@ fun PetCard(
     viewModel: ProfileViewModel,
     creatingModifier: Modifier? = null
 ) {
-
     val context = LocalContext.current
 
-    val image_url = remember {
-        mutableStateOf<Uri?>(null)
-    }
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        image_url.value = uri
-    }
+    viewModel.profileHandler.InitGallery(context = context)
 
     Box(
-        modifier = if (creatingModifier != null)
-            creatingModifier
-                .clickable {
-                    launcher.launch("image/*")
-                }
-        else Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .height(300.dp)
-            .width(250.dp)
-            .toggleable(
-                value = true,
-                enabled = !viewModel.swipableMenu.isMenuOpen,
-                onValueChange = {
-                    onClickPetCard(item.title, item.image)
-                })
+        modifier = creatingModifier?.clickable {
+            viewModel.profileHandler.openGallery()
+        }
+            ?: Modifier
+                .clip(RoundedCornerShape(20.dp))
+                .height(300.dp)
+                .width(250.dp)
+                .toggleable(
+                    value = true,
+                    enabled = !viewModel.swipableMenu.isMenuOpen,
+                    onValueChange = {
+                        onClickPetCard(item.title, item.image)
+                    })
 
     ) {
 
-        if (item.image != "")
-            AsyncImage(
-                model = "http://$MAINENDPOINT/images/${item.image}",
+        when {
+            item.image != "" -> AsyncImage(
+                model = "http://$MAINENDPOINT/${item.image}",
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
             )
-        else
-            if (image_url.value != null)
-                image_url.let {
-                    val image_test =
-                        mutableStateOf<Bitmap?>(null)
-
-                    if (Build.VERSION.SDK_INT < 28) {
-                        image_test.value =
-                            MediaStore.Images.Media.getBitmap(context.contentResolver, it.value)
-                    } else {
-                        val source = ImageDecoder.createSource(context.contentResolver, it.value!!)
-                        image_test.value = ImageDecoder.decodeBitmap(source)
-                    }
-                    image_test.value?.let { bit ->
-                        Image(
-                            bitmap = bit.asImageBitmap(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-//                                .height(150.dp)
-                                .fillMaxSize()
-                        )
-                    }
-                }
-            else
-                Box(
+            viewModel.profileHandler.imageBitmap.value != null -> {
+                Image(
+                    bitmap = viewModel.profileHandler.imageBitmap.value!!.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White)
                 )
+            }
+            else -> Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -193,29 +168,19 @@ fun PetCard(
 
                     IconButton(
                         onClick = {
-                            var a: String
-                            image_url.let {
-                                val image_test = if (Build.VERSION.SDK_INT < 28) {
-                                    MediaStore.Images.Media.getBitmap(
-                                        context.contentResolver,
-                                        it.value
-                                    )
-                                } else {
-                                    val source =
-                                        ImageDecoder.createSource(
-                                            context.contentResolver,
-                                            it.value!!
-                                        )
-                                    ImageDecoder.decodeBitmap(source)
-                                }
-                                a = viewModel.encodeTobase64(image_test) ?: ""
+                            val string64 = viewModel.profileHandler.imageBitmap.value?.let {
+                                encodeToBase64(
+                                    it
+                                )
                             }
+                                ?: ""
+//                            }
                             viewModel.createNewPage(
                                 item = PageProfileDC(
                                     id = "",
                                     title = item.title,
                                     description = item.description,
-                                    image = a
+                                    image = string64
                                 )
                             )
                         },

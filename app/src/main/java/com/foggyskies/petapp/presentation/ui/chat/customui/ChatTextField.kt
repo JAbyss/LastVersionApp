@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.chat.customui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -25,16 +26,16 @@ fun ChatTextField(
     modifier: Modifier
 ) {
 
-    val requester = remember { FocusRequester() }
-
-    val inputService = LocalTextInputService.current
+//    val requester = remember { FocusRequester() }
+//
+//    val inputService = LocalTextInputService.current?.startInput().
 
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = modifier
     ) {
 
-        val focus = remember { mutableStateOf(false) }
+//        val focus = remember { mutableStateOf(false) }
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -45,16 +46,7 @@ fun ChatTextField(
             interactionSource = MutableInteractionSource(),
             modifier = Modifier
                 .fillMaxWidth()
-                .focusable(true)
-                .focusRequester(requester)
-                .onFocusChanged {
-                    if (focus.value != it.isFocused) {
-                        focus.value = it.isFocused
-                        if (!it.isFocused) {
-                            inputService?.hideSoftwareKeyboard()
-                        }
-                    }
-                }
+                .clickable {  }
         )
         if (value == "")
             Text(

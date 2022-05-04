@@ -28,8 +28,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
 import androidx.navigation.NavHostController
 import androidx.navigation.get
+import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
@@ -37,7 +39,10 @@ import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
+import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -61,7 +66,10 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-
+                nav_controller?.navigate(
+                    nav_controller.graph[NavTree.Profile.name].id,
+                    bundleOf("mode" to false, "username" to item.username, "image" to item.image, "idUser" to item.id)
+                )
             }
     ) {
         Row(
@@ -74,14 +82,14 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
         ) {
             Spacer(modifier = Modifier.width(15.dp))
             if (item.image != "")
-                Image(
-                    painter = rememberImagePainter(data = item.image),
+                AsyncImage(
+                    model = "http://$MAINENDPOINT/${item.image}",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .padding(vertical = 10.dp)
                         .clip(CircleShape)
-                        .size(70.dp)
+                        .size(45.dp)
                 )
             else
                 Box(
@@ -141,10 +149,9 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                                 idCompanion = item.id,
                                 image = item.image
                             )
-                            var str = Json.encodeToString(formattedChat)
-//                            val Bundle_1 = Bundle()
-//                            Bundle_1.putParcelable("itemChat", formattedChat)
-                            nav_controller?.navigate("Chat/$str")
+                            val string = Json.encodeToString(formattedChat)
+                            val b = bundleOf("itemChat" to string)
+                            nav_controller?.navigate(nav_controller.graph[NavTree.ChatSec.name].id, b)
                         }
                     }
                 }
@@ -173,8 +180,6 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
 @Composable
 fun OneItemRequest(
     item: UserIUSI,
-    nav_controller: NavHostController?,
-    viewModel: HomeViewModel,
     msViewModel: MainSocketViewModel
 ) {
     Box(
@@ -286,7 +291,7 @@ fun OneItemRequest(
 
 @Composable
 fun FriendsScreen(
-    viewModel: HomeViewModel,
+    viewModel: HomeMVIModel,
     nav_controller: NavHostController,
     msViewModel: MainSocketViewModel
 ) {
@@ -304,7 +309,8 @@ fun FriendsScreen(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    viewModel.friendMenuSwitch()
+                    viewModel.menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+//                    viewModel.friendMenuSwitch()
                 }
         )
         Column(
@@ -385,7 +391,7 @@ fun FriendsScreen(
 
                     itemsIndexed(msViewModel.listRequests) { _, item ->
                         androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.REQUESTS) {
-                            OneItemRequest(item, nav_controller, viewModel, msViewModel)
+                            OneItemRequest(item, msViewModel)
                         }
                     }
                 }

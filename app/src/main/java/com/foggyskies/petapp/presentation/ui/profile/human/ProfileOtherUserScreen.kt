@@ -5,10 +5,12 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
@@ -44,11 +46,11 @@ import androidx.navigation.NavHostController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.globalviews.CircularTouchMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.StateCS
 import com.foggyskies.petapp.presentation.ui.profile.entity.PetCardEntity
 import com.foggyskies.petapp.presentation.ui.profile.human.views.CircularStatuses
 import com.foggyskies.petapp.presentation.ui.profile.human.views.MyLinkCard
+import com.foggyskies.petapp.presentation.ui.profile.human.views.PetsWidget
 import com.foggyskies.petapp.presentation.ui.profile.human.views.StoriesProfile
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.customui.animation.animateDpOffsetAsState
@@ -60,8 +62,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileOtherUserScreen(
     nav_controller: NavHostController,
-    viewModel: ProfileViewModel
+    viewModel: ProfileOtherUserViewModel
 ) {
+
+
+    LaunchedEffect(key1 = Unit){
+        viewModel.getPagesProfileByIdUser()
+    }
 
     val context = LocalContext.current
 
@@ -69,19 +76,13 @@ fun ProfileOtherUserScreen(
 
     BackHandler {
         if (viewModel.stateProfile == StateProfile.PET) {
-            viewModel.stateProfile = StateProfile.HUMAN
-            viewModel.a
+            viewModel.changeStateProfile(StateProfile.HUMAN)
         } else
             nav_controller.navigate(nav_controller.backQueue[1].destination.route!!)
     }
 
     val density = LocalContext.current.resources.displayMetrics
 
-    viewModel.swipableMenu.itemsOffset = listOf(
-        Offset(x = 10 * density.density, y = -70 * density.density),
-        Offset(x = -50 * density.density, y = -45 * density.density),
-        Offset(x = -70 * density.density, y = 10 * density.density)
-    )
     viewModel.swipableMenu.density = density.density
     viewModel.swipableMenu.sizeScreen =
         Size(width = density.widthPixels.toFloat(), height = density.heightPixels.toFloat())
@@ -96,8 +97,8 @@ fun ProfileOtherUserScreen(
                     onDragStart = {
                         offset = it
                         viewModel.swipableMenu.onDragStart(it)
-                        viewModel.circularSelector.offset = viewModel.swipableMenu.offsetStartDp
-                        viewModel.circularSelector.radius = viewModel.swipableMenu.radiusMenu
+                        viewModel.swipableMenu.startOffsetCS = viewModel.swipableMenu.offsetStartDp
+                        viewModel.swipableMenu.radius = viewModel.swipableMenu.radiusMenu
                     },
                     onDragEnd = {
 
@@ -131,7 +132,7 @@ fun ProfileOtherUserScreen(
                         viewModel.viewModelScope.launch {
                             viewModel.swipableMenu.menuClosing()
                         }
-                        viewModel.circularSelector.selectedTarget = StateCS.IDLE
+                        viewModel.swipableMenu.selectedTarget = StateCS.IDLE
                     },
                     onDrag = { change, dragAmount ->
                         offset = change.position
@@ -142,18 +143,18 @@ fun ProfileOtherUserScreen(
                         val minDistance = listDistance.minOrNull()
 
                         if (minDistance!! < viewModel.swipableMenu.radiusCircle) {
-                            viewModel.circularSelector.size =
+                            viewModel.swipableMenu.sizeCS =
                                 viewModel.swipableMenu.radiusCircle
-                            viewModel.circularSelector.selectedTargetOffset =
+                            viewModel.swipableMenu.selectedTargetOffset =
                                 viewModel.swipableMenu.listOffsetsForCircle[listDistance.indexOf(
                                     minDistance
                                 )]
-                            viewModel.circularSelector.selectedTarget = StateCS.SELECTED
+                            viewModel.swipableMenu.selectedTarget = StateCS.SELECTED
                         } else {
-                            viewModel.circularSelector.selectedTarget = StateCS.IDLE
-                            viewModel.circularSelector.offset =
+                            viewModel.swipableMenu.selectedTarget = StateCS.IDLE
+                            viewModel.swipableMenu.startOffsetCS =
                                 viewModel.swipableMenu.offsetStartDp
-                            viewModel.circularSelector.size =
+                            viewModel.swipableMenu.sizeCS =
                                 viewModel.swipableMenu.radiusMenu
                         }
                     }
@@ -347,29 +348,29 @@ fun ProfileOtherUserScreen(
                 ),
             )
 
-            item {
-                AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.HUMAN) {
-                    Column() {
-                        LazyRow {
-                            itemsIndexed(items_list) { index, item ->
-                                Row {
-                                    PetsWidget(
-                                        onClickPetCard = { name, image ->
-                                            viewModel.stateProfile = StateProfile.PET
-                                            viewModel.imageProfile = image
-                                            viewModel.nameProfile = name
-                                        },
-                                        index,
-                                        item,
-                                        viewModel
-                                    )
-                                    Spacer(modifier = Modifier.height(30.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+//            item {
+//                AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.HUMAN) {
+//                    Column() {
+//                        LazyRow {
+//                            itemsIndexed(viewModel.listPostImages) { index, item ->
+//                                Row {
+//                                    PetsWidget(
+//                                        onClickPetCard = { name, image ->
+//                                            viewModel.stateProfile = StateProfile.PET
+//                                            viewModel.imageProfile = image
+//                                            viewModel.nameProfile = name
+//                                        },
+//                                        index,
+//                                        item,
+//                                        viewModel
+//                                    )
+//                                    Spacer(modifier = Modifier.height(30.dp))
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             item {
                 AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.PET) {
                     Column() {
@@ -506,7 +507,7 @@ fun ProfileOtherUserScreen(
         }
 
         if (viewModel.swipableMenu.isTappedScreen)
-            CircularTouchMenu(param = viewModel.swipableMenu, viewModel.circularSelector)
+            viewModel.swipableMenu.CircularTouchMenu(param = viewModel.swipableMenu)
     }
 }
 
@@ -639,47 +640,12 @@ fun PetProfileColumn(
     }
 }
 
-@Composable
-fun PetsWidget(
-    onClickPetCard: (String, String) -> Unit,
-    index: Int,
-    item: PetCardEntity,
-    viewModel: ProfileViewModel
-) {
-
-    if (index == 0) {
-        Box(
-            modifier = Modifier
-                .padding(5.dp)
-                .size(width = 50.dp, height = 100.dp)
-        ) {
-
-            Text(
-                text = "Добавить нового питомца",
-                color = Color.Red,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .rotate(-90f)
-                    .align(Center)
-                    .size(150.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(15.dp))
-    }
-    PetCard(
-        item = item,
-        onClickPetCard,
-        viewModel
-    )
-    Spacer(modifier = Modifier.width(20.dp))
-}
-
 @ExperimentalCoilApi
 @Composable
 fun PetCard(
     item: PetCardEntity,
     onClickPetCard: (String, String) -> Unit,
-    viewModel: ProfileViewModel
+    viewModel: ProfileOtherUserViewModel
 ) {
     Box(
         modifier = Modifier
