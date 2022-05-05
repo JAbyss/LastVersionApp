@@ -1,11 +1,11 @@
 package com.foggyskies.petapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
@@ -13,16 +13,10 @@ import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -36,11 +30,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.room.Room
 import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
-import coil.request.CachePolicy
-import coil.util.Logger
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
@@ -48,6 +39,7 @@ import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.PushNotificationService.Companion.ISAPPLIFE
 import com.foggyskies.petapp.PushNotificationService.Companion.notificationsList
 import com.foggyskies.petapp.domain.db.ChatDB
+import com.foggyskies.petapp.domain.repository.RepositoryChatDB
 import com.foggyskies.petapp.network.ConnectionLiveData
 import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessScreen
 import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessViewModel
@@ -56,7 +48,6 @@ import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeScreen
-import com.foggyskies.petapp.presentation.ui.home.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileScreen
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
@@ -70,8 +61,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 
 enum class DBs {
     Chat
@@ -113,9 +102,14 @@ class MainActivity : ComponentActivity() {
         ISAPPLIFE = true
 
         requestPermissions(PERMISSIONS, MY_PERMISSIONS_REQUEST)
-        startKoin {
-            androidContext(this@MainActivity)
-            modules(listOf(mainModule))
+        try{
+
+            startKoin {
+                androidContext(this@MainActivity)
+                modules(listOf(mainModule))
+            }
+        }catch (_: java.lang.Exception){
+
         }
         loader = ImageLoader.Builder(this)
             .memoryCache {
@@ -172,12 +166,12 @@ class MainActivity : ComponentActivity() {
 //        File(readyPath).writeText("awfawfawf")
 
         setContent {
+            val context = LocalContext.current
+
+            val connection_live_data = ConnectionLiveData(context)
+            isNetworkAvailable = connection_live_data.observeAsState(false)
             Surface(color = MaterialTheme.colors.background) {
                 LoadingApp()
-//                Box(modifier = Modifier.fillMaxSize()) {
-//
-//                    CommentOneItem()
-//                }
             }
         }
         window.setFlags(
@@ -221,10 +215,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(
-    ExperimentalFoundationApi::class, ExperimentalAnimationApi::class,
-    ExperimentalCoilApi::class
-)
+@SuppressLint("SuspiciousIndentation")
 @ExperimentalMaterialApi
 @Composable
 fun LoadingApp() {
@@ -237,9 +228,6 @@ fun LoadingApp() {
     val statusBarColor: Int = Color(0xFFC2C8CC).toArgb()
     window.statusBarColor = statusBarColor
 
-
-    val connection_live_data = ConnectionLiveData(context)
-    isNetworkAvailable = connection_live_data.observeAsState(false)
 
     val db = Room.databaseBuilder(
         context.applicationContext,
@@ -258,6 +246,10 @@ fun LoadingApp() {
 
     SideEffect {
         Log.e("УТЕЧКА", "УРОВЕНЬ АКТИВИТИ")
+    }
+
+    var isHomeLoaded by remember {
+        mutableStateOf(false)
     }
 
     NavHost(navController = nav_controller, startDestination = NavTree.Splash.name) {
@@ -285,10 +277,12 @@ fun LoadingApp() {
 
             }
 
-            if (mainSocketViewModel.mainSocket == null)
+            if (mainSocketViewModel.mainSocket == null && isNetworkAvailable.value)
                 mainSocketViewModel.createMainSocket()
-
-            viewModel.HomeScreen(nav_controller, mainSocketViewModel)
+//            if (!isHomeLoaded){
+//                isHomeLoaded = true
+                viewModel.HomeScreen(nav_controller, mainSocketViewModel)
+//            }
         }
         composable("AdsHomeless") {
             val viewModel =
@@ -314,18 +308,15 @@ fun LoadingApp() {
             }),
             deepLinks = listOf(navDeepLink { uriPattern = "$uri/itemChat={itemChat}token={token}" })
         ) {
-            val Token = it.arguments?.getString("token")
-            if (Token != null) {
-                TOKEN = Token
+            val token = it.arguments?.getString("token")
+            if (token != null) {
+                TOKEN = token
                 USERNAME = context.getSharedPreferences(
                     "User",
                     Context.MODE_PRIVATE
                 ).getString("username", "").toString()
                 mainSocketViewModel.sendAction("deleteAllSentNotifications|")
                 notificationsList = mutableListOf()
-                Log.e("ARGS", "Эксперимент удался я не нул")
-            } else {
-                Log.e("ARGS", "Все хуйня давай поновой")
             }
 
             val str = it.arguments?.getString("itemChat") as String
@@ -345,45 +336,11 @@ fun LoadingApp() {
                 val idUser = it.arguments?.getString("idUser", IDUSER)!!
                 viewModel.stateUserProfile(username, image, idUser, isOwnerMode)
             }
-
-//            if (viewModel.userMode != if (isOwnerMode) UserMode.OWNER else UserMode.OTHER) {
-//
-//            }
-//            viewModel.userMode = if (isOwnerMode) UserMode.OWNER else UserMode.OTHER
-//            viewModel.nameProfile = username.toString()
-
-
-//            }
             ProfileScreen(
                 nav_controller = nav_controller,
                 viewModel,
                 mainSocketViewModel
             )
         }
-//        composable("OtherProfile"){
-//            val viewModel =
-//                viewModelProvider["ProfileOtherViewModel", (ProfileOtherUserViewModel::class.java)]
-//
-//            val idUser = it.arguments?.getString("id")!!
-//            val username = it.arguments?.getString("username")!!
-//            val image = it.arguments?.getString("image")!!
-//
-//            viewModel.humanPhoto = image
-//            viewModel.nameProfile = username
-//            viewModel.staticNameProfile = username
-//            viewModel.idUser = idUser
-//
-//            ProfileOtherUserScreen(
-//                nav_controller = nav_controller,
-//                viewModel,
-////                mainSocketViewModel
-//            )
-//        }
     }
 }
-
-//class GreetingViewModel(private val userId: String) : ViewModel() {
-//    private val _message = MutableLiveData("Hi $userId")
-//    val message: LiveData<String> = _message
-//}
-

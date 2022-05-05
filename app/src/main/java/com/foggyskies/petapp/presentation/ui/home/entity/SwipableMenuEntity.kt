@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.home.entity
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -43,8 +44,8 @@ data class ItemSwappableMenu(
 class SwappableMenu() : CircularSelector() {
 
 
-    fun Modifier(modifier: Modifier, listenerSelector: (Int) -> Unit): Modifier {
-        return modifier.touchMenuListener(listenerSelector)
+    fun Modifier(modifier: Modifier): Modifier {
+        return modifier.touchMenuListener()
     }
 
     lateinit var navController: NavHostController
@@ -163,7 +164,8 @@ class SwappableMenu() : CircularSelector() {
         isMenuOpen = false
     }
 
-    fun Modifier.touchMenuListener(listenerSelector: (Int) -> Unit): Modifier {
+    @SuppressLint("SuspiciousIndentation")
+    fun Modifier.touchMenuListener(): Modifier {
         return pointerInput(Unit) {
             var offset = Offset.Zero
                 detectDragGesturesAfterLongPress(

@@ -34,13 +34,10 @@ abstract class ChatDB : RoomDatabase() {
                     " ${Messages.COLUMN_AUTHOR} TEXT, ${Messages.COLUMN_DATE} TEXT," +
                     " ${Messages.COLUMN_MESSAGE} TEXT," +
                     " ${Messages.COLUMN_LIST_IMAGES} TEXT )"
-        val a = this
         openHelper.writableDatabase.execSQL(CREATE_TABLE)
     }
 
     fun insertMessages(idChat: String, message: ChatMessage) {
-//        val images = message.listImages.toString()
-//        val str = message.message.
         val listS = Json.encodeToString(message.listImages)
         val INSERT_MESSAGE =
             "INSERT OR REPLACE INTO ${Messages.TABLE_NAME + idChat} VALUES (" +
@@ -58,10 +55,6 @@ abstract class ChatDB : RoomDatabase() {
         val cursor = openHelper.readableDatabase.query(SELECT_MESSAGE)
         var messageGlob: ChatMessage? = null
         with(cursor){while(moveToNext()){
-//            val a = Json.decodeFromString<List<Map<String, String>>>(cursor.getString(4))
-//            val b = a.map {
-//                Json.encodeToString(it)
-//            }
             val message = ChatMessage(
                 id = cursor.getString(0),
                 author = cursor.getString(1),
@@ -87,28 +80,20 @@ abstract class ChatDB : RoomDatabase() {
         var stringList = ""
         with(cursor){while(moveToNext()){
             stringList = cursor.getString(0)
-//            messageGlob = message
         } }
         val listImages = Json.decodeFromString<List<String>>(stringList)
-//        val listImages = Json.decodeFromString<List<Map<String, String>>>(stringList)
         return listImages
     }
 
-    fun loadFiftyMessages(idChat: String): MutableList<ChatMessage> {
+    suspend fun loadFiftyMessages(idChat: String): MutableList<ChatMessage> {
         val SELECT_FIFTY_MESSAGES =
             "SELECT * FROM ${Messages.TABLE_NAME + idChat} ORDER BY date ASC "
 //        Limit 50
 //        ORDER BY date ASC
 //        TOP (50)
         val cursor = openHelper.readableDatabase.query(SELECT_FIFTY_MESSAGES)
-//        val itemIds = mutableListOf<Long>()
-//        with(cursor) {
           val listMessages = mutableListOf<ChatMessage>()
         with(cursor){while(moveToNext()){
-//            val a = Json.decodeFromString<List<Map<String, String>>>(cursor.getString(4))
-//            val b = a.map {
-//                Json.encodeToString(it)
-//            }
             val message = ChatMessage(
                 id = cursor.getString(0),
                 author = cursor.getString(1),
@@ -118,11 +103,6 @@ abstract class ChatDB : RoomDatabase() {
             )
             listMessages.add(message)
         } }
-//            while (moveToNext()) {
-//                val itemId = getLong(getColumnIndexOrThrow(BaseColumns._ID))
-//                itemIds.add(itemId)
-//            }
-//        }
         cursor.close()
 
         return listMessages

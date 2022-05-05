@@ -7,20 +7,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.imageLoader
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import com.foggyskies.petapp.GalleryHandler
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.domain.db.ChatDB
+import com.foggyskies.petapp.domain.repository.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
-import com.foggyskies.petapp.presentation.ui.home.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
+import com.foggyskies.petapp.temppackage.GalleryHandler
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
@@ -107,14 +103,15 @@ class ChatViewModel : ViewModel() {
 
 
     fun connectToChat(idChat: String, context: Context) {
-        db?.apply {
-            createTable(idChat)
-            _state.value = state.value.copy(
-                messages = loadFiftyMessages(idChat).asReversed()
-            )
-        }
 
         viewModelScope.launch {
+            db?.apply {
+                createTable(idChat)
+                _state.value = state.value.copy(
+                    messages = loadFiftyMessages(idChat).asReversed()
+                )
+            }
+
             HttpClient(Android) {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
@@ -123,11 +120,7 @@ class ChatViewModel : ViewModel() {
                     requestTimeoutMillis = 30000
                 }
             }.use {
-                var a =
                     it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
-//                _state.value = state.value.copy(
-//                    messages = messages
-//                )
             }
             val client = HttpClient(CIO) {
                 install(WebSockets)
@@ -137,31 +130,12 @@ class ChatViewModel : ViewModel() {
             }
             observeMessages()
                 .onEach { message ->
-//                    ChatMessage
                     if (!_state.value.messages.contains(message)) {
 
                         val newList = state.value.messages.toMutableList().apply {
                             add(0, message)
                         }
-                        viewModelScope.launch {
-
-//                    val newImages = message.listImages.map {
-//                            val image = ImageRequest.Builder(context)
-//                                .data("http://${MainActivity.MAINENDPOINT}/${it}")
-//                                .crossfade(true)
-//                                .diskCachePolicy(CachePolicy.ENABLED)// it's the same even removing comments
-//                                .build()
-//                            val result = image.context.imageLoader.execute(image)
-//                            val _imageDrawable = result.drawable
-//                            // Converting it to bitmap and using it to calculate the palette
-//                            val bitmap = _imageDrawable?.toBitmap()
-//                            val string64 = encodeToBase64(bitmap!!)
-//                            val formattedString = "{\"$it\": \"$string64\"}"
-//                            formattedString
-//                        }
                             repositoryChatDB.insertMessage(idChat, message)
-                        }
-
 
                         _state.value = state.value.copy(
                             messages = newList
@@ -180,10 +154,6 @@ class ChatViewModel : ViewModel() {
                 ?.map {
                     val json = (it as? Frame.Text)?.readText() ?: ""
                     val chatMessage = Json.decodeFromString<ChatMessage>(json)
-//                    db?.insertMessages(
-//                        chatEntity?.id!!,
-//                        message = chatMessage.copy(listImages = emptyList())
-//                    )
                     chatMessage
                 } ?: flow {}
         } catch (e: Exception) {
@@ -218,9 +188,6 @@ class ChatViewModel : ViewModel() {
                 val string64 = encodeToBase64(bm)
 
                 HttpClient(Android) {
-//                install(JsonFeature) {
-//                    serializer = KotlinxSerializer()
-//                }
 //                expectSuccess = false
                     install(HttpTimeout) {
                         requestTimeoutMillis = 300000
@@ -230,13 +197,11 @@ class ChatViewModel : ViewModel() {
                     val response =
                         it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/addImageToMessage") {
                             headers["Auth"] = MainActivity.TOKEN
-//                        headers["Content-Type"] = "text/plain"
                             parameter("idChat", chatEntity?.id)
                             body = string64
                         }
                     if (response.status.isSuccess()) {
                         listImageAddress.add(response.readText())
-//                        imageProfile = humanPhoto
                     }
                 }
             }

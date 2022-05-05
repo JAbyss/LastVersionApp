@@ -116,8 +116,7 @@ fun ProfileScreen(
             modifier =
             viewModel.swipableMenu.Modifier(
                 Modifier
-                    .fillMaxSize(), listenerSelector = {
-                }
+                    .fillMaxSize()
             )
         ) {
 

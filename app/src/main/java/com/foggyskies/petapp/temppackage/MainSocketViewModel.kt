@@ -5,10 +5,10 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.domain.dao.ChatDao
+import com.foggyskies.petapp.domain.repository.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
-import com.foggyskies.petapp.presentation.ui.home.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import io.ktor.client.*
@@ -38,19 +38,7 @@ data class OldListInfo<T>(
     var depricatedItemsList: MutableList<T>
 )
 
-//@HiltViewModel
 class MainSocketViewModel : ViewModel() {
-
-//    public override fun onCleared() {
-//        viewModelScope.launch {
-//            super.onCleared()
-//            mainSocket?.close()
-//            socket?.close()
-//        }
-//    }
-
-
-//    var db: ChatDB? = null
 
     val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
 
@@ -68,7 +56,6 @@ class MainSocketViewModel : ViewModel() {
     var listRequests = mutableStateListOf<UserIUSI>()
 
     var listFriends = mutableStateListOf<UserIUSI>()
-
 
     fun connectToSearchUsers() {
         viewModelScope.launch {
@@ -155,13 +142,13 @@ class MainSocketViewModel : ViewModel() {
 
     fun sendAction(action: String) {
         viewModelScope.launch {
-            if (mainSocket == null) {
+            if (mainSocket == null && MainActivity.isNetworkAvailable.value) {
                 createMainSocket()
                 do {
                     delay(500)
                     mainSocket?.send(action)
                 } while (mainSocket == null)
-            } else {
+            } else if (MainActivity.isNetworkAvailable.value) {
                 mainSocket?.send(action)
             }
         }

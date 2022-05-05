@@ -41,6 +41,7 @@ import io.ktor.http.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.io.use
 
@@ -49,7 +50,9 @@ fun SplashScreen(nav_controller: NavHostController) {
 
     val context = LocalContext.current
 
-    LaunchedEffect(key1 = isNetworkAvailable.value, block = {
+    LaunchedEffect(key1 = Unit, block = {
+
+        delay(1000)
 
         TOKEN = context.getSharedPreferences(
             "Token",
@@ -120,6 +123,12 @@ fun SplashScreen(nav_controller: NavHostController) {
                                 inclusive = true
                             }
                         }
+                    }
+                }
+            } else {
+                nav_controller.navigate(NavTree.Home.name){
+                    popUpTo(NavTree.Splash.name) {
+                        inclusive = true
                     }
                 }
             }

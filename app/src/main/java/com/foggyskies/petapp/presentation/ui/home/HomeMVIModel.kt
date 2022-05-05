@@ -1,16 +1,17 @@
 package com.foggyskies.petapp.presentation.ui.home
 
-import android.graphics.Bitmap
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainSocketViewModel
-import com.foggyskies.petapp.domain.db.ChatDB
+import com.foggyskies.petapp.R
+import com.foggyskies.petapp.domain.repository.RepositoryChatDB
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
-import com.foggyskies.petapp.routs.Routes
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -22,13 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.koin.java.KoinJavaComponent.inject
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.util.*
 
 enum class Menus {
     Friends, Chats, Post
@@ -43,28 +38,7 @@ abstract class BaseViewModel<T : UiState, in E : UiEvent> : ViewModel() {
 }
 
 sealed class HomeScreenEvent : UiEvent {
-    data class ShowDialog(val show: Boolean) : HomeScreenEvent()
-    data class PlusCount(val count: Int) : HomeScreenEvent()
     data class ChangePosts(val posts: List<SelectedPostWithIdPageProfile>) : HomeScreenEvent()
-    object FFF : HomeScreenEvent() {
-        suspend fun getContent(): List<SelectedPostWithIdPageProfile> {
-            val client = HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }
-            return client.get("http://${MainActivity.MAINENDPOINT}/content/getPosts")
-//                .use {
-//                return it.get("http://${MainActivity.MAINENDPOINT}/content/getPosts") {
-//                        this.headers["Auth"] = MainActivity.TOKEN
-//                    }
-////                reducer.setState(reducer.state.value.copy(postsList = a))
-//            }
-        }
-    }
 
 //    companion object GetContent : HomeScreenEvent() {
 
@@ -72,14 +46,10 @@ sealed class HomeScreenEvent : UiEvent {
 }
 
 data class HomeScreenUiState(
-    val isShowDialog: Boolean,
-    val count: Int,
     val postsList: List<SelectedPostWithIdPageProfile>
 ) : UiState {
     companion object {
         fun initial() = HomeScreenUiState(
-            isShowDialog = false,
-            count = 0,
             postsList = emptyList()
         )
     }
@@ -109,7 +79,65 @@ class HomeMVIModel :
     override val state: StateFlow<HomeScreenUiState>
         get() = reducer.state
 
+    open class InternetCheck{
+        open fun startWithCheck(kFunction0: () -> Unit) {
+
+        }
+    }
+
+//    interface checkInternet {
+//        fun checkInternet(): Boolean {
+//            return true
+//        }
+//    }
+//
+//    object a : checkInternet {
+//
+//        fun getA():  {
+//            super.checkInternet()
+//        }
+//
+//        override fun checkInternet(): Boolean {
+//            return super.checkInternet()
+//        }
+//    }
+
+//    class RightMenus : InternetCheck() {
+//
+//    }
+//    object RightMenusActions: InternetAction {
+//        fun getFriends(kFunction0: () -> Unit) {
+//            InternetAction.startWithCheck(kFunction0)
+//        }
+//    }
+
     val swipableMenu = SwappableMenu()
+
+    val listIconHome = listOf(
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_profile,
+            offset = Offset(x = 10f, y = -70f),
+            onValueSelected = {
+                it.navigate(NavTree.Profile.name)
+            }),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_ads,
+            offset = Offset(x = -50f, y = -45f),
+            onValueSelected = {
+                it.navigate(NavTree.AdsHomeless.name)
+            }
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_gamepad,
+            offset = Offset(x = -70f, y = 10f),
+            onValueSelected = {
+                it.navigate(NavTree.Home.name)
+            })
+    )
+
+    init {
+        swipableMenu.listIcon = listIconHome
+    }
 
     val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
 
@@ -130,6 +158,34 @@ class HomeMVIModel :
         }
         install(HttpTimeout) {
             requestTimeoutMillis = 3000
+        }
+    }
+
+
+
+    fun onSelectRightMenu(itemMenu: String, msViewModel: MainSocketViewModel){
+        when (itemMenu) {
+            "Пользователи" -> {
+                menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
+                    menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
+                })
+//                            searchUsersSwitch()
+                msViewModel.connectToSearchUsers()
+            }
+            "Беседы" -> {
+                menuHelper.changeVisibilityMenu(MENUS.CHATS)
+//                            chatsMenuSwitch()
+//                            val a = FeedReaderDbHelper(context)
+                getChats(msViewModel)
+//                            msViewModel.sendAction("getChats|")
+            }
+            "Друзья" -> {
+                menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+//                            friendMenuSwitch()
+                msViewModel.sendAction("getFriends|")
+                msViewModel.sendAction("getRequestsFriends|")
+
+            }
         }
     }
 
@@ -169,185 +225,10 @@ class HomeMVIModel :
         Reducer<HomeScreenUiState, HomeScreenEvent>(initial) {
         override fun reduce(oldState: HomeScreenUiState, event: HomeScreenEvent) {
             when (event) {
-                is HomeScreenEvent.ShowDialog -> {
-                    setState(oldState.copy(isShowDialog = event.show))
-                }
-                is HomeScreenEvent.PlusCount -> {
-                    setState(oldState.copy(count = event.count))
-                }
                 is HomeScreenEvent.ChangePosts -> {
                     setState(oldState.copy(postsList = event.posts))
                 }
             }
         }
-    }
-}
-
-//@Composable
-//fun Aaaa() {
-//    val viewModel: HomeMVIModel = HomeMVIModel()
-//    val state = viewModel.state.collectAsState()
-//
-//    Box(modifier = Modifier.fillMaxSize()) {
-//
-//    }
-//}
-
-class RepositoryChatDB(
-    val dbChat: ChatDB
-) {
-
-    val client = HttpClient(Android) {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = 3000
-        }
-    }
-
-    suspend fun getChats(msViewModel: MainSocketViewModel) {
-        val localChats = dbChat.chatDao().getAllChats()
-        val formattedChat = localChats.map {
-            FormattedChatDC(
-                id = it.idChat,
-                nameChat = it.companionName,
-                image = it.imageCompanion,
-                idCompanion = it.companionId
-            )
-        }
-        msViewModel.listChats = formattedChat.toMutableList()
-        msViewModel.sendAction("getChats|")
-    }
-
-    suspend fun updateChats(
-        needAddItems: List<FormattedChatDC>,
-        deletedItems: List<FormattedChatDC>
-    ) {
-        needAddItems.forEach {
-            dbChat.chatDao().insertChat(it.toChat())
-        }
-        deletedItems.forEach {
-            dbChat.chatDao().deleteChat(it.toChat())
-        }
-    }
-
-//    suspend fun saveImage(
-//        idChat: String,
-//        idMessage: String,
-//        imageLink: String,
-//        image: Bitmap,
-//        imagesList: List<String>
-//    ) {
-//        val message = dbChat.getOneMessage(idChat, idMessage)
-//        val dbListImages = message?.listImages
-//        dbListImages?.let { listLink ->
-//            val newList: List<Map<String, String>> = if (listLink.isEmpty()) {
-//                val nameFile = "image_${Date().time}.png"
-//                val baos = ByteArrayOutputStream()
-//                image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-//                val byte_array = baos.toByteArray()
-//                File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + nameFile).writeBytes(
-//                    byte_array
-//                )
-//                listOf(mapOf(imageLink to nameFile))
-//            } else {
-//                listLink.map { mapImages ->
-//                    val map = Json.decodeFromString<Map<String, String>>(mapImages)
-//                    if (map.containsKey(imageLink)) {
-//                        val isExistFile =
-//                            File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + map[imageLink]).exists()
-//                        if (!isExistFile) {
-//                            val nameFile = "/image_${Date().time}.png"
-//                            val baos = ByteArrayOutputStream()
-//                            image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-//                            val byte_array = baos.toByteArray()
-//                            File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + nameFile).writeBytes(
-//                                byte_array
-//                            )
-//                            mapOf(imageLink to nameFile)
-//                        } else {
-//                            map
-//                        }
-//                    } else {
-//                        val nameFile = "/image_${Date().time}.png"
-//                        val baos = ByteArrayOutputStream()
-//                        image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-//                        val byte_array = baos.toByteArray()
-//                        File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + nameFile).writeBytes(
-//                            byte_array
-//                        )
-//                        mapOf(imageLink to nameFile)
-//                    }
-//                }
-//
-//            }
-////            val newList: List<String> = listLink.map { link ->
-////                val map = Json.decodeFromString<Map<String, String>>(link)
-////                if (map.containsKey(imageLink)) {
-////                    val isExistFile =
-////                        File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + map[imageLink]).exists()
-////                    if (!isExistFile) {
-////                        val nameFile = "image_${Date().time}.png"
-////                        val baos = ByteArrayOutputStream()
-////                        image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-////                        val byte_array = baos.toByteArray()
-////                        File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + nameFile).writeBytes(
-////                            byte_array
-////                        )
-////                        Json.encodeToString(mapOf(imageLink to nameFile))
-////                    } else {
-////                        Json.encodeToString(map[imageLink])
-////                    }
-////                } else {
-////                    val nameFile = "image_${Date().time}.png"
-////                    val baos = ByteArrayOutputStream()
-////                    image.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-////                    val byte_array = baos.toByteArray()
-////                    File(Routes.FILE.MAIN_APP_DIR + Routes.FILE.IMAGES + nameFile).writeBytes(
-////                        byte_array
-////                    )
-////                    Json.encodeToString(mapOf(imageLink to nameFile))
-////                }
-////            }
-//            val listString = Json.encodeToString(newList)
-//            dbChat.reWriteImages(idChat, idMessage, listString)
-//        }
-//    }
-
-//    suspend fun checkImageLink(idChat: String, idMessage: String, remoteImageLink: String): File? {
-//        var isExist = false
-//        var image: File? = null
-//
-//        val listImages = dbChat.getImageList(idChat, idMessage)
-//        listImages.forEach forC@{
-//            if (it.containsKey(remoteImageLink)) {
-//                isExist = true
-//                image = File("${Routes.FILE.MAIN_APP_DIR}/Images${it[remoteImageLink]}")
-//                return image
-//            }
-//        }
-//        return image
-//    }
-//
-//    suspend fun checkImageLink(idChat: String, idMessage: String, dbImageLink: String, a: String = ""): File? {
-//        var isExist = false
-//        var image: File? = null
-//        val key = Json.decodeFromString<Map<String, String>>(dbImageLink).keys.map {
-//            it
-//        }
-//        val listImages = dbChat.getImageList(idChat, idMessage)
-//        listImages.forEach forC@{
-//            if (it.containsKey(key[0])) {
-//                isExist = true
-//                image = File("${Routes.FILE.MAIN_APP_DIR}/Images${it[key[0]]}")
-//                return image
-//            }
-//        }
-//        return image
-//    }
-
-    suspend fun insertMessage(idChat: String, message: ChatMessage) {
-        dbChat.insertMessages(idChat, message = message)
     }
 }

@@ -113,7 +113,6 @@ class PushNotificationService() : LifecycleService() {
 
 
         LIFESERVICE = true
-        Log.e("SERVICE", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         val a = SocketFactory.getDefault()
         CoroutineScope(Dispatchers.IO).launch {
             while (true) {

@@ -2,7 +2,6 @@ package com.foggyskies.petapp.presentation.ui.chat
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.graphics.BitmapFactory
 import android.graphics.Insets
 import android.os.Build
 import android.util.Log
@@ -12,7 +11,6 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -45,24 +43,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewModelScope
 import coil.compose.*
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import coil.size.Size
-import coil.size.SizeResolver
-import coil.size.pxOrElse
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.customui.ChatTextField
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import kotlinx.coroutines.launch
 
 
@@ -192,11 +185,6 @@ fun ChatScreen(
                 viewModel.galleryHandler.GalleryImageSelector(
                     stateSheet = sheetState,
                     onSelectedImage = {
-//                        if (viewModel.listImageString64.contains(it)) {
-//                            viewModel.listImageString64.remove(it)
-//                        } else {
-//                            viewModel.listImageString64.add(it)
-//                        }
                         if (viewModel.galleryHandler.selectedItems.isNotEmpty())
                             viewModel.stateTextField = StateTextField.WRITING
                         else
@@ -220,7 +208,6 @@ fun ChatScreen(
                             viewModel.changeStateChatToHidden()
                         }
                     }
-//                .focusTarget()
             ) {
                 Column {
 
@@ -306,7 +293,6 @@ fun ChatScreen(
                         )
                     }
                 }
-//
             }
         }
         BottomAppBar(
@@ -321,8 +307,6 @@ fun ChatScreen(
             sheetState,
         )
     }
-
-
 }
 
 @Composable
@@ -427,10 +411,7 @@ fun BottomAppBar(
         modifier = modifier
             .onSizeChanged {
                 viewModel.heightBottomAppBar = it.height
-//                    Log.e("dwadawd", "dwdad")
-
                 viewModel.changeStateChatToVisible()
-//                    scope.invalidate()
             }
     ) {
 
@@ -549,7 +530,6 @@ fun BottomAppBar(
                         )
                     },
                     modifier = Modifier
-//                            .rotate(-135f)
                         .size(34.dp)
                 ) {
                     Image(
@@ -593,85 +573,24 @@ fun Message(
 
             if (message.listImages.size == 1) {
                 val imageLink = "http://$MAINENDPOINT/${message.listImages[0]}"
-//                var value by remember {
-//                    mutableStateOf<Any?>(null)
-//                }
-//                val painter = rememberAsyncImagePainter(value)
-//                LaunchedEffect(key1 = Unit) {
-//
-//                    val image = if (message.listImages[0].contains("{"))
-//                        viewModel.repositoryChatDB.checkImageLink(
-//                            viewModel.chatEntity?.id!!,
-//                            idMessage = message.id,
-//                            dbImageLink = message.listImages[0]
-//                        ) else
-//                        viewModel.repositoryChatDB.checkImageLink(
-//                            viewModel.chatEntity?.id!!,
-//                            idMessage = message.id,
-//                            remoteImageLink = message.listImages[0]
-//                        )
-//                    if (image != null) {
-////                        painter.imageLoader.diskCache?.fileSystem.write()
-//                        value = BitmapFactory.decodeFile(image.path)
-////                            image
-//
-//                    } else {
-////                        value = ImageRequest.Builder(context)
-////                            .data(imageLink)
-////                            .crossfade(true)
-////                            .size(Size.ORIGINAL) // Set the target size to load the image at.
-////                            .build()
-//
-//
-//                        painter.imageLoader.execute(
-//                            ImageRequest.Builder(context)
-//                                .data(imageLink)
-//                                .crossfade(true)
-//                                .diskCacheKey(message.listImages[0])
-//                                .size(Size.ORIGINAL) // Set the target size to load the image at.
-//                                .build()
-//                        )
-//
-//                        if (painter.state is AsyncImagePainter.State.Success) {
-//                            val bitmap =
-//                                (painter.state as AsyncImagePainter.State.Success).result.drawable.toBitmap()
-//                            viewModel.viewModelScope.launch {
-//                                viewModel.repositoryChatDB.saveImage(
-//                                    viewModel.chatEntity?.id!!,
-//                                    idMessage = message.id,
-//                                    message.listImages[0],
-//                                    bitmap,
-//                                    message.listImages
-//                                )
-//                            }
-//                        }
-//                    }
-//                }
 
-                val a = MainActivity.loader.diskCache?.get(message.listImages[0])?.data
-                val request = if (a != null) {
-                    val b = a.toFile()
+                val cached = loader.diskCache?.get(message.listImages[0])?.data
+                val request = if (cached != null) {
                     ImageRequest.Builder(context)
-                        .data(b)
-//                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                        .data(cached.toFile())
                         .diskCachePolicy(CachePolicy.READ_ONLY)
                         .diskCacheKey(message.listImages[0])
                         .crossfade(true)
                         .build()
                 } else {
                     ImageRequest.Builder(context)
-//                            .data(b)
                         .data(imageLink)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .diskCacheKey(message.listImages[0])
                         .crossfade(true)
                         .build()
                 }
-//                    }
-                LaunchedEffect(key1 = Unit){
-                    MainActivity.loader.execute(request)
-                }
-//                MainActivity.loader.enqueue(request)
+                loader.enqueue(request)
 
                 AsyncImage(
                     model = request,
@@ -687,44 +606,24 @@ fun Message(
                 message.listImages.windowed(2, 2, true).forEach {
                     Row(Modifier.padding(7.dp)) {
                         val imageLink = "http://$MAINENDPOINT/${it[0]}"
-//                        var bitmap by remember { mutableStateOf<Bitmap?>(null)}
 
-//                        val painter = rememberAsyncImagePainter(
-//                            model = ImageRequest.Builder(LocalContext.current)
-//                                .data("http://$MAINENDPOINT/${it[0]}")
-//                                .crossfade(true)
-////                                .size(Size(1, 1)) // Set the target size to load the image at.
-//                                .build()
-//                        )
-//
-//                        if (painter.state is AsyncImagePainter.State.Success) {
-//                            // This will be executed during the first composition if the image is in the memory cache.
-//                        }
-
-                        val a = MainActivity.loader.diskCache?.get(it[0])?.data
-                        val request = if (a != null) {
-                            val b = a.toFile()
+                        val cached = loader.diskCache?.get(it[0])?.data
+                        val request = if (cached != null) {
                             ImageRequest.Builder(context)
-                                .data(b)
-//                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                                .data(cached.toFile())
                                 .diskCachePolicy(CachePolicy.READ_ONLY)
                                 .diskCacheKey(it[0])
                                 .crossfade(true)
                                 .build()
                         } else {
                             ImageRequest.Builder(context)
-//                            .data(b)
                                 .data(imageLink)
                                 .diskCachePolicy(CachePolicy.ENABLED)
                                 .diskCacheKey(it[0])
                                 .crossfade(true)
                                 .build()
                         }
-//                    }
-                        LaunchedEffect(key1 = Unit){
-                            MainActivity.loader.execute(request)
-                        }
-//                        MainActivity.loader.enqueue(request)
+                        loader.enqueue(request)
 
                         AsyncImage(
                             model = request,
@@ -741,42 +640,23 @@ fun Message(
 
                             val imageLink = "http://$MAINENDPOINT/${it[1]}"
 
-
-//                            val painter = rememberAsyncImagePainter(
-//                                model = ImageRequest.Builder(LocalContext.current)
-//                                    .data("http://$MAINENDPOINT/${it[1]}")
-//                                    .crossfade(true)
-////                                .size(Size(1, 1)) // Set the target size to load the image at.
-//                                    .build()
-//                            )
-//
-//                            if (painter.state is AsyncImagePainter.State.Success) {
-//                                // This will be executed during the first composition if the image is in the memory cache.
-//                            }
-
-                            val a = MainActivity.loader.diskCache?.get(it[1])?.data
-                            val request = if (a != null) {
-                                val b = a.toFile()
+                            val cached = MainActivity.loader.diskCache?.get(it[1])?.data
+                            val request = if (cached != null) {
                                 ImageRequest.Builder(context)
-                                    .data(b)
-//                            .data("http://$MAINENDPOINT/${item[0].item.address}")
+                                    .data(cached.toFile())
                                     .diskCachePolicy(CachePolicy.READ_ONLY)
                                     .diskCacheKey(it[1])
                                     .crossfade(true)
                                     .build()
                             } else {
                                 ImageRequest.Builder(context)
-//                            .data(b)
                                     .data(imageLink)
                                     .diskCachePolicy(CachePolicy.ENABLED)
                                     .diskCacheKey(it[1])
                                     .crossfade(true)
                                     .build()
                             }
-//                    }
-                            LaunchedEffect(key1 = Unit){
-                                MainActivity.loader.execute(request)
-                            }
+                            loader.enqueue(request)
 
                             AsyncImage(
                                 model = request,
