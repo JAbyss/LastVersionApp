@@ -5,7 +5,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.domain.dao.ChatDao
-import com.foggyskies.petapp.domain.repository.RepositoryChatDB
+import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
@@ -40,7 +40,7 @@ data class OldListInfo<T>(
 
 class MainSocketViewModel : ViewModel() {
 
-    val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+    val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
 
     var chatDao: ChatDao? = null
 
@@ -57,22 +57,24 @@ class MainSocketViewModel : ViewModel() {
 
     var listFriends = mutableStateListOf<UserIUSI>()
 
-    fun connectToSearchUsers() {
-        viewModelScope.launch {
-            val client = HttpClient(CIO) {
-                install(WebSockets)
-            }
-            socket = client.webSocketSession {
-                url("ws://${MainActivity.MAINENDPOINT}/user")
-                header("Auth", MainActivity.TOKEN)
-            }
-            observeMessages().onEach { user ->
 
-                _users.value = users.value.copy(
-                    users = user
-                )
-            }.launchIn(viewModelScope)
-        }
+    fun connectToSearchUsers() {
+        if (MainActivity.isNetworkAvailable.value)
+            viewModelScope.launch {
+                val client = HttpClient(CIO) {
+                    install(WebSockets)
+                }
+                socket = client.webSocketSession {
+                    url("ws://${MainActivity.MAINENDPOINT}/user")
+                    header("Auth", MainActivity.TOKEN)
+                }
+                observeMessages().onEach { user ->
+
+                    _users.value = users.value.copy(
+                        users = user
+                    )
+                }.launchIn(viewModelScope)
+            }
     }
 
     suspend fun observeMessages(): Flow<List<UsersSearch>> {
@@ -93,9 +95,10 @@ class MainSocketViewModel : ViewModel() {
     }
 
     fun sendMessage(username: String) {
-        viewModelScope.launch {
-            socket?.send(username)
-        }
+        if (MainActivity.isNetworkAvailable.value)
+            viewModelScope.launch {
+                socket?.send(username)
+            }
     }
 
     fun disconnect() {
@@ -141,17 +144,18 @@ class MainSocketViewModel : ViewModel() {
     }
 
     fun sendAction(action: String) {
-        viewModelScope.launch {
-            if (mainSocket == null && MainActivity.isNetworkAvailable.value) {
-                createMainSocket()
-                do {
-                    delay(500)
+        if (MainActivity.isNetworkAvailable.value)
+            viewModelScope.launch {
+                if (mainSocket == null) {
+                    createMainSocket()
+                    do {
+                        delay(500)
+                        mainSocket?.send(action)
+                    } while (mainSocket == null)
+                } else {
                     mainSocket?.send(action)
-                } while (mainSocket == null)
-            } else if (MainActivity.isNetworkAvailable.value) {
-                mainSocket?.send(action)
+                }
             }
-        }
     }
 
     private fun observeActions(): Flow<String> {
@@ -170,7 +174,7 @@ class MainSocketViewModel : ViewModel() {
         }
     }
 
-    var listPagesProfile = mutableListOf<PageProfileFormattedDC>()
+    var listPagesProfile by mutableStateOf(emptyList<PageProfileFormattedDC>())
 
     fun createMainSocket() {
         viewModelScope.launch {
@@ -207,44 +211,24 @@ class MainSocketViewModel : ViewModel() {
                     val map_actions = mapOf(
                         "getFriends" to {
                             val json = Json.decodeFromString<List<UserIUSI>>(formatted)
-                            json.forEach { friend ->
-
-                                if (listFriends.size > json.size) {
-                                    val listRemove = mutableListOf<UserIUSI>()
-                                    listFriends.forEach { friend ->
-                                        if (json.contains(friend)) {
-
-                                        } else {
-                                            listRemove.add(friend)
-                                        }
-                                    }
-                                    listFriends.removeAll(listRemove)
-                                } else {
-                                    if (!listFriends.contains(friend)) {
-                                        listFriends.add(friend)
-                                    }
-                                }
+                            val needAddItems: List<UserIUSI> = json - listFriends.toSet()
+                            val deletedItems = listFriends - json.toSet()
+                            viewModelScope.launch {
+                                repositoryUserDB.updateFriends(needAddItems, deletedItems)
                             }
                         },
                         "getChats" to {
                             val json = Json.decodeFromString<List<FormattedChatDC>>(formatted)
-                            val needAddItems: List<FormattedChatDC> = json - listChats
-                            val deletedItems = listChats - json
-//                            val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+                            val needAddItems: List<FormattedChatDC> = json - listChats.toSet()
+                            val deletedItems = listChats - json.toSet()
                             viewModelScope.launch {
-                                repositoryChatDB.updateChats(needAddItems, deletedItems)
-//                                needAddItems.forEach {
-//                                    chatDao?.insertChat(it.toChat())
-//                                }
-//                                deletedItems.forEach {
-//                                    chatDao?.deleteChat(it.toChat())
-//                                }
+                                repositoryUserDB.updateChats(needAddItems, deletedItems)
                             }
                             listChats = json.toMutableList()
                         },
                         "getRequestsFriends" to {
                             val json = Json.decodeFromString<List<UserIUSI>>(formatted)
-                            if (listRequests.size != 0 && json.size == 0) {
+                            if (listRequests.size != 0 && json.isEmpty()) {
                                 listRequests.clear()
                             }
                             json.forEach { request ->

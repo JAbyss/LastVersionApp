@@ -11,8 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
-import com.foggyskies.petapp.domain.db.ChatDB
-import com.foggyskies.petapp.domain.repository.RepositoryChatDB
+import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
+import com.foggyskies.petapp.domain.db.UserDB
+import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
@@ -63,7 +64,7 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    var db: ChatDB? = null
+    var db: UserDB? = null
 
     var chatEntity: FormattedChatDC? = null
 
@@ -99,7 +100,7 @@ class ChatViewModel : ViewModel() {
     var visibleButtonDown by mutableStateOf(false)
 
     var countUnreadMessage by mutableStateOf(0)
-    val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+    val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
 
 
     fun connectToChat(idChat: String, context: Context) {
@@ -111,37 +112,38 @@ class ChatViewModel : ViewModel() {
                     messages = loadFiftyMessages(idChat).asReversed()
                 )
             }
-
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 30000
-                }
-            }.use {
-                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
-            }
-            val client = HttpClient(CIO) {
-                install(WebSockets)
-            }
-            socket = client.webSocketSession {
-                url("ws://${MainActivity.MAINENDPOINT}/subscribes/$idChat?username=$USERNAME")
-            }
-            observeMessages()
-                .onEach { message ->
-                    if (!_state.value.messages.contains(message)) {
-
-                        val newList = state.value.messages.toMutableList().apply {
-                            add(0, message)
-                        }
-                            repositoryChatDB.insertMessage(idChat, message)
-
-                        _state.value = state.value.copy(
-                            messages = newList
-                        )
+            if (isNetworkAvailable.value) {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
                     }
-                }.launchIn(viewModelScope)
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 30000
+                    }
+                }.use {
+                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
+                }
+                val client = HttpClient(CIO) {
+                    install(WebSockets)
+                }
+                socket = client.webSocketSession {
+                    url("ws://${MainActivity.MAINENDPOINT}/subscribes/$idChat?username=$USERNAME")
+                }
+                observeMessages()
+                    .onEach { message ->
+                        if (!_state.value.messages.contains(message)) {
+
+                            val newList = state.value.messages.toMutableList().apply {
+                                add(0, message)
+                            }
+                            repositoryUserDB.insertMessage(idChat, message)
+
+                            _state.value = state.value.copy(
+                                messages = newList
+                            )
+                        }
+                    }.launchIn(viewModelScope)
+            }
         }
     }
 
@@ -190,7 +192,7 @@ class ChatViewModel : ViewModel() {
                 HttpClient(Android) {
 //                expectSuccess = false
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 300000
+                        requestTimeoutMillis = 30000
                     }
                 }.use {
 

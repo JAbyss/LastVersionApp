@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.globalviews.post.BottomCommentBar
@@ -40,6 +41,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.reflect.KSuspendFunction0
 
 class PostScreenHandler {
 
@@ -67,7 +69,6 @@ class PostScreenHandler {
     )
     @Composable
     fun PostScreen(
-//        viewModel: HomeViewModel,
         onLongPress: (Offset) -> Unit
     ) {
 
@@ -84,6 +85,7 @@ class PostScreenHandler {
         fun doubleTapLike() {
             scope.launch {
                 likePost()
+//                doubleTapAction()
                 isVisibleLikeAnimation = true
                 delay(200)
                 isStartSecondStepAnimation = true
@@ -99,7 +101,6 @@ class PostScreenHandler {
                 .fillMaxWidth(0.8f)
                 .fillMaxHeight(0.73f)
                 .background(Color.White)
-//                .align(Alignment.Center)
         ) {
 
             val state = rememberLazyListState()
@@ -112,19 +113,9 @@ class PostScreenHandler {
 
                         detectTapGestures(
                             onLongPress = onLongPress
-//                            {
-//                                viewModel.swipableMenu.isReadyMenu = false
-//                                viewModel.isVisiblePhotoWindow = false
-//                                viewModel.photoScreenClosed()
-//                            }
                         )
                     }
             ) {
-                val isLikeAnimation = remember {
-                    mutableStateOf(false)
-                }
-
-
                 AnimatedContent(
                     targetState = statePost,
                     transitionSpec = {
@@ -189,13 +180,11 @@ class PostScreenHandler {
                         ) {
 
                             dys.forEach { dy ->
-                                if (maxDimension != null) {
-                                    drawCircle(
-                                        color = Color.White,
-                                        radius = maxDimension * dy * 2f,
-                                        alpha = 1 - dy
-                                    )
-                                }
+                                drawCircle(
+                                    color = Color.White,
+                                    radius = maxDimension * dy * 2f,
+                                    alpha = 1 - dy
+                                )
                             }
                         }
 
@@ -222,22 +211,22 @@ class PostScreenHandler {
     }
 
     suspend fun likePost() {
-
-        HttpClient(Android) {
-            install(JsonFeature) {
-                serializer = KotlinxSerializer()
+        if (isNetworkAvailable.value)
+            HttpClient(Android) {
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30000
+                }
+            }.use {
+                isLiked = it.get("http://${MainActivity.MAINENDPOINT}/content/addLikeToPost") {
+                    this.headers["Auth"] = MainActivity.TOKEN
+                    parameter("idPageProfile", selectedPost?.idPageProfile)
+                    parameter("idPost", selectedPost?.item?.id)
+                }
+                selectedPost?.isLiked = isLiked
             }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 3000
-            }
-        }.use {
-            isLiked = it.get("http://${MainActivity.MAINENDPOINT}/content/addLikeToPost") {
-                this.headers["Auth"] = MainActivity.TOKEN
-                parameter("idPageProfile", selectedPost?.idPageProfile)
-                parameter("idPost", selectedPost?.item?.id)
-            }
-            selectedPost?.isLiked = isLiked
-        }
     }
 
     suspend fun sendNewComment() {
@@ -250,6 +239,29 @@ class PostScreenHandler {
                 date = ""
             )
             listComments = listComments + comment
+            if (isNetworkAvailable.value)
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
+                    }
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
+                    }
+                }.use {
+                    it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addCommentToPost") {
+                        headers["Auth"] = MainActivity.TOKEN
+                        headers["Content-Type"] = "Application/Json"
+                        parameter("idPageProfile", selectedPost?.idPageProfile)
+                        parameter("idPost", selectedPost?.item?.id!!)
+                        body = comment
+                    }
+                }
+            commentValue = TextFieldValue("")
+        }
+    }
+
+    suspend fun getLikedUsers() {
+        if (isNetworkAvailable.value)
             HttpClient(Android) {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
@@ -258,53 +270,32 @@ class PostScreenHandler {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addCommentToPost") {
-                    headers["Auth"] = MainActivity.TOKEN
-                    headers["Content-Type"] = "Application/Json"
-                    parameter("idPageProfile", selectedPost?.idPageProfile)
-                    parameter("idPost", selectedPost?.item?.id!!)
-                    body = comment
-                }
+                likedUsersList =
+                    it.get("http://${MainActivity.MAINENDPOINT}/content/getLikedUsers") {
+                        this.headers["Auth"] = MainActivity.TOKEN
+                        parameter("idPageProfile", selectedPost?.idPageProfile)
+                        parameter("idPost", selectedPost?.item?.id!!)
+                    }
             }
-            commentValue = TextFieldValue("")
-        }
     }
 
-    suspend fun getLikedUsers() {
-
-        HttpClient(Android) {
-            install(JsonFeature) {
-                serializer = KotlinxSerializer()
-            }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 3000
-            }
-        }.use {
-            likedUsersList =
-                it.get("http://${MainActivity.MAINENDPOINT}/content/getLikedUsers") {
-                    this.headers["Auth"] = MainActivity.TOKEN
-                    parameter("idPageProfile", selectedPost?.idPageProfile)
-                    parameter("idPost", selectedPost?.item?.id!!)
+    private suspend fun getInfoAboutOnePost() {
+        if (isNetworkAvailable.value)
+            HttpClient(Android) {
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
                 }
-        }
-    }
-
-    suspend fun getInfoAboutOnePost() {
-        HttpClient(Android) {
-            install(JsonFeature) {
-                serializer = KotlinxSerializer()
-            }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 3000
-            }
-        }.use {
-            selectedPost =
-                it.get("http://${MainActivity.MAINENDPOINT}/content/getInfoAboutOnePost") {
-                    this.headers["Auth"] = MainActivity.TOKEN
-                    parameter("idPageProfile", selectedPost?.idPageProfile)
-                    parameter("idPost", selectedPost?.item?.id!!)
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 3000
                 }
-        }
+            }.use {
+                selectedPost =
+                    it.get("http://${MainActivity.MAINENDPOINT}/content/getInfoAboutOnePost") {
+                        this.headers["Auth"] = MainActivity.TOKEN
+                        parameter("idPageProfile", selectedPost?.idPageProfile)
+                        parameter("idPost", selectedPost?.item?.id!!)
+                    }
+            }
     }
 
     fun selectPost(
@@ -319,7 +310,7 @@ class PostScreenHandler {
 
     suspend fun selectPost(
         postContentPreview: ContentPreviewDC,
-        page:  PageProfileFormattedDC,
+        page: PageProfileFormattedDC,
         action: () -> Unit
     ) {
 
@@ -337,19 +328,20 @@ class PostScreenHandler {
     }
 
     suspend fun getComments() {
-        HttpClient(Android) {
-            install(JsonFeature) {
-                serializer = KotlinxSerializer()
+        if (isNetworkAvailable.value)
+            HttpClient(Android) {
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 3000
+                }
+            }.use {
+                listComments = it.get("http://${MainActivity.MAINENDPOINT}/content/getComments") {
+                    this.headers["Auth"] = MainActivity.TOKEN
+                    parameter("idPageProfile", selectedPost?.idPageProfile)
+                    parameter("idPost", selectedPost?.item?.id!!)
+                }
             }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 3000
-            }
-        }.use {
-            listComments = it.get("http://${MainActivity.MAINENDPOINT}/content/getComments") {
-                this.headers["Auth"] = MainActivity.TOKEN
-                parameter("idPageProfile", selectedPost?.idPageProfile)
-                parameter("idPost", selectedPost?.item?.id!!)
-            }
-        }
     }
 }

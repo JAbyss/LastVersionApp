@@ -1,12 +1,13 @@
 package com.foggyskies.petapp.presentation.ui.home
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.domain.repository.RepositoryChatDB
+import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
@@ -79,7 +80,7 @@ class HomeMVIModel :
     override val state: StateFlow<HomeScreenUiState>
         get() = reducer.state
 
-    open class InternetCheck{
+    open class InternetCheck {
         open fun startWithCheck(kFunction0: () -> Unit) {
 
         }
@@ -139,7 +140,7 @@ class HomeMVIModel :
         swipableMenu.listIcon = listIconHome
     }
 
-    val repositoryChatDB: RepositoryChatDB by inject(RepositoryChatDB::class.java)
+    private val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
 
     val menuHelper = MenuVisibilityHelper(action = { swipableMenu.isReadyMenu = it })
 
@@ -161,30 +162,36 @@ class HomeMVIModel :
         }
     }
 
+    fun checkInternet(func: () -> Unit) {
+        if (MainActivity.isNetworkAvailable.value) {
+            func()
+        }
+    }
 
+    fun onSelectRightMenu(itemMenu: String, msViewModel: MainSocketViewModel) {
+        viewModelScope.launch {
 
-    fun onSelectRightMenu(itemMenu: String, msViewModel: MainSocketViewModel){
-        when (itemMenu) {
-            "Пользователи" -> {
-                menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
-                    menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
-                })
-//                            searchUsersSwitch()
-                msViewModel.connectToSearchUsers()
-            }
-            "Беседы" -> {
-                menuHelper.changeVisibilityMenu(MENUS.CHATS)
-//                            chatsMenuSwitch()
-//                            val a = FeedReaderDbHelper(context)
-                getChats(msViewModel)
-//                            msViewModel.sendAction("getChats|")
-            }
-            "Друзья" -> {
-                menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
-//                            friendMenuSwitch()
-                msViewModel.sendAction("getFriends|")
-                msViewModel.sendAction("getRequestsFriends|")
+            when (itemMenu) {
+                "Пользователи" -> {
+                    menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
+                        menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
+                    })
+                    msViewModel.connectToSearchUsers()
+                }
+                "Беседы" -> {
+                    repositoryUserDB.getChats(msViewModel)
+//                    if (msViewModel.listChats.isNotEmpty())
+                        menuHelper.changeVisibilityMenu(MENUS.CHATS)
+//                getChats(msViewModel)
+                }
+                "Друзья" -> {
+                    repositoryUserDB.getFriends(msViewModel)
+//                    if (msViewModel.listFriends.isNotEmpty())
+                        menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+//                    msViewModel.sendAction("getFriends|")
+                    msViewModel.sendAction("getRequestsFriends|")
 
+                }
             }
         }
     }
@@ -201,25 +208,10 @@ class HomeMVIModel :
         }
     }
 
-    fun getChats(msViewModel: MainSocketViewModel) {
-        viewModelScope.launch {
-            repositoryChatDB.getChats(msViewModel)
-        }
+//    fun getChats(msViewModel: MainSocketViewModel) {
 //        viewModelScope.launch {
-//
-//            val chats = msViewModel.chatDao?.getAllChats()?.toMutableList()!!
-//            val formattedChat = chats.map {
-//                FormattedChatDC(
-//                    id = it.idChat,
-//                    nameChat = it.companionName,
-//                    image = it.imageCompanion,
-//                    idCompanion = it.companionId
-//                )
-//            }
-//            msViewModel.listChats = formattedChat.toMutableList()
-//            msViewModel.sendAction("getChats|")
 //        }
-    }
+//    }
 
     private class HomeReducer(initial: HomeScreenUiState) :
         Reducer<HomeScreenUiState, HomeScreenEvent>(initial) {

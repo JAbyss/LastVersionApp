@@ -18,12 +18,8 @@ data class Chat(
     val companionName: String,
     @ColumnInfo(name = "image")
     val imageCompanion: String,
-//    @ColumnInfo(name = "image")
-//    val image: String,
     @ColumnInfo(name = "lastMessage")
     val lastMessage: String
-//    @ColumnInfo(name = "messages")
-//    val messages: List<ChatMessage>
 ){
     companion object {
         const val TABLE_CHAT = "Chat"

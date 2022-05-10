@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
-import coil.compose.ImagePainter
+import coil.compose.AsyncImagePainter
 import com.foggyskies.data.vehicle.room.AdsHomelessLocalDataSource
 import com.foggyskies.data.vehicle.room.AdsHomelessRemoteDataSource
 import com.foggyskies.data.vehicle.room.RoomAdsHomelessDataSource
@@ -53,13 +53,13 @@ class AdsHomelessViewModel(application: Application) : AndroidViewModel(applicat
 
     var isFullSizeImage by mutableStateOf(false)
 
-    var selectedImage by mutableStateOf<ImagePainter?>(null)
+    var selectedImage by mutableStateOf<AsyncImagePainter?>(null)
 
     enum class StatePhotoSize{
         OPEN, CLOSE
     }
 
-    fun changePhotoSize(imagePainter: ImagePainter? = null, state: StatePhotoSize){
+    fun changePhotoSize(imagePainter: AsyncImagePainter? = null, state: StatePhotoSize){
         when(state){
             StatePhotoSize.OPEN -> {
                 isFullSizeImage = true

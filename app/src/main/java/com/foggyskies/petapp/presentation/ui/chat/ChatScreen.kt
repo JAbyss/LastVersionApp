@@ -417,7 +417,6 @@ fun BottomAppBar(
 
         Row(
             verticalAlignment = Alignment.Bottom,
-//            modifier =
         ) {
             Spacer(modifier = Modifier.width(10.dp))
             Button(
@@ -578,6 +577,7 @@ fun Message(
                 val request = if (cached != null) {
                     ImageRequest.Builder(context)
                         .data(cached.toFile())
+                        .size(100, 100)
                         .diskCachePolicy(CachePolicy.READ_ONLY)
                         .diskCacheKey(message.listImages[0])
                         .crossfade(true)
@@ -585,6 +585,7 @@ fun Message(
                 } else {
                     ImageRequest.Builder(context)
                         .data(imageLink)
+                        .size(100, 100)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .diskCacheKey(message.listImages[0])
                         .crossfade(true)
@@ -611,6 +612,7 @@ fun Message(
                         val request = if (cached != null) {
                             ImageRequest.Builder(context)
                                 .data(cached.toFile())
+                                .size(100, 100)
                                 .diskCachePolicy(CachePolicy.READ_ONLY)
                                 .diskCacheKey(it[0])
                                 .crossfade(true)
@@ -618,6 +620,7 @@ fun Message(
                         } else {
                             ImageRequest.Builder(context)
                                 .data(imageLink)
+                                .size(100, 100)
                                 .diskCachePolicy(CachePolicy.ENABLED)
                                 .diskCacheKey(it[0])
                                 .crossfade(true)
@@ -646,11 +649,13 @@ fun Message(
                                     .data(cached.toFile())
                                     .diskCachePolicy(CachePolicy.READ_ONLY)
                                     .diskCacheKey(it[1])
+                                    .size(100, 100)
                                     .crossfade(true)
                                     .build()
                             } else {
                                 ImageRequest.Builder(context)
                                     .data(imageLink)
+                                    .size(100, 100)
                                     .diskCachePolicy(CachePolicy.ENABLED)
                                     .diskCacheKey(it[1])
                                     .crossfade(true)

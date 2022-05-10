@@ -2,6 +2,7 @@ package com.foggyskies.petapp.presentation.ui.globalviews
 
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +49,7 @@ data class FormattedChatDC(
     var idCompanion: String,
     var image: String,
     var lastMessage: String = ""
-) : Parcelable{
+) : Parcelable {
     fun toChat(): Chat {
         return Chat(
             idChat = id,
@@ -64,9 +65,11 @@ data class FormattedChatDC(
 fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
     Box(
         modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
             .fillMaxWidth()
+            .background(Color.White)
             .clickable {
-               val string = Json.encodeToString(item)
+                val string = Json.encodeToString(item)
                 val b = bundleOf("itemChat" to string)
                 nav_controller?.navigate(nav_controller.graph[NavTree.ChatSec.name].id, b)
             }
@@ -111,14 +114,26 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
             ) {
                 Text(text = item.nameChat, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(5.dp))
-                Text(text = if (item.lastMessage.isNotEmpty()) item.lastMessage else "Пусто, напишите первым.", maxLines = 1, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.LightGray, modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = if (item.lastMessage.isNotEmpty()) item.lastMessage else "Пусто, напишите первым.",
+                    maxLines = 1,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.LightGray,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeMVIModel, msViewModel: MainSocketViewModel) {
+fun BoxScope.ChatsScreen(
+    nav_controller: NavHostController?,
+    viewModel: HomeMVIModel,
+    msViewModel: MainSocketViewModel
+) {
 
     Box() {
 
@@ -128,7 +143,7 @@ fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeMVIM
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
-                ){
+                ) {
                     viewModel.menuHelper.changeVisibilityMenu(MENUS.CHATS)
 //                    viewModel.chatsMenuSwitch()
                 }
@@ -139,15 +154,58 @@ fun BoxScope.ChatsScreen(nav_controller: NavHostController?, viewModel: HomeMVIM
                 .clip(RoundedCornerShape(20.dp))
                 .widthIn(max = 300.dp)
                 .align(Alignment.Center)
-                .background(Color.White)
+//                .background(Color.White)
         ) {
             LazyColumn(
                 modifier = Modifier
                     .padding(5.dp)
             ) {
-                items(msViewModel.listChats) { item ->
-                    OneItemChat(item, nav_controller)
+                stickyHeader {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White)
+                            .align(Alignment.CenterStart)
+                    ) {
+                        Text(
+                            text = "Чаты",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(7.dp)
+                                .align(
+                                    Alignment.Center
+                                )
+                        )
+                    }
                 }
+                item { Spacer(modifier = Modifier.height(10.dp)) }
+                if (msViewModel.listChats.isEmpty())
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(Color.White)
+                                .align(Alignment.CenterStart)
+                        ) {
+                            Text(
+                                text = "Пустовато",
+                                fontSize = 16.sp,
+                                modifier = Modifier
+                                    .padding(
+                                        horizontal = 12.dp,
+                                        vertical = 7.dp
+                                    )
+                                    .align(
+                                        Alignment.Center
+                                    )
+                            )
+                        }
+                    }
+                else
+                    items(msViewModel.listChats) { item ->
+                        OneItemChat(item, nav_controller)
+                    }
             }
         }
     }

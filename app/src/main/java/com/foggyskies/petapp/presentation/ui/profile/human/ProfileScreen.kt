@@ -42,6 +42,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
+import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.globalviews.FullInvisibleBack
@@ -58,9 +59,9 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     msViewModel: MainSocketViewModel
 ) {
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = isNetworkAvailable.value) {
         if (viewModel.userMode == UserMode.OWNER) {
-            viewModel.getAvatar()
+            viewModel.checkInternet(viewModel::getAvatar)
             msViewModel.sendAction("getPagesProfile|")
         }
     }
@@ -68,8 +69,6 @@ fun ProfileScreen(
     val context = LocalContext.current
 
     val state = rememberLazyListState()
-
-    val backHandler = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     BackHandler {
         if (viewModel.stateProfile == StateProfile.PET) {
@@ -80,12 +79,15 @@ fun ProfileScreen(
 
     val density = LocalContext.current.resources.displayMetrics
 
-    viewModel.density = density.density
-//    viewModel.swipableMenu.listIcon = viewModel.listIconStateHuman
-    viewModel.swipableMenu.density = density.density
-    viewModel.swipableMenu.sizeScreen =
-        Size(width = density.widthPixels.toFloat(), height = density.heightPixels.toFloat())
-    viewModel.swipableMenu.navController = nav_controller
+    LaunchedEffect(key1 = Unit) {
+        viewModel.density = density.density
+        viewModel.swipableMenu.density = density.density
+        viewModel.swipableMenu.sizeScreen =
+            Size(width = density.widthPixels.toFloat(), height = density.heightPixels.toFloat())
+        viewModel.swipableMenu.navController = nav_controller
+    }
+
+
     val stateSheet = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
     SideEffect {
@@ -128,10 +130,7 @@ fun ProfileScreen(
 
                 HeadProfile(viewModel = viewModel, state = state, context, stateSheet)
 
-                // Профиль Человека
-//                item {
                 MainProfilePages(viewModel, msViewModel)
-//                }
 
                 item {
                     AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.PET) {
@@ -315,7 +314,8 @@ fun ProfileScreen(
                         viewModel.isVisiblePostWindow = false
                         viewModel.photoScreenClosed()
 
-                    })
+                    }
+                )
             }
             if (viewModel.swipableMenu.isTappedScreen)
                 viewModel.swipableMenu.CircularTouchMenu(param = viewModel.swipableMenu)

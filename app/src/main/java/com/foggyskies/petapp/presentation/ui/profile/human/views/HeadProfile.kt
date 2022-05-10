@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.*
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.R
@@ -73,8 +74,28 @@ fun LazyListScope.HeadProfile(
                 ) {
                     // Аватарка
                     AnimatedContent(targetState = viewModel.imageProfile) { targetImage ->
+
+                        val cached = MainActivity.loader.diskCache?.get("avatar")?.data
+                        val request = if (cached != null) {
+                            val b = cached.toFile()
+                            ImageRequest.Builder(context)
+                                .data(b)
+                                .diskCachePolicy(CachePolicy.READ_ONLY)
+                                .diskCacheKey("avatar")
+                                .crossfade(true)
+                                .build()
+                        } else {
+                            ImageRequest.Builder(context)
+                                .data("http://${MainActivity.MAINENDPOINT}/$targetImage")
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .diskCacheKey("avatar")
+                                .crossfade(true)
+                                .build()
+                        }
+                        MainActivity.loader.enqueue(request)
+
                         AsyncImage(
-                            model = "http://${MainActivity.MAINENDPOINT}/$targetImage",
+                            model = request,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

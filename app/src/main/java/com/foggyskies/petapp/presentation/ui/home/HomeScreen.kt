@@ -51,6 +51,7 @@ import com.foggyskies.petapp.presentation.ui.globalviews.InternalNotificationScr
 import com.foggyskies.petapp.presentation.ui.globalviews.SearchUsersScreen
 import com.foggyskies.petapp.presentation.ui.home.views.RightMenu
 import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,11 +62,14 @@ fun HomeMVIModel.HomeScreen(
     val context = LocalContext.current
 
     LaunchedEffect(key1 = isNetworkAvailable.value) {
-//        getPosts()
-
-        if (isNetworkAvailable.value)
-            getContent()
-//        getChats(msViewModel.chatDao!!, msViewModel)
+        checkInternet(this@HomeScreen::getContent)
+        if (msViewModel.mainSocket == null)
+            checkInternet(msViewModel::createMainSocket)
+//        if (isNetworkAvailable.value) {
+//            if (msViewModel.mainSocket == null)
+//                msViewModel.createMainSocket()
+////            getContent()
+//        }
     }
     val displayMetrics = LocalContext.current.resources.displayMetrics
 
@@ -296,7 +300,6 @@ fun PhotosFeed(viewModel: HomeMVIModel) {
     val state = viewModel.state.collectAsState()
 
     LazyColumn() {
-
 
         items(state.value.postsList.windowed(2, 2, true)) { item ->
 

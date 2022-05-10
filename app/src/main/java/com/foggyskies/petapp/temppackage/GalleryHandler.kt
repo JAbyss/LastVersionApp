@@ -146,6 +146,7 @@ class GalleryHandler {
         LazyColumn(
             modifier = Modifier
                 .wrapContentSize()
+                .padding(bottom = 60.dp)
         ) {
 
             item {

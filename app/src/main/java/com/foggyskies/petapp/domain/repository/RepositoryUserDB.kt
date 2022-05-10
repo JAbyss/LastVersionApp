@@ -1,7 +1,9 @@
 package com.foggyskies.petapp.domain.repository
 
+import androidx.compose.runtime.toMutableStateList
 import com.foggyskies.petapp.MainSocketViewModel
-import com.foggyskies.petapp.domain.db.ChatDB
+import com.foggyskies.petapp.domain.db.UserDB
+import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import io.ktor.client.*
@@ -10,8 +12,8 @@ import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 
-class RepositoryChatDB(
-    val dbChat: ChatDB
+class RepositoryUserDB(
+    val dbUser: UserDB
 ) {
 
     val client = HttpClient(Android) {
@@ -24,7 +26,7 @@ class RepositoryChatDB(
     }
 
     suspend fun getChats(msViewModel: MainSocketViewModel) {
-        val localChats = dbChat.chatDao().getAllChats()
+        val localChats = dbUser.chatDao().getAllChats()
         val formattedChat = localChats.map {
             FormattedChatDC(
                 id = it.idChat,
@@ -43,14 +45,33 @@ class RepositoryChatDB(
         deletedItems: List<FormattedChatDC>
     ) {
         needAddItems.forEach {
-            dbChat.chatDao().insertChat(it.toChat())
+            dbUser.chatDao().insertChat(it.toChat())
         }
         deletedItems.forEach {
-            dbChat.chatDao().deleteChat(it.toChat())
+            dbUser.chatDao().deleteChat(it.toChat())
+        }
+    }
+
+    suspend fun updateFriends(
+        needAddItems: List<UserIUSI>,
+        deletedItems: List<UserIUSI>
+    ){
+        needAddItems.forEach {
+            dbUser.friendDao().insertOne(it.toFriendTable())
+        }
+        deletedItems.forEach {
+            dbUser.friendDao().deleteOne(it.toFriendTable())
         }
     }
 
     suspend fun insertMessage(idChat: String, message: ChatMessage) {
-        dbChat.insertMessages(idChat, message = message)
+        dbUser.insertMessages(idChat, message = message)
+    }
+
+    suspend fun getFriends(msViewModel: MainSocketViewModel) {
+        val localFriends = dbUser.friendDao().getFriends()
+        val formattedList = localFriends.map { it.toIUSI() }
+        msViewModel.listFriends = formattedList.toMutableStateList()
+        msViewModel.sendAction("getFriends|")
     }
 }

@@ -2,20 +2,24 @@ package com.foggyskies.petapp.presentation.ui.profile.human
 
 import android.graphics.Bitmap
 import android.os.Build
-import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.foggyskies.petapp.temppackage.GalleryHandler
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
+import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
 import com.foggyskies.petapp.presentation.ui.home.ContentUsersDC
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
+import com.foggyskies.petapp.temppackage.GalleryHandler
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -122,22 +126,23 @@ class ProfileViewModel : ViewModel() {
     var listPostImages by mutableStateOf(emptyList<ContentPreviewDC>())
 
     private fun getContentPage(idPageProfile: String) {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-                listPostImages =
-                    it.get("http://${MAINENDPOINT}/content/getContentPreview") {
-                        headers["Auth"] = TOKEN
-                        parameter("idPageProfile", idPageProfile)
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
                     }
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
+                    }
+                }.use {
+                    listPostImages =
+                        it.get("http://${MAINENDPOINT}/content/getContentPreview") {
+                            headers["Auth"] = TOKEN
+                            parameter("idPageProfile", idPageProfile)
+                        }
+                }
             }
-        }
     }
 
     var selectedPost by mutableStateOf<ContentPreviewDC?>(null)
@@ -158,23 +163,24 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun getInfoAboutOnePost() {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-                selectedPostInfo =
-                    it.get("http://${MAINENDPOINT}/content/getInfoAboutOnePost") {
-                        headers["Auth"] = TOKEN
-                        parameter("idPageProfile", selectedPage.id)
-                        parameter("idPost", selectedPost?.id)
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
                     }
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
+                    }
+                }.use {
+                    selectedPostInfo =
+                        it.get("http://${MAINENDPOINT}/content/getInfoAboutOnePost") {
+                            headers["Auth"] = TOKEN
+                            parameter("idPageProfile", selectedPage.id)
+                            parameter("idPost", selectedPost?.id)
+                        }
+                }
             }
-        }
 
     }
 
@@ -324,72 +330,59 @@ class ProfileViewModel : ViewModel() {
         else {
             getContentPage(selectedPage.id)
         }
-//        when (stateProfile) {
-//            StateProfile.HUMAN -> {
-//                imageProfile = humanPhoto
-//                nameProfile = USERNAME
-//                isVisibleInfoUser = true
-//                swipableMenu.listIcon = listIconStateHuman
-//            }
-//            StateProfile.PET -> {
-//                getContentPage(selectedPage.id)
-//                imageProfile = selectedPage.image
-//                nameProfile = selectedPage.title
-//                swipableMenu.listIcon = listIconStatePage
-//            }
-//        }
     }
 
     var isAddingNewCard by mutableStateOf(false)
 
     fun createNewPage(item: PageProfileDC) {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                expectSuccess = false
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-//                            val responseRegistration =
-                val response =
-                    it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/createPageProfile") {
-                        headers["Auth"] = TOKEN
-                        headers["Content-Type"] = "Application/Json"
-                        body = item
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
                     }
-                if (response.status.isSuccess()) {
-                    isAddingNewCard = false
+                    expectSuccess = false
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 30000
+                    }
+                }.use {
+                    val response =
+                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/createPageProfile") {
+                            headers["Auth"] = TOKEN
+                            headers["Content-Type"] = "Application/Json"
+                            body = item
+                        }
+                    if (response.status.isSuccess()) {
+                        isAddingNewCard = false
+                    }
                 }
             }
-        }
     }
 
     fun addNewImagePost(item: ContentRequestDC) {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
-                expectSuccess = false
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-//                            val responseRegistration =
-                val response =
-                    it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addPostImage") {
-                        headers["Auth"] = TOKEN
-                        headers["Content-Type"] = "Application/Json"
-                        body = item
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
                     }
-                if (response.status.isSuccess()) {
-                    menuHelper.changeVisibilityMenu(MENUS.NEWCONTENT)
+                    expectSuccess = false
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 30000
+                    }
+                }.use {
+//                            val responseRegistration =
+                    val response =
+                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addPostImage") {
+                            headers["Auth"] = TOKEN
+                            headers["Content-Type"] = "Application/Json"
+                            body = item
+                        }
+                    if (response.status.isSuccess()) {
+                        menuHelper.changeVisibilityMenu(MENUS.NEWCONTENT)
+                    }
                 }
             }
-        }
     }
 
 //    fun getAvatar() {
@@ -412,77 +405,86 @@ class ProfileViewModel : ViewModel() {
 //        }
 //    }
 
-    fun getAvatar() {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-
-                val response =
-                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/avatar") {
-                        headers["Auth"] = TOKEN
-                    }
-                if (response.status.isSuccess()) {
-                    humanPhoto = response.readText()
-                    initImageProfile = humanPhoto
-                }
-            }
+    fun checkInternet(func: () -> Unit) {
+        if (MainActivity.isNetworkAvailable.value) {
+            func()
         }
     }
 
+    fun getAvatar() {
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
+                    }
+                }.use {
+
+                    val response =
+                        it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/avatar") {
+                            headers["Auth"] = TOKEN
+                        }
+                    if (response.status.isSuccess()) {
+                        humanPhoto = response.readText()
+                        initImageProfile = humanPhoto
+                    }
+                }
+            }
+    }
+
     fun changeAvatar(image: String) {
-        viewModelScope.launch {
-            HttpClient(Android) {
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
 //                install(JsonFeature) {
 //                    serializer = KotlinxSerializer()
 //                }
 //                expectSuccess = false
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 3000
-                }
-            }.use {
-
-                val response =
-                    it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/changeAvatar") {
-                        headers["Auth"] = TOKEN
-//                        headers["Content-Type"] = "text/plain"
-                        body = image
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
                     }
-                if (response.status.isSuccess()) {
-                    humanPhoto = response.readText()
-                    initImageProfile = humanPhoto
+                }.use {
+
+                    val response =
+                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/changeAvatar") {
+                            headers["Auth"] = TOKEN
+//                        headers["Content-Type"] = "text/plain"
+                            body = image
+                        }
+                    if (response.status.isSuccess()) {
+                        humanPhoto = response.readText()
+                        initImageProfile = humanPhoto
+                    }
                 }
             }
-        }
     }
 
     private fun getPagesProfileByIdUser(idUser: String) {
-        viewModelScope.launch {
-            HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+                    install(JsonFeature) {
+                        serializer = KotlinxSerializer()
+                    }
 //                expectSuccess = false
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 30000
-                }
-            }.use {
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 30000
+                    }
+                }.use {
 
-                listPagesProfile =
-                    it.get("http://${MainActivity.MAINENDPOINT}/getPagesProfileByIdUser") {
-                        headers["Auth"] = TOKEN
-                        parameter("idUser", idUser)
+                    listPagesProfile =
+                        it.get("http://${MainActivity.MAINENDPOINT}/getPagesProfileByIdUser") {
+                            headers["Auth"] = TOKEN
+                            parameter("idUser", idUser)
 //                        headers["Content-Type"] = "text/plain"
 //                        body = image
-                    }
+                        }
 //                if (response.status.isSuccess()) {
 //                    humanPhoto = response.readText()
 //                    initImageProfile = humanPhoto
 //                }
+                }
             }
-        }
     }
 }
 
@@ -506,7 +508,8 @@ fun encodeToBase64(image: Bitmap): String {
     val string = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         java.util.Base64.getEncoder().encodeToString(byte_array)
     } else {
-        ""
+//        Base64.getEncoder().encode(byte_array);
+        android.util.Base64.encodeToString(byte_array, android.util.Base64.NO_WRAP)
     }
     string.replace("\\n", "")
     return string

@@ -38,8 +38,8 @@ import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.PushNotificationService.Companion.ISAPPLIFE
 import com.foggyskies.petapp.PushNotificationService.Companion.notificationsList
-import com.foggyskies.petapp.domain.db.ChatDB
-import com.foggyskies.petapp.domain.repository.RepositoryChatDB
+import com.foggyskies.petapp.domain.db.UserDB
+import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.network.ConnectionLiveData
 import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessScreen
 import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessViewModel
@@ -54,6 +54,7 @@ import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.registation.AuthorizationViewModel
 import com.foggyskies.petapp.presentation.ui.splash.SplashScreen
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.AuthorizationScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
@@ -61,21 +62,25 @@ import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 
 enum class DBs {
-    Chat
+    User
 }
 
 val mainModule = module {
-    single(named(DBs.Chat)) {
+    single(named(DBs.User)) {
         Room.databaseBuilder(
             androidContext(),
-            ChatDB::class.java,
+            UserDB::class.java,
             "chat-db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
     single {
-        RepositoryChatDB(get(named(DBs.Chat)))
+        RepositoryUserDB(get(named(DBs.User)))
     }
 }
 
@@ -102,13 +107,13 @@ class MainActivity : ComponentActivity() {
         ISAPPLIFE = true
 
         requestPermissions(PERMISSIONS, MY_PERMISSIONS_REQUEST)
-        try{
+        try {
 
             startKoin {
                 androidContext(this@MainActivity)
                 modules(listOf(mainModule))
             }
-        }catch (_: java.lang.Exception){
+        } catch (_: java.lang.Exception) {
 
         }
         loader = ImageLoader.Builder(this)
@@ -117,6 +122,10 @@ class MainActivity : ComponentActivity() {
                     .maxSizePercent(0.25)
                     .build()
             }
+//            .fetcherDispatcher(Dispatchers.Default)
+//            .decoderDispatcher(Dispatchers.Default)2
+//            .transformationDispatcher(Dispatchers.Default)
+//            .interceptorDispatcher(Dispatchers.Default)
             .crossfade(true)
             .diskCache {
                 DiskCache.Builder()
@@ -156,14 +165,17 @@ class MainActivity : ComponentActivity() {
 //        }
 //        MediaStore.Downloads.
 //        var directory = "/storage/emulated/0"
-//        val originString = "$directory/RusLan"
+//        val originString = "$directory/RusLana"
 //        val path = Paths.get(originString)
 //        val file = File(originString)
 //        if (!Files.exists(path)) {
-//            file.mkdirs()
+////            file.mkdirs()
+//            Files.createTempDirectory(path, "")
 //        }
 //        val readyPath = "$originString/image_12_123.png"
 //        File(readyPath).writeText("awfawfawf")
+
+
 
         setContent {
             val context = LocalContext.current
@@ -174,10 +186,10 @@ class MainActivity : ComponentActivity() {
                 LoadingApp()
             }
         }
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        );
+//        window.setFlags(
+//            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+//            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+//        );
     }
 
     fun onClick() {
@@ -231,7 +243,7 @@ fun LoadingApp() {
 
     val db = Room.databaseBuilder(
         context.applicationContext,
-        ChatDB::class.java,
+        UserDB::class.java,
         "chat-db"
     ).build()
     val chatDao = db.chatDao()
@@ -281,7 +293,7 @@ fun LoadingApp() {
                 mainSocketViewModel.createMainSocket()
 //            if (!isHomeLoaded){
 //                isHomeLoaded = true
-                viewModel.HomeScreen(nav_controller, mainSocketViewModel)
+            viewModel.HomeScreen(nav_controller, mainSocketViewModel)
 //            }
         }
         composable("AdsHomeless") {
@@ -329,7 +341,7 @@ fun LoadingApp() {
             val viewModel =
                 viewModelProvider["ProfileViewModel", (ProfileViewModel::class.java)]
 
-            LaunchedEffect(key1 = Unit) {
+            LaunchedEffect(key1 = isNetworkAvailable.value) {
                 val isOwnerMode = it.arguments?.getBoolean("mode", true) ?: true
                 val username = it.arguments?.getString("username", USERNAME)!!
                 val image = it.arguments?.getString("image", "")!!

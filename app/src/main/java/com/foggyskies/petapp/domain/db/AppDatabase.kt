@@ -1,18 +1,16 @@
 package com.foggyskies.petapp.domain.db
 
 import android.provider.BaseColumns
-import android.util.Log
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.foggyskies.petapp.data.Chat
+import com.foggyskies.petapp.data.FriendTable
 import com.foggyskies.petapp.domain.dao.ChatDao
-import com.foggyskies.petapp.domain.dao.MessageDao
+import com.foggyskies.petapp.domain.dao.FriendsDao
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
-import io.ktor.network.tls.extensions.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToStream
 
 object Messages : BaseColumns {
     const val TABLE_NAME = "message_"
@@ -23,9 +21,12 @@ object Messages : BaseColumns {
     const val COLUMN_LIST_IMAGES = "listImages"
 }
 
-@Database(entities = [Chat::class], version = 1, exportSchema = true)
-abstract class ChatDB : RoomDatabase() {
+@Database(entities = [Chat::class, FriendTable::class], version = 2, exportSchema = true)
+abstract class UserDB : RoomDatabase() {
+
     abstract fun chatDao(): ChatDao
+
+    abstract fun friendDao(): FriendsDao
 
     fun createTable(tableName: String) {
         val CREATE_TABLE =
@@ -37,7 +38,7 @@ abstract class ChatDB : RoomDatabase() {
         openHelper.writableDatabase.execSQL(CREATE_TABLE)
     }
 
-    fun insertMessages(idChat: String, message: ChatMessage) {
+    suspend fun insertMessages(idChat: String, message: ChatMessage) {
         val listS = Json.encodeToString(message.listImages)
         val INSERT_MESSAGE =
             "INSERT OR REPLACE INTO ${Messages.TABLE_NAME + idChat} VALUES (" +
@@ -66,12 +67,6 @@ abstract class ChatDB : RoomDatabase() {
         } }
         return messageGlob
     }
-
-//    fun reWriteImages(idChat: String, idMessage: String, newListString: String){
-//        val RE_WRITE_IMAGES =
-//            "UPDATE message_$idChat SET listImages=\'$newListString\' WHERE id LIKE \'$idMessage\'"
-//        openHelper.writableDatabase.execSQL(RE_WRITE_IMAGES)
-//    }
 
     suspend fun getImageList(idChat: String, idMessage: String): List<String> {
         val SELECT_LIST_IMAGES =
