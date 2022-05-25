@@ -26,9 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import java.io.File
 
@@ -36,7 +42,7 @@ class GalleryHandler {
 
     var listPath by mutableStateOf(emptyList<String>())
 
-    fun getCameraImages(context: Context): List<String> {
+    fun getCameraImages(context: Context){
         val uri: Uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val cursor: Cursor?
         val column_index_data: Int
@@ -60,7 +66,7 @@ class GalleryHandler {
             listOfAllImages.add(absolutePathOfImage)
         }
         listPath = listOfAllImages
-        return listOfAllImages
+//        return listOfAllImages
     }
 
     val imageBitmap =
@@ -112,9 +118,11 @@ class GalleryHandler {
     @OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
     @Composable
     fun GalleryImageSelector(
+        listItems: List<String> = emptyList(),
         stateSheet: ModalBottomSheetState,
         onSelectedImage: (String) -> Unit = {},
         isManySelect: Boolean = false,
+        chatMode: Boolean = false,
         bottomBar: @Composable () -> Unit = {},
     ) {
         DisposableEffect(key1 = stateSheet.isVisible) {
@@ -128,6 +136,10 @@ class GalleryHandler {
 //            mutableStateOf(emptyList<String>())
 //        }
 
+        SideEffect {
+            Log.e("GALLERY HANDLER", "Утечка")
+        }
+//
         val selectMode: (String) -> Unit = {
             selectedItems = if (selectedItems.contains(it))
                 selectedItems - it
@@ -143,16 +155,29 @@ class GalleryHandler {
         else
             oneSelectMode
 
+        val context = LocalContext.current
+
         LazyColumn(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(bottom = 60.dp)
+            modifier = if (!chatMode)
+                Modifier
+//                .apply {
+//                    wrapContentSize()
+////                    if (chatMode)
+//                        padding(bottom = 60.dp)
+//                }
+                    .wrapContentSize()
+            else
+                Modifier
+                    .wrapContentSize()
+                    .padding(bottom = 60.dp)
         ) {
 
             item {
                 Spacer(modifier = Modifier.height(10.dp))
             }
-            itemsIndexed(listPath.windowed(3, 3, true)) { index, list ->
+//            val lists =
+//            windowed(1, 1, false))
+            itemsIndexed(listItems.windowed(3, 3, false)) { index, list ->
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 5.dp, vertical = 2.5.dp)
@@ -188,8 +213,19 @@ class GalleryHandler {
                                         1f
                                 )
                             }
-                            Image(
-                                rememberAsyncImagePainter(File(list[0])),
+                            var request by remember {
+                                mutableStateOf<ImageRequest?>(null)
+                            }
+                            LaunchedEffect(key1 = Unit ){
+                                request = ImageRequest.Builder(context)
+                                    .data(File(list[0]))
+                                    .crossfade(true)
+                                    .build()
+                                request?.let { loader.enqueue(it) }
+                            }
+
+                            AsyncImage(
+                                model = request,
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
@@ -295,6 +331,9 @@ class GalleryHandler {
                             }
                         }
                 }
+//                if (index == lists.lastIndex){
+//                    Spacer(modifier = Modifier.padding(bottom = 60.dp))
+//                }
             }
         }
     }

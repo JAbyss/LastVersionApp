@@ -65,7 +65,7 @@ data class FormattedChatDC(
 fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
+//            .clip(RoundedCornerShape(10.dp))
             .fillMaxWidth()
             .background(Color.White)
             .clickable {
@@ -129,64 +129,43 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BoxScope.ChatsScreen(
+fun ChatsScreen(
     nav_controller: NavHostController?,
     viewModel: HomeMVIModel,
     msViewModel: MainSocketViewModel
 ) {
 
-    Box() {
-
-        Box(
-            Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    viewModel.menuHelper.changeVisibilityMenu(MENUS.CHATS)
-//                    viewModel.chatsMenuSwitch()
-                }
-        )
-
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .widthIn(max = 300.dp)
-                .align(Alignment.Center)
-//                .background(Color.White)
-        ) {
             LazyColumn(
                 modifier = Modifier
-                    .padding(5.dp)
+                    .clip(RoundedCornerShape(20.dp))
+//                    .padding(5.dp)
             ) {
-                stickyHeader {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White)
-                            .align(Alignment.CenterStart)
-                    ) {
-                        Text(
-                            text = "Чаты",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(7.dp)
-                                .align(
-                                    Alignment.Center
-                                )
-                        )
-                    }
-                }
-                item { Spacer(modifier = Modifier.height(10.dp)) }
+//                stickyHeader {
+//                    Box(
+//                        modifier = Modifier
+//                            .clip(RoundedCornerShape(20.dp))
+//                            .background(Color.White)
+//                    ) {
+//                        Text(
+//                            text = "Чаты",
+//                            fontSize = 20.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            modifier = Modifier
+//                                .padding(7.dp)
+//                                .align(
+//                                    Alignment.Center
+//                                )
+//                        )
+//                    }
+//                }
+//                item { Spacer(modifier = Modifier.height(10.dp)) }
                 if (msViewModel.listChats.isEmpty())
                     item {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color.White)
-                                .align(Alignment.CenterStart)
+//                                .align(Alignment.CenterStart)
                         ) {
                             Text(
                                 text = "Пустовато",
@@ -207,6 +186,6 @@ fun BoxScope.ChatsScreen(
                         OneItemChat(item, nav_controller)
                     }
             }
-        }
-    }
+//        }
+//    }
 }

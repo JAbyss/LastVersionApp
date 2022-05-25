@@ -50,7 +50,7 @@ import com.foggyskies.petapp.presentation.ui.profile.human.views.*
 import kotlinx.coroutines.launch
 
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalAnimationApi::class,
+    ExperimentalAnimationApi::class,
     ExperimentalMaterialApi::class
 )
 @Composable
@@ -64,10 +64,18 @@ fun ProfileScreen(
             viewModel.checkInternet(viewModel::getAvatar)
             msViewModel.sendAction("getPagesProfile|")
         }
+//        if (launcher == null)
     }
 
     val context = LocalContext.current
 
+//    var a by remember {
+//        mutableStateOf(false)
+//    }
+//    if (!a) {
+    viewModel.profileHandler.InitGallery(context = context)
+//        a = true
+//    }
     val state = rememberLazyListState()
 
     BackHandler {
@@ -100,14 +108,17 @@ fun ProfileScreen(
         sheetShape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp),
         sheetContent = {
             viewModel.profileHandler.GalleryImageSelector(
-                stateSheet,
+                stateSheet = stateSheet,
                 onSelectedImage = {
                     scope.launch {
                         stateSheet.hide()
                     }
                     val bm = BitmapFactory.decodeFile(it)
                     val string64 = encodeToBase64(bm)
-                    viewModel.changeAvatar(string64)
+                    if (viewModel.stateProfile == StateProfile.HUMAN)
+                        viewModel.changeAvatar(string64)
+                    else
+                        viewModel.changeAvatarPageProfile(string64)
                 }
             )
         },
@@ -253,15 +264,6 @@ fun ProfileScreen(
                     }
                 )
             }
-
-//        AnimatedVisibility(
-//            visible = viewModel.stateProfile == StateProfile.PET,
-//            modifier = Modifier
-//                .padding(bottom = 5.dp)
-//                .align(BottomCenter)
-//        ) {
-//            PetBottomMenu()
-//        }
             AnimatedVisibility(
                 visible = viewModel.isAddingNewCard,
                 modifier = Modifier
@@ -454,6 +456,7 @@ fun BoxScope.AddNewImage(
                             )
                         )
                     )
+                    viewModel.descriptionMenuNewContent = ""
                 }
             },
             modifier = Modifier

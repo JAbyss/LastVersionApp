@@ -6,6 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -21,7 +23,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
 import kotlinx.coroutines.*
 
 enum class SideScreen {
@@ -44,9 +45,12 @@ data class ItemSwappableMenu(
 class SwappableMenu() : CircularSelector() {
 
 
-    fun Modifier(modifier: Modifier): Modifier {
-        return modifier.touchMenuListener()
+    fun Modifier(modifier: Modifier, callback: () -> Unit = {}): Modifier {
+        return modifier.touchMenuListener(callback)
     }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    var modalBottomSheetState: ModalBottomSheetState? = null
 
     lateinit var navController: NavHostController
 
@@ -141,7 +145,8 @@ class SwappableMenu() : CircularSelector() {
         }
     }
 
-    fun onDragStart(startOffsetPx: Offset) {
+    @OptIn(ExperimentalMaterialApi::class)
+    fun onDragStart(startOffsetPx: Offset, callback: () -> Unit) {
 
         if (
             (startOffsetPx.x > sizeScreen.width * 0.1f) &&
@@ -153,6 +158,11 @@ class SwappableMenu() : CircularSelector() {
             isTappedScreen = true
             isMenuOpen = true
         } else {
+            // FIXME Не 100 проц что работает
+//            CoroutineScope(Dispatchers.Default).launch {
+//                modalBottomSheetState?.show()
+//            }
+            callback()
             isTappedScreen = false
             isMenuOpen = false
         }
@@ -165,14 +175,14 @@ class SwappableMenu() : CircularSelector() {
     }
 
     @SuppressLint("SuspiciousIndentation")
-    fun Modifier.touchMenuListener(): Modifier {
+    fun Modifier.touchMenuListener(callback: () -> Unit): Modifier {
         return pointerInput(Unit) {
             var offset = Offset.Zero
                 detectDragGesturesAfterLongPress(
                     onDragStart = {
                         if (isReadyMenu) {
                             offset = it
-                            onDragStart(it)
+                            onDragStart(it, callback)
                             startOffsetCS = offsetStartDp
                             radius = radiusMenu
                         }

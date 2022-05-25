@@ -241,15 +241,15 @@ class HomeViewModel : ViewModel() {
     fun getChats(msViewModel: MainSocketViewModel) {
         viewModelScope.launch {
 //            msViewModel.listChats =
-            val chats = msViewModel.chatDao?.getAllChats()?.toMutableList()!!
-            val formattedChat = chats.map {
-                FormattedChatDC(
-                    id = it.idChat,
-                    nameChat = it.companionName,
-                    image = it.imageCompanion,
-                    idCompanion = it.companionId
-                )
-            }
+//            val chats = msViewModel.repositoryUserDB. chatDao?.getAllChats()?.toMutableList()!!
+//            val formattedChat = chats.map {
+//                FormattedChatDC(
+//                    id = it.idChat,
+//                    nameChat = it.companionName,
+//                    image = it.imageCompanion,
+//                    idCompanion = it.companionId
+//                )
+//            }
             val CREATE_TABLE =
                 "CREATE TABLE ${Messages.TABLE_NAME + "fwafawf"} (" +
                         " ${Messages.COLUMN_ID} TEXT PRIMARY KEY," +
@@ -258,7 +258,7 @@ class HomeViewModel : ViewModel() {
                         " ${Messages.COLUMN_LIST_IMAGES} TEXT )"
 //            a.writableDatabase.execSQL(CREATE_TABLE)
 //            msViewModel.chatDao?.createNewMessageTable("623480a2132ed64da24c5e3b")
-            msViewModel.listChats = formattedChat.toMutableList()
+//            msViewModel.listChats = formattedChat.toMutableList()
             msViewModel.sendAction("getChats|")
 //            val isExist = dao.checkOnExistChat(idChat = "623480a2132ed64da24c5e3b")
 //            if (isExist)

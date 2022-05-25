@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.domain.dao.ChatDao
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
@@ -20,6 +21,7 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -38,11 +40,17 @@ data class OldListInfo<T>(
     var depricatedItemsList: MutableList<T>
 )
 
+@kotlinx.serialization.Serializable
+data class NewMessagesCollection(
+    val id: String,
+    val new_messages: List<ChatMessage>
+)
+
 class MainSocketViewModel : ViewModel() {
 
     val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
 
-    var chatDao: ChatDao? = null
+//    var chatDao: ChatDao? = null
 
     var mainSocket: WebSocketSession? = null
 
@@ -176,6 +184,8 @@ class MainSocketViewModel : ViewModel() {
 
     var listPagesProfile by mutableStateOf(emptyList<PageProfileFormattedDC>())
 
+    var listNewMessages by mutableStateOf(emptyList<NewMessagesCollection>())
+
     fun createMainSocket() {
         viewModelScope.launch {
 
@@ -201,7 +211,6 @@ class MainSocketViewModel : ViewModel() {
                 url("ws://${MainActivity.MAINENDPOINT}/mainSocket/$idUser")
                 header("Auth", MainActivity.TOKEN)
             }
-
             observeActions().onEach { user ->
                 val regex = ".+(?=\\|)".toRegex()
                 val action = regex.find(user)?.value
@@ -256,6 +265,12 @@ class MainSocketViewModel : ViewModel() {
                             val json =
                                 Json.decodeFromString<List<PageProfileFormattedDC>>(formatted)
                             listPagesProfile = json.toMutableList()
+                        },
+                        "getNewMessages" to {
+                            val json =
+                                Json.decodeFromString<List<NewMessagesCollection>>(formatted)
+                            listNewMessages = json
+//                            listPagesProfile = json.toMutableList()
                         }
                     )
                     map_actions[action]?.invoke()

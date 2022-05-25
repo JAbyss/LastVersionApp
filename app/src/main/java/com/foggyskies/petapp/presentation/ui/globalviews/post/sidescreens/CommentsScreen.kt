@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +16,6 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.home.CommentDC
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -43,11 +41,12 @@ fun CommentsScreen(
     var context = LocalContext.current
 
     @Composable
-    fun OneItemComment(item: CommentDC) {
+    fun OneItemComment(users: HashMap<String, UserIUSI>, item: CommentDC) {
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+//                .fillMaxHeight(0.85f)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -62,7 +61,7 @@ fun CommentsScreen(
                 ) {
                     Box() {
                         AsyncImage(
-                            model = "http://${MainActivity.MAINENDPOINT}/images/test_avatar.jpg",
+                            model = "http://${MainActivity.MAINENDPOINT}/${users[item.idUser]?.image}",
                             contentDescription = null,
                             modifier = Modifier
                                 .clip(CircleShape)
@@ -77,14 +76,14 @@ fun CommentsScreen(
                                 radius = 25f,
                             )
                             drawCircle(
-                                color = Color.Gray,
+                                color = if (users[item.idUser]?.status!! == "В сети") Color.Green else Color.Gray,
                                 radius = 12f,
                             )
                         }
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "JAbyss",
+                        text = users[item.idUser]?.username!!,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
                     )
@@ -136,19 +135,23 @@ fun CommentsScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.9f)
+    ) {
 
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             state = state,
             modifier = Modifier.fillMaxSize()
         ) {
-            itemsIndexed(postScreenHandler.listComments) { index, item ->
+            itemsIndexed(postScreenHandler.listComments.comments) { index, item ->
                 if (index == 0)
                     Spacer(modifier = Modifier.height(10.dp))
-                OneItemComment(item)
+                OneItemComment(postScreenHandler.listComments.users, item)
                 Spacer(modifier = Modifier.height(10.dp))
-                if (index != 0 && index != postScreenHandler.listComments.lastIndex)
+                if (index != 0 && index != postScreenHandler.listComments.comments.lastIndex)
                     Divider(
                         color = Color.LightGray, thickness = 0.5.dp, modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
@@ -158,7 +161,7 @@ fun CommentsScreen(
             }
         }
         AnimatedVisibility(
-            visible = postScreenHandler.listComments.isEmpty(),
+            visible = postScreenHandler.listComments.comments.isEmpty(),
             modifier = Modifier.align(Alignment.Center)
         ) {
             Text(

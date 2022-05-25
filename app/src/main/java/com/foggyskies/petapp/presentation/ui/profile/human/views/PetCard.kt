@@ -5,6 +5,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -16,10 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentRecomposeScope
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomStart
 import androidx.compose.ui.Alignment.Companion.Center
@@ -53,7 +51,15 @@ fun PetCard(
 ) {
     val context = LocalContext.current
 
-    viewModel.profileHandler.InitGallery(context = context)
+
+
+//    LaunchedEffect(key1 = Unit ){
+//    }
+
+
+    SideEffect {
+        Log.e("CHECK YTECHKA", "YTECHKA")
+    }
 
     Box(
         modifier = creatingModifier?.clickable {
@@ -71,6 +77,16 @@ fun PetCard(
                     })
 
     ) {
+
+//        if (viewModel.profileHandler.imageBitmap.value != null){
+//            Image(
+//                bitmap = viewModel.profileHandler.imageBitmap.value!!.asImageBitmap(),
+//                contentDescription = null,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .fillMaxSize()
+//            )
+//        }
 
         when {
             item.image != "" -> AsyncImage(

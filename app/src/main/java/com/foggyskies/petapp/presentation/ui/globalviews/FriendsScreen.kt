@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -68,7 +69,12 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
             .clickable {
                 nav_controller?.navigate(
                     nav_controller.graph[NavTree.Profile.name].id,
-                    bundleOf("mode" to false, "username" to item.username, "image" to item.image, "idUser" to item.id)
+                    bundleOf(
+                        "mode" to false,
+                        "username" to item.username,
+                        "image" to item.image,
+                        "idUser" to item.id
+                    )
                 )
             }
     ) {
@@ -76,7 +82,7 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .fillMaxWidth(0.75f)
+                .fillMaxWidth(1f)
                 .align(Alignment.CenterStart)
                 .background(Color.White)
         ) {
@@ -109,70 +115,81 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                 }
             Spacer(modifier = Modifier.width(20.dp))
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(0.75f)
             ) {
                 Text(
                     text = item.username,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .fillMaxWidth()
                 )
                 if (item.status != "") {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Text(text = item.status, maxLines = 1, modifier = Modifier.fillMaxWidth())
+                    Text(
+                        text = item.status,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
                 }
             }
-        }
-        Button(
-            onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
 
-                    HttpClient(Android) {
-                        install(JsonFeature) {
-                            serializer = KotlinxSerializer()
-                        }
-                        install(HttpTimeout) {
-                            requestTimeoutMillis = 3000
-                        }
-                    }.use {
-                        val idChat = it.post<String>("http://$MAINENDPOINT/createChat") {
-                            this.headers["Auth"] = TOKEN
-                            this.headers["Content-Type"] = "Application/Json"
-                            this.body = CreateChat(
-                                username = USERNAME,
-                                idUserSecond = item.id
-                            )
-                        }
-                        CoroutineScope(Dispatchers.Main).launch {
-                            val formattedChat = FormattedChatDC(
-                                id = idChat,
-                                nameChat = item.username,
-                                idCompanion = item.id,
-                                image = item.image
-                            )
-                            val string = Json.encodeToString(formattedChat)
-                            val b = bundleOf("itemChat" to string)
-                            nav_controller?.navigate(nav_controller.graph[NavTree.ChatSec.name].id, b)
+            IconButton(
+                onClick = {
+                    CoroutineScope(Dispatchers.IO).launch {
+
+                        HttpClient(Android) {
+                            install(JsonFeature) {
+                                serializer = KotlinxSerializer()
+                            }
+                            install(HttpTimeout) {
+                                requestTimeoutMillis = 3000
+                            }
+                        }.use {
+                            val idChat = it.post<String>("http://$MAINENDPOINT/createChat") {
+                                this.headers["Auth"] = TOKEN
+                                this.headers["Content-Type"] = "Application/Json"
+                                this.body = CreateChat(
+                                    username = USERNAME,
+                                    idUserSecond = item.id
+                                )
+                            }
+                            CoroutineScope(Dispatchers.Main).launch {
+                                val formattedChat = FormattedChatDC(
+                                    id = idChat,
+                                    nameChat = item.username,
+                                    idCompanion = item.id,
+                                    image = item.image
+                                )
+                                val string = Json.encodeToString(formattedChat)
+                                val b = bundleOf("itemChat" to string)
+                                nav_controller?.navigate(
+                                    nav_controller.graph[NavTree.ChatSec.name].id,
+                                    b
+                                )
+                            }
                         }
                     }
-                }
-            },
-            shape = RoundedCornerShape(20.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color.White
-            ),
-            elevation = ButtonDefaults.elevation(
-                defaultElevation = 0.dp
-            ),
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_chat),
-                contentDescription = null,
+                },
+//            shape = RoundedCornerShape(20.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                backgroundColor = Color.White
+//            ),
+//            elevation = ButtonDefaults.elevation(
+//                defaultElevation = 0.dp
+//            ),
+//            contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
-                    .size(35.dp)
-            )
+//                    .align(Alignment.CenterEnd)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_chat),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(35.dp)
+                )
+            }
         }
     }
 }
@@ -297,29 +314,29 @@ fun FriendsScreen(
 ) {
     var stateFriendsScreen by remember { mutableStateOf(StateFriendScreen.FRIENDS) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    viewModel.menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
-//                    viewModel.friendMenuSwitch()
-                }
-        )
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//    ) {
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .clickable(
+//                    interactionSource = remember { MutableInteractionSource() },
+//                    indication = null
+//                ) {
+//                    viewModel.menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+////                    viewModel.friendMenuSwitch()
+//                }
+//        )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .align(Alignment.Center)
+//                .align(Alignment.Center)
                 .fillMaxWidth(0.9f)
         ) {
-
+//
             AnimatedVisibility(
                 visible = msViewModel.listRequests.isNotEmpty(),
                 modifier = Modifier.align(End)
@@ -364,41 +381,42 @@ fun FriendsScreen(
                     }
                 }
             }
-
+//
             Spacer(modifier = Modifier.height(30.dp))
+//
+//            Box(
+//                modifier = Modifier
+//                    .padding(horizontal = 24.dp)
+//                    .clip(RoundedCornerShape(20.dp))
+//                    .fillMaxWidth(1f)
+//                    .background(Color.White)
+//            ) {
 
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .fillMaxWidth(1f)
-                    .background(Color.White)
-            ) {
+            LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
 
-                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-
-                    itemsIndexed(msViewModel.listFriends) { index, item ->
-                        androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.FRIENDS) {
-                            AnimationLoad(index = index, delayItems = 100) {
-                                Column() {
-                                    OneItemFriend(item, nav_controller)
-                                    if (index != msViewModel.listFriends.lastIndex)
-                                        Spacer(modifier = Modifier.height(5.dp))
-                                }
+                itemsIndexed(msViewModel.listFriends) { index, item ->
+                    androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.FRIENDS) {
+                        AnimationLoad(index = index, delayItems = 100) {
+                            Column() {
+                                OneItemFriend(item, nav_controller)
+                                if (index != msViewModel.listFriends.lastIndex)
+                                    Spacer(modifier = Modifier.height(5.dp))
                             }
                         }
                     }
+                }
 
-                    itemsIndexed(msViewModel.listRequests) { _, item ->
-                        androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.REQUESTS) {
-                            OneItemRequest(item, msViewModel)
-                        }
+                itemsIndexed(msViewModel.listRequests) { _, item ->
+                    androidx.compose.animation.AnimatedVisibility(visible = stateFriendsScreen == StateFriendScreen.REQUESTS) {
+                        OneItemRequest(item, msViewModel)
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(5.dp))
         }
-    }
+//            }
+//            Spacer(modifier = Modifier.height(5.dp))
+//        }
+//    }
 }
 
 @Composable

@@ -1,6 +1,9 @@
 package com.foggyskies.petapp.presentation.ui.home
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +12,7 @@ import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
+import com.foggyskies.petapp.presentation.ui.globalviews.Screens
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
@@ -86,6 +90,8 @@ class HomeMVIModel :
         }
     }
 
+    var selectedPage by mutableStateOf(Screens.IDLE)
+
 //    interface checkInternet {
 //        fun checkInternet(): Boolean {
 //            return true
@@ -140,7 +146,7 @@ class HomeMVIModel :
         swipableMenu.listIcon = listIconHome
     }
 
-    private val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
+    val repositoryUserDB: RepositoryUserDB by inject(RepositoryUserDB::class.java)
 
     val menuHelper = MenuVisibilityHelper(action = { swipableMenu.isReadyMenu = it })
 
@@ -181,13 +187,13 @@ class HomeMVIModel :
                 "Беседы" -> {
                     repositoryUserDB.getChats(msViewModel)
 //                    if (msViewModel.listChats.isNotEmpty())
-                        menuHelper.changeVisibilityMenu(MENUS.CHATS)
+                    menuHelper.changeVisibilityMenu(MENUS.CHATS)
 //                getChats(msViewModel)
                 }
                 "Друзья" -> {
                     repositoryUserDB.getFriends(msViewModel)
 //                    if (msViewModel.listFriends.isNotEmpty())
-                        menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+                    menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
 //                    msViewModel.sendAction("getFriends|")
                     msViewModel.sendAction("getRequestsFriends|")
 

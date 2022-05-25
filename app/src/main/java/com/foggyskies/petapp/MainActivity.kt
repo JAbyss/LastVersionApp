@@ -98,7 +98,6 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     }
-//    private val PERMISSIONS_OLD_API =
 
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalMaterialApi::class)
@@ -176,7 +175,6 @@ class MainActivity : ComponentActivity() {
 //        File(readyPath).writeText("awfawfawf")
 
 
-
         setContent {
             val context = LocalContext.current
 
@@ -238,29 +236,14 @@ fun LoadingApp() {
     val statusBarColor: Int = Color(0xFFC2C8CC).toArgb()
     window.statusBarColor = statusBarColor
 
-
-    val db = Room.databaseBuilder(
-        context.applicationContext,
-        UserDB::class.java,
-        "chat-db"
-    ).build()
-    val chatDao = db.chatDao()
-
-
     val viewModelProvider = ViewModelProvider(context as ComponentActivity)
 
     val mainSocketViewModel =
         viewModelProvider["MainSocketViewModel", (MainSocketViewModel::class.java)]
 
-    mainSocketViewModel.chatDao = chatDao
-
-    SideEffect {
-        Log.e("УТЕЧКА", "УРОВЕНЬ АКТИВИТИ")
-    }
-
-    var isHomeLoaded by remember {
-        mutableStateOf(false)
-    }
+//    SideEffect {
+//        Log.e("УТЕЧКА", "УРОВЕНЬ АКТИВИТИ")
+//    }
 
     NavHost(navController = nav_controller, startDestination = NavTree.Splash.name) {
         composable(NavTree.Splash.name) {
@@ -273,9 +256,7 @@ fun LoadingApp() {
             AuthorizationScreen(nav_controller, viewModel)
         }
         composable(NavTree.Home.name) {
-//            val viewModel = viewModelProvider["HomeViewModel", (HomeViewModel::class.java)]
             val viewModel = viewModelProvider["HomeViewModel", (HomeMVIModel::class.java)]
-//            val viewModel: HomeMVIModel = HomeMVIModel()
 
             SideEffect {
                 Log.e(
@@ -308,7 +289,6 @@ fun LoadingApp() {
             val item = Json.decodeFromString<FormattedChatDC>(str)
 
             val viewModel = viewModelProvider["ChatViewModel", (ChatViewModel::class.java)]
-            viewModel.db = db
             ChatScreen(viewModel, item)
         }
         composable(

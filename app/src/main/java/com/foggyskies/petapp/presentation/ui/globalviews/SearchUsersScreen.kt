@@ -190,150 +190,139 @@ fun OneItemUser(
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun BoxScope.SearchUsersScreen(
+fun SearchUsersScreen(
     nav_controller: NavHostController?,
     viewModel: HomeMVIModel,
     msViewModel: MainSocketViewModel
 ) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//    ) {
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .clickable(
+//                    interactionSource = remember { MutableInteractionSource() },
+//                    indication = null
+//                ) {
+//                    msViewModel.disconnect()
+//                    viewModel.menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS)
+////                    viewModel.searchUsersSwitch()
+//                }
+//        )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+//            modifier = Modifier.align(Alignment.Center)
     ) {
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    msViewModel.disconnect()
-                    viewModel.menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS)
-//                    viewModel.searchUsersSwitch()
-                }
-        )
+        val listUsers = msViewModel.users
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.align(Alignment.Center)
-        ) {
+        var localListUsers by remember {
+            mutableStateOf(mutableListOf<AnimatedVisibleDC<UsersSearch>>())
+        }
 
-            SearchBar(msViewModel)
+        val previos = remember { mutableListOf<Int>(0, 0) }
 
-            Spacer(modifier = Modifier.height(30.dp))
+        val scope = rememberCoroutineScope()
 
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .fillMaxWidth(0.9f)
-            ) {
+        remember(listUsers.value.users.size) {
+            scope.launch {
+                try {
+                    previos[0] = previos[1]
+                    previos[1] = listUsers.value.users.size
 
-                val listUsers = msViewModel.users
-
-                var localListUsers by remember {
-                    mutableStateOf(mutableListOf<AnimatedVisibleDC<UsersSearch>>())
-                }
-
-                val previos = remember { mutableListOf<Int>(0, 0) }
-
-                val scope = rememberCoroutineScope()
-
-                remember(listUsers.value.users.size) {
-                    scope.launch {
-                        try {
-                            previos[0] = previos[1]
-                            previos[1] = listUsers.value.users.size
-
-                            if (previos[0] != 0 && previos[1] == 0) {
-                                localListUsers.forEach {
-                                    it.isVisible.value = false
-                                }
-                                localListUsers = mutableListOf()
-                            } else if (previos[0] > previos[1]) {
-                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                var listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                localListUsers.forEachIndexed { index, item ->
-                                    if (!listUsers.value.users.contains(item.item)) {
-                                        item.isVisible.value = false
-                                        delay(50)
-                                        listForRemove.add(item)
-                                    } else {
-                                        newList.add(item)
-                                    }
-                                }
-                                localListUsers.removeAll(listForRemove)
-                                localListUsers = newList
-                            } else if (previos[0] != 0 && previos[0] < previos[1]) {
-                                val listForSave = mutableListOf<UsersSearch>()
-                                val listForSave_2 = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                val listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                localListUsers.forEachIndexed { index, item ->
-                                    if (listUsers.value.users.contains(item.item)) {
-                                        listForSave.add(item.item)
-                                        listForSave_2.add(item)
-                                    } else {
-                                        item.isVisible.value = false
-                                        delay(50)
-                                        listForRemove.add(item)
-                                    }
-                                }
-                                if (listForRemove.isNotEmpty())
-                                    localListUsers.removeAll(listForRemove)
-                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                listUsers.value.users.forEach { item ->
-                                    if (!listForSave.contains(item)) {
-                                        val newItem = AnimatedVisibleDC<UsersSearch>(
-                                            item = item,
-                                            isVisible = mutableStateOf(false)
-                                        )
-                                        newList.add(newItem)
-                                    }
-                                }
-                                listForSave_2.forEach {
-                                    newList.add(it)
-                                }
-                                localListUsers = newList
-                            } else {
-                                val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
-                                listUsers.value.users.forEach { item_1 ->
-                                    val newItem = AnimatedVisibleDC<UsersSearch>(
-                                        item = item_1,
-                                        isVisible = mutableStateOf(false)
-                                    )
-                                    newList.add(newItem)
-                                }
-                                localListUsers = newList
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                    if (previos[0] != 0 && previos[1] == 0) {
+                        localListUsers.forEach {
+                            it.isVisible.value = false
                         }
+                        localListUsers = mutableListOf()
+                    } else if (previos[0] > previos[1]) {
+                        val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        var listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        localListUsers.forEachIndexed { index, item ->
+                            if (!listUsers.value.users.contains(item.item)) {
+                                item.isVisible.value = false
+                                delay(50)
+                                listForRemove.add(item)
+                            } else {
+                                newList.add(item)
+                            }
+                        }
+                        localListUsers.removeAll(listForRemove)
+                        localListUsers = newList
+                    } else if (previos[0] != 0 && previos[0] < previos[1]) {
+                        val listForSave = mutableListOf<UsersSearch>()
+                        val listForSave_2 = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        val listForRemove = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        localListUsers.forEachIndexed { index, item ->
+                            if (listUsers.value.users.contains(item.item)) {
+                                listForSave.add(item.item)
+                                listForSave_2.add(item)
+                            } else {
+                                item.isVisible.value = false
+                                delay(50)
+                                listForRemove.add(item)
+                            }
+                        }
+                        if (listForRemove.isNotEmpty())
+                            localListUsers.removeAll(listForRemove)
+                        val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        listUsers.value.users.forEach { item ->
+                            if (!listForSave.contains(item)) {
+                                val newItem = AnimatedVisibleDC<UsersSearch>(
+                                    item = item,
+                                    isVisible = mutableStateOf(false)
+                                )
+                                newList.add(newItem)
+                            }
+                        }
+                        listForSave_2.forEach {
+                            newList.add(it)
+                        }
+                        localListUsers = newList
+                    } else {
+                        val newList = mutableListOf<AnimatedVisibleDC<UsersSearch>>()
+                        listUsers.value.users.forEach { item_1 ->
+                            val newItem = AnimatedVisibleDC<UsersSearch>(
+                                item = item_1,
+                                isVisible = mutableStateOf(false)
+                            )
+                            newList.add(newItem)
+                        }
+                        localListUsers = newList
                     }
-                    mutableStateOf(0)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+            }
+            mutableStateOf(0)
+        }
 
-                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                    itemsIndexed(localListUsers) { index, item ->
+        LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+            itemsIndexed(localListUsers) { index, item ->
 
-                        if (item.item.username != USERNAME) {
-                            LaunchedEffect(key1 = localListUsers.size) {
-                                delay(index * 250L)
-                                item.isVisible.value = true
-                            }
+                if (item.item.username != USERNAME) {
+                    LaunchedEffect(key1 = localListUsers.size) {
+                        delay(index * 250L)
+                        item.isVisible.value = true
+                    }
 
-                            androidx.compose.animation.AnimatedVisibility(visible = item.isVisible.value) {
-                                Column() {
-                                    OneItemUser(item.item, msViewModel)
-                                    if (index != localListUsers.lastIndex)
-                                        Spacer(modifier = Modifier.height(5.dp))
-                                }
-                            }
+                    androidx.compose.animation.AnimatedVisibility(visible = item.isVisible.value) {
+                        Column() {
+                            OneItemUser(item.item, msViewModel)
+                            if (index != localListUsers.lastIndex)
+                                Spacer(modifier = Modifier.height(5.dp))
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(5.dp))
         }
+        Spacer(modifier = Modifier.height(30.dp))
+
+        SearchBar(msViewModel)
     }
 }

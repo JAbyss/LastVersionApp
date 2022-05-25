@@ -1,6 +1,7 @@
 package com.foggyskies.petapp.presentation.ui.profile.human.views
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -17,10 +18,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentRecomposeScope
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,13 +32,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.*
+import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.profile.human.StateProfile
 import com.foggyskies.petapp.presentation.ui.profile.human.UserMode
+import com.foggyskies.petapp.routs.Routes
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -53,11 +54,12 @@ fun LazyListScope.HeadProfile(
     context: Context,
     stateSheet: ModalBottomSheetState
 ) {
-
 //    val context = LocalContext.current
 
     stickyHeader {
-
+        SideEffect {
+            Log.e("HEAD_PROFILE", "УТЕЧКА")
+        }
         Spacer(modifier = Modifier.height(20.dp))
         AnimatedVisibility(visible = viewModel.isVisibleInfoUser || state.firstVisibleItemIndex == 0) {
             val scope = rememberCoroutineScope()
@@ -75,25 +77,12 @@ fun LazyListScope.HeadProfile(
                     // Аватарка
                     AnimatedContent(targetState = viewModel.imageProfile) { targetImage ->
 
-                        val cached = MainActivity.loader.diskCache?.get("avatar")?.data
-                        val request = if (cached != null) {
-                            val b = cached.toFile()
-                            ImageRequest.Builder(context)
-                                .data(b)
-                                .diskCachePolicy(CachePolicy.READ_ONLY)
-                                .diskCacheKey("avatar")
-                                .crossfade(true)
-                                .build()
-                        } else {
-                            ImageRequest.Builder(context)
-                                .data("http://${MainActivity.MAINENDPOINT}/$targetImage")
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .diskCacheKey("avatar")
-                                .crossfade(true)
-                                .build()
-                        }
-                        MainActivity.loader.enqueue(request)
-
+                        val request = ImageRequest.Builder(context)
+                            .data("${Routes.SERVER.REQUESTS.BASE_URL}/$targetImage")
+                            .crossfade(true)
+                            .build()
+                        loader.enqueue(request)
+                        // TODO Добавить загрузку аватарки для профиля.
                         AsyncImage(
                             model = request,
                             contentDescription = null,

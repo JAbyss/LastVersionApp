@@ -9,10 +9,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
-import com.foggyskies.petapp.domain.db.UserDB
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
@@ -64,11 +64,13 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    var db: UserDB? = null
-
     var chatEntity: FormattedChatDC? = null
 
-    val galleryHandler = GalleryHandler()
+    var galleryHandler :GalleryHandler? = null
+
+    init {
+        galleryHandler = GalleryHandler()
+    }
 
     var heightHeaderAppBar by mutableStateOf(0)
 
@@ -106,8 +108,8 @@ class ChatViewModel : ViewModel() {
     fun connectToChat(idChat: String, context: Context) {
 
         viewModelScope.launch {
-            db?.apply {
-                createTable(idChat)
+            repositoryUserDB.dbUser.apply {
+                createTableMessages(idChat)
                 _state.value = state.value.copy(
                     messages = loadFiftyMessages(idChat).asReversed()
                 )
@@ -184,7 +186,7 @@ class ChatViewModel : ViewModel() {
     fun addImageToMessage(message: String, callBack: () -> Unit) {
         viewModelScope.launch {
 
-            galleryHandler.selectedItems.forEach {
+            galleryHandler!!.selectedItems.forEach {
 
                 val bm = BitmapFactory.decodeFile(it)
                 val string64 = encodeToBase64(bm)
@@ -214,11 +216,19 @@ class ChatViewModel : ViewModel() {
                 )
             )
             listImageAddress.clear()
-            galleryHandler.selectedItems = emptyList()
+            galleryHandler!!.selectedItems = emptyList()
             callBack()
         }
     }
+
+    var selectedImage by mutableStateOf<SelectedImageMessage?>(null)
+
 }
+
+data class SelectedImageMessage(
+    var message: ChatMessage,
+    var imageRequest: ImageRequest
+)
 
 @Serializable
 data class MessageDC(

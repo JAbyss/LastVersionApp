@@ -14,12 +14,14 @@ import kotlinx.serialization.json.Json
 
 object Messages : BaseColumns {
     const val TABLE_NAME = "message_"
+    const val TABLE_NAME_NEW_MESSAGES = "new_messages_"
     const val COLUMN_ID = "id"
     const val COLUMN_AUTHOR = "author"
     const val COLUMN_DATE = "date"
     const val COLUMN_MESSAGE = "message"
     const val COLUMN_LIST_IMAGES = "listImages"
 }
+
 
 @Database(entities = [Chat::class, FriendTable::class], version = 2, exportSchema = true)
 abstract class UserDB : RoomDatabase() {
@@ -28,7 +30,7 @@ abstract class UserDB : RoomDatabase() {
 
     abstract fun friendDao(): FriendsDao
 
-    fun createTable(tableName: String) {
+    fun createTableMessages(tableName: String) {
         val CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS ${Messages.TABLE_NAME + tableName} (" +
                     " ${Messages.COLUMN_ID} TEXT PRIMARY KEY," +
@@ -81,8 +83,9 @@ abstract class UserDB : RoomDatabase() {
     }
 
     suspend fun loadFiftyMessages(idChat: String): MutableList<ChatMessage> {
+//        ORDER BY date ASC !!
         val SELECT_FIFTY_MESSAGES =
-            "SELECT * FROM ${Messages.TABLE_NAME + idChat} ORDER BY date ASC "
+            "SELECT * FROM ${Messages.TABLE_NAME + idChat} "
 //        Limit 50
 //        ORDER BY date ASC
 //        TOP (50)
@@ -102,4 +105,51 @@ abstract class UserDB : RoomDatabase() {
 
         return listMessages
     }
+
+    /**
+     * New Messages
+     */
+
+    fun createTableNewMessage(idChat: String) {
+        val CREATE_TABLE =
+            "CREATE TABLE IF NOT EXISTS ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} (" +
+                    " ${Messages.COLUMN_ID} TEXT PRIMARY KEY," +
+                    " ${Messages.COLUMN_AUTHOR} TEXT, ${Messages.COLUMN_DATE} TEXT," +
+                    " ${Messages.COLUMN_MESSAGE} TEXT," +
+                    " ${Messages.COLUMN_LIST_IMAGES} TEXT )"
+        openHelper.writableDatabase.execSQL(CREATE_TABLE)
+    }
+
+    suspend fun insertNewMessage(idChat: String, message: ChatMessage) {
+        val images = Json.encodeToString(message.listImages)
+        val INSERT_MESSAGE =
+            "INSERT OR REPLACE INTO ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} VALUES (" +
+                    " \"${message.id}\"," +
+                    " \"${message.author}\"," +
+                    " \"${message.date}\"," +
+                    " \'${message.message}\'," +
+                    " \'$images\') "
+        openHelper.writableDatabase.execSQL(INSERT_MESSAGE)
+    }
+
+    suspend fun loadNewMessages(idChat: String): MutableList<ChatMessage> {
+        val SELECT_NEW_MESSAGES =
+            "SELECT * FROM ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} ORDER BY date ASC "
+        val cursor = openHelper.readableDatabase.query(SELECT_NEW_MESSAGES)
+        val listNewMessages = mutableListOf<ChatMessage>()
+        with(cursor){ while(moveToNext()){
+            val message = ChatMessage(
+                id = cursor.getString(0),
+                author = cursor.getString(1),
+                date = cursor.getString(2),
+                message = cursor.getString(3),
+                listImages = Json.decodeFromString(cursor.getString(4))
+            )
+            listNewMessages.add(message)
+        } }
+        cursor.close()
+
+        return listNewMessages
+    }
+
 }

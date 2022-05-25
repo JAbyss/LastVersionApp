@@ -1,12 +1,19 @@
 package com.foggyskies.petapp.presentation.ui.home
 
+import android.app.Activity
+import android.graphics.Insets
+import android.os.Build
+import android.view.WindowInsets
+import android.view.WindowMetrics
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +26,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -43,6 +52,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.reflect.KSuspendFunction0
 
+@kotlinx.serialization.Serializable
+data class FormattedCommentDC(
+    val users: HashMap<String, UserIUSI>,
+    var comments: List<CommentDC>
+)
+
 class PostScreenHandler {
 
     var isTagMenuOpen by mutableStateOf(false)
@@ -53,11 +68,16 @@ class PostScreenHandler {
 
     var iconUsersReply by mutableStateOf(true)
 
-    var selectedPage by mutableStateOf<PageProfileFormattedDC?>(null)
+//    var selectedPage by mutableStateOf<PageProfileFormattedDC?>(null)
 
     var selectedPost by mutableStateOf<SelectedPostWithIdPageProfile?>(null)
 
-    var listComments by mutableStateOf(emptyList<CommentDC>())
+    var listComments by mutableStateOf<FormattedCommentDC>(
+        FormattedCommentDC(
+            users = hashMapOf(),
+            comments = emptyList()
+        )
+    )
 
     var likedUsersList by mutableStateOf(emptyList<UserIUSI>())
 
@@ -95,11 +115,39 @@ class PostScreenHandler {
             }
         }
 
-        Column(
+        val context = LocalContext.current
+
+        val display = LocalDensity.current.density
+
+        val display_metrics = LocalContext.current.resources.displayMetrics
+
+
+        val height: Int =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val windowMetrics: WindowMetrics =
+                    (context as Activity).windowManager.currentWindowMetrics
+                val insets: Insets = windowMetrics.windowInsets
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+                windowMetrics.bounds.height() - insets.bottom - insets.top
+            } else {
+                val resourceId =
+                    context.resources.getIdentifier("status_bar_height", "dimen", "android")
+                if (resourceId > 0) {
+                    display_metrics.heightPixels - context.resources.getDimensionPixelSize(
+                        resourceId
+                    )
+                } else
+                    0
+            }
+
+        val Hheiht = (height / display_metrics.density).toInt() * 0.8f
+
+        Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(20.dp))
-                .fillMaxWidth(0.8f)
-                .fillMaxHeight(0.73f)
+                .fillMaxWidth(0.92f)
+                .height(Hheiht.dp)
+//                .fillMaxHeight(0.73f)
                 .background(Color.White)
         ) {
 
@@ -107,14 +155,9 @@ class PostScreenHandler {
 
             Box(
                 Modifier
+                    .align(Alignment.Center)
                     .fillMaxWidth()
-                    .fillMaxHeight(0.9f)
-                    .pointerInput(Unit) {
-
-                        detectTapGestures(
-                            onLongPress = onLongPress
-                        )
-                    }
+                    .fillMaxHeight(1f)
             ) {
                 AnimatedContent(
                     targetState = statePost,
@@ -203,7 +246,6 @@ class PostScreenHandler {
                             )
                         }
                     }
-
                 }
             }
             BottomCommentBar(this@PostScreenHandler)
@@ -238,7 +280,7 @@ class PostScreenHandler {
                 message = commentValue.text,
                 date = ""
             )
-            listComments = listComments + comment
+            listComments.comments = listComments.comments + comment
             if (isNetworkAvailable.value)
                 HttpClient(Android) {
                     install(JsonFeature) {

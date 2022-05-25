@@ -27,7 +27,7 @@ class RepositoryUserDB(
 
     suspend fun getChats(msViewModel: MainSocketViewModel) {
         val localChats = dbUser.chatDao().getAllChats()
-        val formattedChat = localChats.map {
+        var formattedChat = localChats.map {
             FormattedChatDC(
                 id = it.idChat,
                 nameChat = it.companionName,
@@ -35,6 +35,14 @@ class RepositoryUserDB(
                 idCompanion = it.companionId,
                 lastMessage = it.lastMessage
             )
+        }.toMutableList()
+        // FIXME UNKNOWN
+        msViewModel.listNewMessages.forEach { newChat ->
+            formattedChat.forEachIndexed { index, it ->
+                if (newChat.id == it.id){
+                    formattedChat[index] = formattedChat[index].copy(lastMessage = newChat.new_messages.last().message)
+                }
+            }
         }
         msViewModel.listChats = formattedChat.toMutableList()
         msViewModel.sendAction("getChats|")

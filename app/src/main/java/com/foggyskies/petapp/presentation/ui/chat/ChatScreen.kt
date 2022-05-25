@@ -11,6 +11,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import coil.annotation.ExperimentalCoilApi
 import coil.compose.*
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -56,6 +58,7 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.customui.ChatTextField
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.globalviews.FullScreenImage
 import kotlinx.coroutines.launch
 
 
@@ -164,37 +167,68 @@ fun ChatScreen(
     )
     LaunchedEffect(key1 = sheetState.currentValue) {
         if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
-            viewModel.galleryHandler.selectedItems = emptyList()
+            viewModel.galleryHandler!!.selectedItems = emptyList()
             viewModel.stateTextField = StateTextField.EMPTY
         }
     }
 
     val keyBoard = LocalSoftwareKeyboardController.current
+    SideEffect {
+        Log.e("MODAL BOTTOM ВЫШЕ", "Утечка")
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
         ModalBottomSheetLayout(
             sheetShape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp),
             sheetContent = {
+                SideEffect {
+                    Log.e("MODAL BOTTOM", "Утечка")
+                }
+//                Box(modifier = Modifier.height(100.dp).fillMaxWidth()) {
+//
+//                }
                 DisposableEffect(key1 = sheetState.isVisible) {
                     onDispose {
                         if (!sheetState.isVisible)
                             keyBoard?.show()
                     }
                 }
-                viewModel.galleryHandler.GalleryImageSelector(
+//                Box() {
+
+                viewModel.galleryHandler!!.GalleryImageSelector(
+                    listItems = viewModel.galleryHandler!!.listPath,
                     stateSheet = sheetState,
                     onSelectedImage = {
-                        if (viewModel.galleryHandler.selectedItems.isNotEmpty())
+                        if (viewModel.galleryHandler!!.selectedItems.isNotEmpty())
                             viewModel.stateTextField = StateTextField.WRITING
                         else
                             viewModel.stateTextField = StateTextField.EMPTY
                     },
+                    chatMode = true,
                     isManySelect = true,
                 )
+//                }
+//                viewModel.galleryHandler.apply {
+//                    GalleryImageSelector(
+////                        stateSheet = sheetState,
+////                        onSelectedImage = {
+//////                            if (selectedItems.isNotEmpty())
+//////                                viewModel.stateTextField = StateTextField.WRITING
+//////                            else
+//////                                viewModel.stateTextField = StateTextField.EMPTY
+////                        },
+//                        chatMode = true,
+//                        isManySelect = true,
+//                    )
+//                }
+
             },
             sheetState = sheetState,
         ) {
+            SideEffect {
+                Log.e("IN                 MODAL BOTTOM", "Утечка")
+            }
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -244,17 +278,17 @@ fun ChatScreen(
                         }
                     }
                 }
-                BottomAppBar(
-                    viewModel,
-                    Modifier
-                        .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp))
-                        .background(Color(0xFFDAE0E4))
-                        .fillMaxWidth()
-                        .heightIn(max = 80.dp)
-                        .align(Alignment.BottomCenter),
-                    lazy_state,
-                    sheetState,
-                )
+//                BottomAppBar(
+//                    viewModel,
+//                    Modifier
+//                        .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp))
+//                        .background(Color(0xFFDAE0E4))
+//                        .fillMaxWidth()
+//                        .heightIn(max = 80.dp)
+//                        .align(Alignment.BottomCenter),
+//                    lazy_state,
+//                    sheetState,
+//                )
                 AnimatedVisibility(
                     visible = viewModel.visibleButtonDown,
                     modifier = Modifier
@@ -293,19 +327,37 @@ fun ChatScreen(
                         )
                     }
                 }
+                AnimatedVisibility(
+                    visible = viewModel.selectedImage != null,
+                    modifier = Modifier
+                        .align(Center)
+                ) {
+                    FullScreenImage(
+                        viewModel.selectedImage
+                    ) {
+                        viewModel.selectedImage = null
+                    }
+                }
             }
         }
-        BottomAppBar(
-            viewModel,
-            Modifier
-                .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp))
-                .background(Color(0xFFDAE0E4))
-                .fillMaxWidth()
-                .heightIn(max = 80.dp)
-                .align(Alignment.BottomCenter),
-            lazy_state,
-            sheetState,
-        )
+        AnimatedVisibility(
+            visible = viewModel.selectedImage == null, modifier = Modifier.align(
+                BottomCenter
+            )
+        ) {
+
+            BottomAppBar(
+                viewModel,
+                Modifier
+                    .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp))
+                    .background(Color(0xFFDAE0E4))
+                    .fillMaxWidth()
+                    .heightIn(max = 80.dp)
+                    .align(Alignment.BottomCenter),
+                lazy_state,
+                sheetState,
+            )
+        }
     }
 }
 
@@ -484,7 +536,7 @@ fun BottomAppBar(
             Button(
                 onClick = {
                     if (viewModel.stateTextField == StateTextField.WRITING) {
-                        if (viewModel.galleryHandler.listPath.isNotEmpty()) {
+                        if (viewModel.galleryHandler!!.listPath.isNotEmpty()) {
                             viewModel.addImageToMessage(value) {
                                 scope.launch {
                                     state.hide()
@@ -501,7 +553,7 @@ fun BottomAppBar(
                         viewModel.stateTextField = StateTextField.EMPTY
                     } else {
                         keyboard?.hide()
-                        viewModel.galleryHandler.getCameraImages(context)
+                        viewModel.galleryHandler!!.getCameraImages(context)
                         scope.launch {
                             state.show()
                         }
@@ -549,6 +601,7 @@ fun BottomAppBar(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun Message(
@@ -601,6 +654,12 @@ fun Message(
                         .padding(bottom = if (message.message == "") 0.dp else 7.dp)
                         .requiredHeightIn(max = 300.dp)
                         .fillMaxWidth()
+                        .clickable {
+                            viewModel.selectedImage = SelectedImageMessage(
+                                imageRequest = request,
+                                message = message
+                            )
+                        }
                 )
             } else if (message.listImages.size > 1) {
 //
@@ -636,6 +695,12 @@ fun Message(
                                 .clip(RoundedCornerShape(20.dp))
                                 .requiredHeightIn(max = 100.dp)
                                 .weight(1f)
+                                .clickable {
+                                    viewModel.selectedImage = SelectedImageMessage(
+                                        imageRequest = request,
+                                        message = message
+                                    )
+                                }
                         )
 
                         if (it.size > 1) {
@@ -671,6 +736,12 @@ fun Message(
                                     .clip(RoundedCornerShape(20.dp))
                                     .requiredHeightIn(max = 100.dp)
                                     .weight(1f)
+                                    .clickable {
+                                        viewModel.selectedImage = SelectedImageMessage(
+                                            imageRequest = request,
+                                            message = message
+                                        )
+                                    }
                             )
                         }
                     }

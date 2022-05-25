@@ -1,24 +1,15 @@
 package com.foggyskies.petapp.routs
 
-class Routes {
-    init {
-        throw RuntimeException("This class don't need init.")
-    }
+object Routes {
 
-    class SERVER {
-        init {
-            throw RuntimeException("This class don't need init.")
-        }
-        companion object {
+    object SERVER {
+//        companion object {
             const val BASE_IP = "192.168.0.88:2525"
-        }
+//        }
 
-        class WEBSOCKETCOMMANDS {
-            init {
-                throw RuntimeException("This class don't need init.")
-            }
+        object WEBSOCKETCOMMANDS {
 
-            companion object {
+//            companion object {
                 const val BASE_URL = "ws://$BASE_IP"
                 const val COMMAND_SYMBOL = "|"
 
@@ -30,15 +21,12 @@ class Routes {
 
                 const val MAIN_SOCKET = "/mainSocket/"
                 const val CHAT_SOCKET = "/subscribes/"
-            }
+//            }
         }
 
-        class REQUESTS {
-            init {
-                throw RuntimeException("This class don't need init.")
-            }
+        object REQUESTS {
 
-            companion object {
+//            companion object {
                 const val BASE_URL = "http://$BASE_IP"
                 const val AUTH = "/auth"
                 const val REGISTRATION = "/registration"
@@ -53,19 +41,17 @@ class Routes {
                 const val PAGES_OTHER_PROFILE = "/getPagesProfileByIdUser"
                 const val CREATE_CHAT_SESSION = "/subscribes/createChatSession?idChat="
                 const val ADD_IMAGE_TO_POST = "/subscribes/addImageToMessage"
-            }
+//            }
         }
     }
 
-    class FILE {
-        init {
-            throw RuntimeException("This class don't need init.")
-        }
-        companion object{
+    object FILE {
+
+//        companion object{
             const val ANDROID_DIR = "/storage/emulated/0"
 
             const val MAIN_APP_DIR = "$ANDROID_DIR/RusLan"
             const val IMAGES = "/Images"
-        }
+//        }
     }
 }

@@ -21,6 +21,7 @@ import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import com.foggyskies.petapp.temppackage.GalleryHandler
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -189,7 +190,7 @@ class ProfileViewModel : ViewModel() {
 //    var nameProfile by mutableStateOf(USERNAME)
     val listIconOther = listOf(
         ItemSwappableMenu(
-            Image = R.drawable.ic_menu_vack,
+            Image = R.drawable.ic_menu_back,
             offset = Offset(x = 10f, y = -70f),
             onValueSelected = {
                 it.navigate(it.backQueue[1].destination.route!!)
@@ -217,7 +218,7 @@ class ProfileViewModel : ViewModel() {
 
     val listIconStateHuman = listOf(
         ItemSwappableMenu(
-            Image = R.drawable.ic_menu_vack,
+            Image = R.drawable.ic_menu_back,
             offset = Offset(x = 10f, y = -70f),
             onValueSelected = {
                 it.navigate(it.backQueue[1].destination.route!!)
@@ -249,7 +250,7 @@ class ProfileViewModel : ViewModel() {
 
     val listIconStatePage = listOf(
         ItemSwappableMenu(
-            Image = R.drawable.ic_menu_vack,
+            Image = R.drawable.ic_menu_back,
             offset = Offset(x = 10f, y = -70f),
             onValueSelected = {
                 changeStateProfile(StateProfile.HUMAN)
@@ -293,8 +294,9 @@ class ProfileViewModel : ViewModel() {
     }
 
     var initUserName by mutableStateOf("")
-    var initImageProfile by mutableStateOf("images/avatars/avatar_6268d3987bcbb777469bb04c.png")
+    var initImageProfile by mutableStateOf("")
     var listPagesProfile by mutableStateOf(emptyList<PageProfileFormattedDC>())
+    var initImagePageProfile by mutableStateOf(selectedPage.image)
 
     fun stateUserProfile(username: String, image: String, idUser: String, isOwnerMode: Boolean) {
 
@@ -311,8 +313,9 @@ class ProfileViewModel : ViewModel() {
         if (stateProfile == StateProfile.HUMAN) initUserName else selectedPage.title
     }
     val imageProfile by derivedStateOf {
-        if (stateProfile == StateProfile.HUMAN) initImageProfile else selectedPage.image
+        if (stateProfile == StateProfile.HUMAN) initImageProfile else initImagePageProfile
     }
+
     var isVisibleInfoUser by mutableStateOf(true)
 
     val listIconSM by derivedStateOf {
@@ -329,6 +332,7 @@ class ProfileViewModel : ViewModel() {
             isVisibleInfoUser = true
         else {
             getContentPage(selectedPage.id)
+            initImagePageProfile = selectedPage.image
         }
     }
 
@@ -358,7 +362,11 @@ class ProfileViewModel : ViewModel() {
                 }
             }
     }
-
+    /**
+     * Отправляет на сервер новый пост ContentRequestDC
+     * Если ответ от сервера 200-300, то добавляет созданный пост в лист контента
+     * @param ContentRequestDC
+     */
     fun addNewImagePost(item: ContentRequestDC) {
         if (isNetworkAvailable.value)
             viewModelScope.launch {
@@ -380,33 +388,17 @@ class ProfileViewModel : ViewModel() {
                         }
                     if (response.status.isSuccess()) {
                         menuHelper.changeVisibilityMenu(MENUS.NEWCONTENT)
+                        selectedPage.apply {
+                            countContents = "${((countContents.toInt()) +1)}"
+                        }
+                        listPostImages = listPostImages + response.receive<ContentPreviewDC>()
                     }
                 }
             }
     }
 
-//    fun getAvatar() {
-//        viewModelScope.launch {
-//            HttpClient(Android) {
-//                install(HttpTimeout) {
-//                    requestTimeoutMillis = 3000
-//                }
-//            }.use {
-//
-//                val response =
-//                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/avatar") {
-//                        headers["Auth"] = TOKEN
-//                    }
-//                if (response.status.isSuccess()) {
-//                    humanPhoto = response.readText()
-//                    imageProfile = humanPhoto
-//                }
-//            }
-//        }
-//    }
-
     fun checkInternet(func: () -> Unit) {
-        if (MainActivity.isNetworkAvailable.value) {
+        if (isNetworkAvailable.value) {
             func()
         }
     }
@@ -454,6 +446,39 @@ class ProfileViewModel : ViewModel() {
                     if (response.status.isSuccess()) {
                         humanPhoto = response.readText()
                         initImageProfile = humanPhoto
+                    }
+                }
+            }
+    }
+
+    fun changeAvatarPageProfile(image: String) {
+        if (isNetworkAvailable.value)
+            viewModelScope.launch {
+                HttpClient(Android) {
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
+//                expectSuccess = false
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 3000
+                    }
+                }.use {
+
+                    val response =
+                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/changeAvatarProfile") {
+                            headers["Auth"] = TOKEN
+                            headers["idPage"] = selectedPage.id
+//                        headers["Content-Type"] = "text/plain"
+                            body = image
+                        }
+                    if (response.status.isSuccess()) {
+                        initImagePageProfile = response.readText()
+                        listPagesProfile.forEach { page ->
+                            if (page.id == selectedPage.id) {
+                                page.image = initImagePageProfile
+                                return@forEach
+                            }
+                        }
                     }
                 }
             }

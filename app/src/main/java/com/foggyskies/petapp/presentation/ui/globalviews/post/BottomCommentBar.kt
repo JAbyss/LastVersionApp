@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun BottomCommentBar(
+fun BoxScope.BottomCommentBar(
 //    viewModel: HomeViewModel,
     postScreenHandler: PostScreenHandler
 ) {
@@ -234,12 +234,13 @@ fun BottomCommentBar(
     HorizontalPager(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(1f)
+//            .fillMaxHeight(1f)
+            .align(Alignment.BottomCenter)
 //            .background(Color.Blue)
         ,
         count = 3,
         state = pagerState,
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.Bottom
     ) { position ->
         when (currentPage) {
             0 -> postScreenHandler.statePost = StatePost.IMAGE

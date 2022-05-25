@@ -69,7 +69,7 @@ fun AdsHomelessScreen(
 
     viewModel.swipableMenu.listIcon = listOf(
         ItemSwappableMenu(
-            Image = R.drawable.ic_menu_vack, onValueSelected = {
+            Image = R.drawable.ic_menu_back, onValueSelected = {
                 backHolder?.onBackPressed()
             },
             offset = Offset(x = 10f, y = -70f)
@@ -113,7 +113,7 @@ fun AdsHomelessScreen(
                 detectDragGesturesAfterLongPress(
                     onDragStart = {
                         offset = it
-                        viewModel.swipableMenu.onDragStart(it)
+                        viewModel.swipableMenu.onDragStart(it, {})
                         viewModel.circularSelector.startOffsetCS =
                             viewModel.swipableMenu.offsetStartDp
                         viewModel.circularSelector.radius = viewModel.swipableMenu.radiusMenu

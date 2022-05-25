@@ -1,6 +1,7 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,13 +42,13 @@ fun ImageScreen(
                 translationY = offset.y
             )
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTransformGestures { centroid, pan, zoom, rotation ->
-                    if (scale != 1f)
-                        offset += pan
-                    scale *= zoom
-                }
-            }
+//            .pointerInput(1) {
+//                detectTransformGestures { centroid, pan, zoom, rotation ->
+//                    if (scale != 1.3f)
+//                        offset += pan
+//                    scale *= zoom
+//                }
+//            }
             .pointerInput(true) {
 
                 detectTapGestures(
@@ -60,7 +61,7 @@ fun ImageScreen(
                         scale = 1f
                         offset = Offset.Zero
                     },
-                    onLongPress = onLongPress
+                    onLongPress = null
 //                        {
 //                            viewModel.swipableMenu.isReadyMenu = false
 //                            viewModel.isVisiblePhotoWindow = false

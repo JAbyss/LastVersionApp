@@ -29,7 +29,11 @@ import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 @Composable
 fun LikesScreen(postScreenHandler: PostScreenHandler) {
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.85f)
+    ) {
 
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -50,7 +54,7 @@ fun LikesScreen(postScreenHandler: PostScreenHandler) {
                     ) {
                         Box() {
                             AsyncImage(
-                                model = "http://$MAINENDPOINT/images/${item.image}",
+                                model = "http://$MAINENDPOINT/${item.image}",
                                 contentDescription = null,
                                 modifier = Modifier
                                     .clip(CircleShape)
@@ -66,7 +70,7 @@ fun LikesScreen(postScreenHandler: PostScreenHandler) {
                                     radius = 26f,
                                 )
                                 drawCircle(
-                                    color = Color.Gray,
+                                    color = if (item.status == "В сети" ) Color.Green else Color.Gray,
                                     radius = 15f,
                                 )
                             }
