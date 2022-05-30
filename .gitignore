@@ -13,4 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-src/main/java/com/foggyskies/petapp/PasswordCoder.kt
+/app/src/main/java/com/foggyskies/petapp/PasswordCoder.kt
