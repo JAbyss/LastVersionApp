@@ -1,6 +1,5 @@
 package com.foggyskies.petapp.presentation.ui.globalviews
 
-import android.os.Bundle
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,16 +33,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.get
 import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -89,7 +86,7 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
             Spacer(modifier = Modifier.width(15.dp))
             if (item.image != "")
                 AsyncImage(
-                    model = "http://$MAINENDPOINT/${item.image}",
+                    model = "${Routes.SERVER.REQUESTS.BASE_URL}/${item.image}",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -147,7 +144,7 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                                 requestTimeoutMillis = 3000
                             }
                         }.use {
-                            val idChat = it.post<String>("http://$MAINENDPOINT/createChat") {
+                            val idChat = it.post<String>("${Routes.SERVER.REQUESTS.BASE_URL}/createChat") {
                                 this.headers["Auth"] = TOKEN
                                 this.headers["Content-Type"] = "Application/Json"
                                 this.body = CreateChat(

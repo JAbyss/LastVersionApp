@@ -1,12 +1,9 @@
 package com.foggyskies.petapp.presentation.ui.globalviews
 
-import android.os.Bundle
 import android.os.Parcelable
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,17 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import androidx.navigation.NavHostController
-import androidx.navigation.NavOptions
 import androidx.navigation.get
 import coil.compose.AsyncImage
-import coil.compose.rememberImagePainter
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.data.Chat
 import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.routs.Routes
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -83,7 +75,7 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
 
             if (item.image != "")
                 AsyncImage(
-                    model = "http://$MAINENDPOINT/${item.image}",
+                    model = "${Routes.SERVER.REQUESTS.BASE_URL}/${item.image}",
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

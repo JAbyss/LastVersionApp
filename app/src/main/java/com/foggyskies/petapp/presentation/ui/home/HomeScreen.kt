@@ -58,7 +58,7 @@ fun HomeMVIModel.HomeScreen(
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(key1 = isNetworkAvailable.value) {
+    LaunchedEffect(key1 = Unit) {
         checkInternet(this@HomeScreen::getContent)
         if (msViewModel.mainSocket == null)
             checkInternet(msViewModel::createMainSocket)
@@ -85,14 +85,9 @@ fun HomeMVIModel.HomeScreen(
         swipableMenu.modalBottomSheetState = modalBottomSheetState
 
     val scope = rememberCoroutineScope()
-//    val bottomSheetState = rememberBottomSheetScaffoldState(bottomSheetState = BottomSheetState(initialValue = BottomSheetValue.Expanded))
-//    BottomSheetScaffold(sheetContent = ) {
-//
-//    }
+    val stateUi = this.state.collectAsState()
 
     ModalBottomSheetLayout(
-//        sheetShape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp),
-//        scaffoldState = bottomSheetState,
         sheetState = modalBottomSheetState,
         sheetContentColor = Color.Transparent,
         sheetBackgroundColor = Color.Transparent,
@@ -126,61 +121,15 @@ fun HomeMVIModel.HomeScreen(
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-//                .fillMaxWidth()
-//                .height(300.dp)
-//                .border(2.dp, color = Color.Gray, shape = RoundedCornerShape(20.dp))
                     .fillMaxSize()
-//                .fillMaxWidth(0.9f)
-//                .fillMaxHeight()
                     .align(Center)
-//                    .pointerInput(Unit) {
-//                        detectHorizontalDragGestures { change, dragAmount ->
-//                            var newY = change.position.y
-//                            var oldY = change.previousPosition.y
-//                            val vibrator =
-//                                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
-//                            val canVibrate = vibrator?.hasVibrator()
-//                            if (dragAmount <= -50 && newY - oldY <= 10) {
-//                                if (canVibrate == true) {
-//                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                                        // API 26
-//                                        vibrator.vibrate(
-//                                            createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
-//                                        )
-//
-//                                    } else {
-//                                        // This method was deprecated in API level 26
-//                                        vibrator.vibrate(100)
-//                                    }
-//                                }
-//                                menuHelper.setVisibilityMenu(MENUS.RIGHT, true)
-//                                swipableMenu.isReadyMenu = false
-//                            } else if (dragAmount >= 50) {
-//
-//                                if (canVibrate == true) {
-//                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                                        // API 26
-//                                        vibrator.vibrate(
-//                                            createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
-//                                        )
-//
-//                                    } else {
-//                                        vibrator.vibrate(100)
-//                                    }
-//                                }
-//                                menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
-//
-//                                swipableMenu.isReadyMenu = true
-//                            }
-//                        }
-//                    }
             ) {
                 item {
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-                itemsIndexed(state.value.postsList) { index, item ->
+                itemsIndexed(stateUi.value.postsList) { index, item ->
 
-                    val postScreenHandler = PostScreenHandler()
+                    val postScreenHandler = remember { PostScreenHandler() }
 
                     postScreenHandler.selectPost(
                         item,
@@ -189,7 +138,7 @@ fun HomeMVIModel.HomeScreen(
                     )
 
                     postScreenHandler.PostScreen(onLongPress = {})
-                    if (index != state.value.postsList.lastIndex) {
+                    if (index != stateUi.value.postsList.lastIndex) {
                         Spacer(modifier = Modifier.height(15.dp))
                         Divider(
                             color = Color.LightGray,

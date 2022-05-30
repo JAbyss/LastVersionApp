@@ -151,7 +151,7 @@ class SwappableMenu() : CircularSelector() {
         if (
             (startOffsetPx.x > sizeScreen.width * 0.1f) &&
             (startOffsetPx.x < sizeScreen.width * 0.9f) &&
-            (startOffsetPx.y > sizeScreen.height * 0.1f) &&
+            (startOffsetPx.y > sizeScreen.height * 0.2f) &&
             (startOffsetPx.y < sizeScreen.height * 0.9f)
         ) {
             offsetStart = startOffsetPx

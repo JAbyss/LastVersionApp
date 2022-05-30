@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.internal.composableLambda
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomStart
 import androidx.compose.ui.Alignment.Companion.Center
@@ -34,12 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileDC
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
+import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 
 @Composable
@@ -49,21 +50,24 @@ fun PetCard(
     viewModel: ProfileViewModel,
     creatingModifier: Modifier? = null
 ) {
-    val context = LocalContext.current
-
-
-
-//    LaunchedEffect(key1 = Unit ){
-//    }
-
+    val context = LocalContext.current.applicationContext
 
     SideEffect {
         Log.e("CHECK YTECHKA", "YTECHKA")
     }
-
+    val image_url = remember {
+        mutableStateOf<Uri?>(null)
+    }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        image_url.value = uri
+    }
     Box(
         modifier = creatingModifier?.clickable {
-            viewModel.profileHandler.openGallery()
+            launcher.launch("image/*")
+
+//            viewModel.profileHandler.openGallery()
         }
             ?: Modifier
                 .clip(RoundedCornerShape(20.dp))
@@ -78,39 +82,49 @@ fun PetCard(
 
     ) {
 
-//        if (viewModel.profileHandler.imageBitmap.value != null){
-//            Image(
-//                bitmap = viewModel.profileHandler.imageBitmap.value!!.asImageBitmap(),
-//                contentDescription = null,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .fillMaxSize()
-//            )
-//        }
+        if (image_url.value != null)
+            image_url.let {
+                val image_test =
+                    mutableStateOf<Bitmap?>(null)
 
-        when {
-            item.image != "" -> AsyncImage(
-                model = "http://$MAINENDPOINT/${item.image}",
+                if (Build.VERSION.SDK_INT < 28) {
+                    image_test.value =
+                        MediaStore.Images.Media.getBitmap(context.contentResolver, it.value)
+                } else {
+                    val source =
+                        ImageDecoder.createSource(context.contentResolver, it.value!!)
+                    image_test.value = ImageDecoder.decodeBitmap(source)
+                }
+                image_test.value?.let { bit ->
+                    Image(
+                        bitmap = bit.asImageBitmap(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+//                                .height(150.dp)
+                            .fillMaxWidth()
+                            .clickable {
+                                launcher.launch("image/*")
+                            }
+//                                .size(100.dp, 70.dp)
+                    )
+                }
+            }
+        else if (item.image != "")
+            AsyncImage(
+                model = "${Routes.SERVER.REQUESTS.BASE_URL}/${item.image}",
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
             )
-            viewModel.profileHandler.imageBitmap.value != null -> {
-                Image(
-                    bitmap = viewModel.profileHandler.imageBitmap.value!!.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-            }
-            else -> Box(
+        else
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
             )
-        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -141,37 +155,47 @@ fun PetCard(
                             .padding(start = 15.dp, bottom = 10.dp)
                     )
                 } else {
-                    val recomposition = currentRecomposeScope
-                    BasicTextField(
-                        value = item.title,
-                        onValueChange = {
-                            item.title = it
-                            recomposition.invalidate()
-                        },
-                        singleLine = true,
-                        textStyle = TextStyle(
-                            fontSize = 18.sp,
-                            color = Color.Black,
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                        modifier = Modifier
-                            .padding(start = 15.dp, top = 10.dp)
-                    )
-                    BasicTextField(
-                        value = item.description,
-                        onValueChange = {
-                            item.description = it
-                            recomposition.invalidate()
-                        },
-                        maxLines = 3,
-                        textStyle = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                        modifier = Modifier
-                            .padding(start = 15.dp, bottom = 10.dp)
-                    )
+                    ClosedComposedFun {
+                        var text by remember {
+                            mutableStateOf(item.title)
+                        }
+                        BasicTextField(
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                item.title = text
+//                            recomposition.invalidate()
+                            },
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.SemiBold,
+                            ),
+                            modifier = Modifier
+                                .padding(start = 15.dp, top = 10.dp)
+                        )
+                    }
+                    ClosedComposedFun {
+                        var text by remember {
+                            mutableStateOf(item.description)
+                        }
+                        BasicTextField(
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                item.description = text
+                            },
+                            maxLines = 3,
+                            textStyle = TextStyle(
+                                fontSize = 16.sp,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                            modifier = Modifier
+                                .padding(start = 15.dp, bottom = 10.dp)
+                        )
+                    }
                 }
             }
             if (creatingModifier != null)
@@ -184,21 +208,30 @@ fun PetCard(
 
                     IconButton(
                         onClick = {
-                            val string64 = viewModel.profileHandler.imageBitmap.value?.let {
-                                encodeToBase64(
-                                    it
+                            image_url.let {
+                                var image_test = if (Build.VERSION.SDK_INT < 28) {
+
+                                        MediaStore.Images.Media.getBitmap(context.contentResolver, it.value)
+                                } else {
+                                    val source =
+                                        ImageDecoder.createSource(context.contentResolver, it.value!!)
+                                    ImageDecoder.decodeBitmap(source)
+                                }
+                                val string64 = image_test?.let {
+                                    encodeToBase64(
+                                        it
+                                    )
+                                }
+                                    ?: ""
+                                viewModel.createNewPage(
+                                    item = PageProfileDC(
+                                        id = "",
+                                        title = item.title,
+                                        description = item.description,
+                                        image = string64
+                                    )
                                 )
                             }
-                                ?: ""
-//                            }
-                            viewModel.createNewPage(
-                                item = PageProfileDC(
-                                    id = "",
-                                    title = item.title,
-                                    description = item.description,
-                                    image = string64
-                                )
-                            )
                         },
                     ) {
                         Image(
@@ -211,4 +244,8 @@ fun PetCard(
                 }
         }
     }
+}
+
+@Composable fun ClosedComposedFun(body: @Composable () -> Unit){
+    body()
 }

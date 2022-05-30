@@ -1,43 +1,42 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
+import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 import com.foggyskies.petapp.presentation.ui.home.StatePost
+import com.foggyskies.petapp.routs.Routes
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun BoxScope.BottomCommentBar(
-//    viewModel: HomeViewModel,
     postScreenHandler: PostScreenHandler
 ) {
 
@@ -83,7 +82,7 @@ fun BoxScope.BottomCommentBar(
                 modifier = Modifier.fillMaxWidth(0.7f)
             )
             IconButton(onClick = {
-                scope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     postScreenHandler.sendNewComment()
                 }
             }) {
@@ -120,45 +119,56 @@ fun BoxScope.BottomCommentBar(
                     .background(Color.White)
             ) {
                 AsyncImage(
-                    model = "http://$MAINENDPOINT/${postScreenHandler.selectedPost?.image}",
+                    model = "${Routes.SERVER.REQUESTS.BASE_URL}/${postScreenHandler.selectedPost?.image}",
+//                    imageLoader = loader,
                     contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .clip(CircleShape)
                         .size(30.dp)
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
-            Text(
-                text = postScreenHandler.selectedPost?.author!!,
-                fontSize = 16.sp,
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.35f)
-            )
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x88ffffff))
+            ) {
+                Text(
+                    text = postScreenHandler.selectedPost?.author!!,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(horizontal = 7.dp, vertical = 5.dp)
+                        .fillMaxWidth(0.35f)
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                 ) {
 
-                    Button(
+                    IconButton(
                         onClick = {
                             postScreenHandler.statePost = StatePost.IMAGE
                         },
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.elevation(
-                            defaultElevation = 0.dp
-                        ),
-                        contentPadding = PaddingValues(2.dp),
+//                        shape = CircleShape,
+//                        colors = ButtonDefaults.buttonColors(
+//                            backgroundColor = Color.White
+//                        ),
+//                        elevation = ButtonDefaults.elevation(
+//                            defaultElevation = 0.dp
+//                        ),
+//                        contentPadding = PaddingValues(2.dp),
                         modifier = Modifier
-                            .padding(end = 7.dp)
+                            .clip(CircleShape)
                             .size(40.dp)
+                            .background(Color(0x88ffffff))
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_share),
@@ -167,23 +177,25 @@ fun BoxScope.BottomCommentBar(
                             Color.Black
                         )
                     }
-                    Button(
+                    Spacer(modifier = Modifier.width(7.dp))
+                    IconButton(
                         onClick = {
                             scope.launch {
                                 pagerState.animateScrollToPage(1)
                             }
                         },
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.elevation(
-                            defaultElevation = 0.dp
-                        ),
-                        contentPadding = PaddingValues(2.dp),
+//                        shape = CircleShape,
+//                        colors = ButtonDefaults.buttonColors(
+//                            backgroundColor = Color.White
+//                        ),
+//                        elevation = ButtonDefaults.elevation(
+//                            defaultElevation = 0.dp
+//                        ),
+//                        contentPadding = PaddingValues(2.dp),
                         modifier = Modifier
-                            .padding(end = 7.dp)
+                            .clip(CircleShape)
                             .size(40.dp)
+                            .background(Color(0x88ffffff))
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_chat_idle),
@@ -192,23 +204,25 @@ fun BoxScope.BottomCommentBar(
                             Color.Black
                         )
                     }
-                    Button(
+                    Spacer(modifier = Modifier.width(7.dp))
+                    IconButton(
                         onClick = {
-                            scope.launch {
+                            CoroutineScope(Dispatchers.IO).launch {
                                 postScreenHandler.likePost()
                             }
                         },
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.elevation(
-                            defaultElevation = 0.dp
-                        ),
-                        contentPadding = PaddingValues(2.dp),
+//                        shape = CircleShape,
+//                        colors = ButtonDefaults.buttonColors(
+//                            backgroundColor = Color.White
+//                        ),
+//                        elevation = ButtonDefaults.elevation(
+//                            defaultElevation = 0.dp
+//                        ),
+//                        contentPadding = PaddingValues(2.dp),
                         modifier = Modifier
-                            .padding(end = 15.dp)
+                            .clip(CircleShape)
                             .size(40.dp)
+                            .background(Color(0x88ffffff))
                     ) {
                         Icon(
                             painter = painterResource(id = if (!postScreenHandler.isLiked) R.drawable.ic_like_not_clicked else R.drawable.ic_like),
@@ -217,6 +231,7 @@ fun BoxScope.BottomCommentBar(
                             if (postScreenHandler.isLiked) Color.Red else Color.Black
                         )
                     }
+                    Spacer(modifier = Modifier.width(15.dp))
                 }
             }
         }
@@ -246,13 +261,13 @@ fun BoxScope.BottomCommentBar(
             0 -> postScreenHandler.statePost = StatePost.IMAGE
             1 -> {
                 postScreenHandler.statePost = StatePost.COMMENTS
-                scope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     postScreenHandler.getComments()
                 }
             }
             2 -> {
                 postScreenHandler.statePost = StatePost.LIKES
-                scope.launch {
+                CoroutineScope(Dispatchers.IO).launch {
                     postScreenHandler.getLikedUsers()
                 }
             }

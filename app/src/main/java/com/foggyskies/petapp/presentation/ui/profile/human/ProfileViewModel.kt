@@ -8,9 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.MainActivity
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
@@ -19,6 +17,7 @@ import com.foggyskies.petapp.presentation.ui.home.ContentUsersDC
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
+import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.temppackage.GalleryHandler
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -29,6 +28,8 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -128,7 +129,7 @@ class ProfileViewModel : ViewModel() {
 
     private fun getContentPage(idPageProfile: String) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
@@ -138,7 +139,7 @@ class ProfileViewModel : ViewModel() {
                     }
                 }.use {
                     listPostImages =
-                        it.get("http://${MAINENDPOINT}/content/getContentPreview") {
+                        it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getContentPreview") {
                             headers["Auth"] = TOKEN
                             parameter("idPageProfile", idPageProfile)
                         }
@@ -157,7 +158,7 @@ class ProfileViewModel : ViewModel() {
     var isLiked by mutableStateOf(false)
 
     fun photoScreenClosed() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             delay(400)
             swipableMenu.isReadyMenu = true
         }
@@ -165,7 +166,7 @@ class ProfileViewModel : ViewModel() {
 
     fun getInfoAboutOnePost() {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
@@ -175,7 +176,7 @@ class ProfileViewModel : ViewModel() {
                     }
                 }.use {
                     selectedPostInfo =
-                        it.get("http://${MAINENDPOINT}/content/getInfoAboutOnePost") {
+                        it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getInfoAboutOnePost") {
                             headers["Auth"] = TOKEN
                             parameter("idPageProfile", selectedPage.id)
                             parameter("idPost", selectedPost?.id)
@@ -340,7 +341,7 @@ class ProfileViewModel : ViewModel() {
 
     fun createNewPage(item: PageProfileDC) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
@@ -351,13 +352,14 @@ class ProfileViewModel : ViewModel() {
                     }
                 }.use {
                     val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/createPageProfile") {
+                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/createPageProfile") {
                             headers["Auth"] = TOKEN
                             headers["Content-Type"] = "Application/Json"
                             body = item
                         }
                     if (response.status.isSuccess()) {
                         isAddingNewCard = false
+//                        listPagesProfile += item
                     }
                 }
             }
@@ -369,7 +371,7 @@ class ProfileViewModel : ViewModel() {
      */
     fun addNewImagePost(item: ContentRequestDC) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
@@ -381,7 +383,7 @@ class ProfileViewModel : ViewModel() {
                 }.use {
 //                            val responseRegistration =
                     val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addPostImage") {
+                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/content/addPostImage") {
                             headers["Auth"] = TOKEN
                             headers["Content-Type"] = "Application/Json"
                             body = item
@@ -405,7 +407,7 @@ class ProfileViewModel : ViewModel() {
 
     fun getAvatar() {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(HttpTimeout) {
                         requestTimeoutMillis = 3000
@@ -413,7 +415,7 @@ class ProfileViewModel : ViewModel() {
                 }.use {
 
                     val response =
-                        it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/avatar") {
+                        it.get<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/avatar") {
                             headers["Auth"] = TOKEN
                         }
                     if (response.status.isSuccess()) {
@@ -426,7 +428,7 @@ class ProfileViewModel : ViewModel() {
 
     fun changeAvatar(image: String) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
 //                install(JsonFeature) {
 //                    serializer = KotlinxSerializer()
@@ -438,7 +440,7 @@ class ProfileViewModel : ViewModel() {
                 }.use {
 
                     val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/changeAvatar") {
+                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatar") {
                             headers["Auth"] = TOKEN
 //                        headers["Content-Type"] = "text/plain"
                             body = image
@@ -453,7 +455,7 @@ class ProfileViewModel : ViewModel() {
 
     fun changeAvatarPageProfile(image: String) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
 //                install(JsonFeature) {
 //                    serializer = KotlinxSerializer()
@@ -465,7 +467,7 @@ class ProfileViewModel : ViewModel() {
                 }.use {
 
                     val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/changeAvatarProfile") {
+                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatarProfile") {
                             headers["Auth"] = TOKEN
                             headers["idPage"] = selectedPage.id
 //                        headers["Content-Type"] = "text/plain"
@@ -486,7 +488,7 @@ class ProfileViewModel : ViewModel() {
 
     private fun getPagesProfileByIdUser(idUser: String) {
         if (isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
@@ -498,7 +500,7 @@ class ProfileViewModel : ViewModel() {
                 }.use {
 
                     listPagesProfile =
-                        it.get("http://${MainActivity.MAINENDPOINT}/getPagesProfileByIdUser") {
+                        it.get("${Routes.SERVER.REQUESTS.BASE_URL}/getPagesProfileByIdUser") {
                             headers["Auth"] = TOKEN
                             parameter("idUser", idUser)
 //                        headers["Content-Type"] = "text/plain"

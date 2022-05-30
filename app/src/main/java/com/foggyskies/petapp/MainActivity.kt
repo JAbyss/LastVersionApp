@@ -32,6 +32,8 @@ import androidx.room.Room
 import coil.ImageLoader
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
+import coil.request.CachePolicy
+import coil.size.Precision
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
@@ -54,6 +56,7 @@ import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.registation.AuthorizationViewModel
 import com.foggyskies.petapp.presentation.ui.splash.SplashScreen
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.AuthorizationScreen
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -116,22 +119,41 @@ class MainActivity : ComponentActivity() {
 
         }
         loader = ImageLoader.Builder(this)
-            .memoryCache {
-                MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
-                    .build()
-            }
+//            .memoryCache {
+//                MemoryCache.Builder(this)
+//                    .maxSizePercent(0.2)
+//                    .build()
+//            }
 //            .fetcherDispatcher(Dispatchers.Default)
 //            .decoderDispatcher(Dispatchers.Default)2
 //            .transformationDispatcher(Dispatchers.Default)
 //            .interceptorDispatcher(Dispatchers.Default)
             .crossfade(true)
+            .dispatcher(Dispatchers.Default)
+            .bitmapFactoryMaxParallelism(1)
             .diskCache {
                 DiskCache.Builder()
-                    .directory(File("/storage/emulated/0/RusLan/Images/"))
-                    .maxSizePercent(0.10)
+                    .directory(File("/storage/emulated/0/Download/Images/"))
+//                    .directory(File("/storage/emulated/0/RusLan/Images/"))
+                    .maxSizePercent(0.2)
                     .build()
             }
+            .build()
+
+        loaderForGallery = ImageLoader.Builder(this)
+            .crossfade(true)
+            .bitmapFactoryMaxParallelism(1)
+//            .precision(Precision.EXACT)
+            .dispatcher(Dispatchers.Default)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .respectCacheHeaders(false)
+//            .memoryCache(MemoryCache.Builder(this)
+//                .weakReferencesEnabled(false)
+//                .strongReferencesEnabled(false)
+//                .build())
+            .addLastModifiedToFileCacheKey(false)
+            .allowRgb565(true)
             .build()
 //        if (!LIFESERVICE){
 //            Intent(this, PushNotificationService::class.java).also {
@@ -209,6 +231,8 @@ class MainActivity : ComponentActivity() {
         var TOKEN = ""
         var IDUSER = ""
         lateinit var loader: ImageLoader
+        lateinit var loaderForGallery: ImageLoader
+
 
         /**        194.67.93.244:8089
         192.168.0.28
@@ -216,9 +240,11 @@ class MainActivity : ComponentActivity() {
         26.228.47.11
 
         192.168.0.88:2525
-         */
 
-        val MAINENDPOINT = "192.168.0.88:2525"
+        94.41.84.183:2526
+
+         */
+//        val MAINENDPOINT = "94.41.84.183:2526"
         lateinit var isNetworkAvailable: State<Boolean>
     }
 }
@@ -241,9 +267,6 @@ fun LoadingApp() {
     val mainSocketViewModel =
         viewModelProvider["MainSocketViewModel", (MainSocketViewModel::class.java)]
 
-//    SideEffect {
-//        Log.e("УТЕЧКА", "УРОВЕНЬ АКТИВИТИ")
-//    }
 
     NavHost(navController = nav_controller, startDestination = NavTree.Splash.name) {
         composable(NavTree.Splash.name) {
@@ -262,18 +285,13 @@ fun LoadingApp() {
                 Log.e(
                     "УТЕЧКА",
                     "УРОВЕНЬ НАВИГАЦИЯ АКТИВИТ\n\n${mainSocketViewModel.mainSocket.toString()}\n\n"
-//                        "\n${viewModel.selectedPost.toString()}" +
-//                        "\n${viewModel.listContents.toString()}"
                 )
-
             }
 
-            if (mainSocketViewModel.mainSocket == null && isNetworkAvailable.value)
-                mainSocketViewModel.createMainSocket()
-//            if (!isHomeLoaded){
-//                isHomeLoaded = true
+//            if (mainSocketViewModel.mainSocket == null && isNetworkAvailable.value)
+//                mainSocketViewModel.createMainSocket()
+
             viewModel.HomeScreen(nav_controller, mainSocketViewModel)
-//            }
         }
         composable("AdsHomeless") {
             val viewModel =

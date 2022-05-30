@@ -4,8 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.foggyskies.petapp.data.Chat.Companion.TABLE_CHAT
-import com.foggyskies.petapp.presentation.ui.chat.MessageDC
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
 
 @Entity(tableName = TABLE_CHAT)
 data class Chat(

@@ -1,75 +1,114 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
-import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
+import com.foggyskies.petapp.MainActivity.Companion.loader
+import com.foggyskies.petapp.routs.Routes
 import kotlin.reflect.KFunction0
 
 @Composable
 fun ImageScreen(
     image: String,
-    onLongPress: (Offset) -> Unit,
+    description: String,
     onDoubleTap: KFunction0<Unit>,
 //    onDoubleTap: Unit,
 ) {
+    val scrollState = rememberScrollState()
 
-    var scale by remember { mutableStateOf(1f) }
+    var textVisibility by remember {
+        mutableStateOf(description.isNotEmpty())
+    }
 
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    AsyncImage(
-        model =
-        "http://$MAINENDPOINT/$image",
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .graphicsLayer(
-                scaleX = if (scale < 1f) 1f else scale,
-                scaleY = if (scale < 1f) 1f else scale,
-                translationX = offset.x,
-                translationY = offset.y
-            )
-            .fillMaxSize()
-//            .pointerInput(1) {
-//                detectTransformGestures { centroid, pan, zoom, rotation ->
-//                    if (scale != 1.3f)
-//                        offset += pan
-//                    scale *= zoom
-//                }
-//            }
-            .pointerInput(true) {
+    Box() {
+        AsyncImage(
+            model =
+            "${Routes.SERVER.REQUESTS.BASE_URL}/$image",
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.Center)
+                .pointerInput(true) {
 
-                detectTapGestures(
-                    onDoubleTap = {
-                        onDoubleTap()
-                    }
-//                        isLiked = !isLiked
-                    ,
-                    onTap = {
-                        scale = 1f
-                        offset = Offset.Zero
-                    },
-                    onLongPress = null
-//                        {
-//                            viewModel.swipableMenu.isReadyMenu = false
-//                            viewModel.isVisiblePhotoWindow = false
-//                            viewModel.photoScreenClosed()
-//                        }
+                    detectTapGestures(
+                        onDoubleTap = {
+                            onDoubleTap()
+                        }, onTap = if (description.isNotEmpty()) {
+                            { textVisibility = true }
+                        } else null
+                    )
 
-                )
+                }
+        )
+        AnimatedVisibility(
+            visible = textVisibility,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+        ) {
+            Box() {
 
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 55.dp, top = 15.dp)
+                        .clip(RoundedCornerShape(15.dp))
+                        .fillMaxWidth(0.9f)
+//                .heightIn(max = 300.dp)
+                        .background(Color(0x88FFFFFF))
+                        .align(Alignment.BottomCenter)
+                        .verticalScroll(scrollState)
+                ) {
+                    Text(
+//                text = "ASCII (англ. American standard code for information interchange, [ˈæs.ki][1]) — название таблицы (кодировки, набора), в которой некоторым распространённым печатным и непечатным символам сопоставлены числовые коды. Таблица была разработана и стандартизирована в США, в 1963 году.",
+                        text = description,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .padding(vertical = 10.dp)
+                            .fillMaxWidth(0.9f)
+                            .align(Alignment.Center)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(end = 7.dp, bottom = 60.dp)
+                        .align(Alignment.BottomEnd)
+                        .clickable {
+                            textVisibility = false
+                        }
+                ) {
+
+                    Divider(
+                        thickness = 3.dp,
+                        color = Color.Black,
+                        modifier = Modifier
+//                    .padding(horizontal = 7.dp, vertical = 5.dp)
+                            .padding(7.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .height(3.5.dp)
+                            .width(12.dp)
+                            .align(Alignment.Center)
+
+                    )
+                }
             }
-    )
+        }
+    }
 }

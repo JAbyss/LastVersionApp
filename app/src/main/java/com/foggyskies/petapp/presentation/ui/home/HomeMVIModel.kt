@@ -17,6 +17,7 @@ import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -89,6 +90,14 @@ class HomeMVIModel :
 
         }
     }
+
+
+    suspend fun initService(msViewModel: MainSocketViewModel){
+
+        msViewModel.sendAction(Routes.SERVER.WEBSOCKETCOMMANDS.CHATS)
+
+    }
+
 
     var selectedPage by mutableStateOf(Screens.IDLE)
 
@@ -206,7 +215,7 @@ class HomeMVIModel :
         viewModelScope.launch {
             client.use {
                 val a: List<SelectedPostWithIdPageProfile> =
-                    it.get("http://${MainActivity.MAINENDPOINT}/content/getPosts") {
+                    it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getPosts") {
                         this.headers["Auth"] = MainActivity.TOKEN
                     }
                 reducer.sendEvent(HomeScreenEvent.ChangePosts(a))

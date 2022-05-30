@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,7 @@ import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.home.CommentDC
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
+import com.foggyskies.petapp.routs.Routes
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -61,8 +63,9 @@ fun CommentsScreen(
                 ) {
                     Box() {
                         AsyncImage(
-                            model = "http://${MainActivity.MAINENDPOINT}/${users[item.idUser]?.image}",
+                            model = "${Routes.SERVER.REQUESTS.BASE_URL}/${users[item.idUser]?.image}",
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .clip(CircleShape)
                                 .size(25.dp)
@@ -225,7 +228,7 @@ fun CommentsScreen(
                             ) {
                                 Box() {
                                     AsyncImage(
-                                        model = "http://${MainActivity.MAINENDPOINT}/images/test_avatar.jpg",
+                                        model = "${Routes.SERVER.REQUESTS.BASE_URL}/images/test_avatar.jpg",
                                         contentDescription = null,
                                         modifier = Modifier
                                             .clip(CircleShape)

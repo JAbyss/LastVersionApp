@@ -4,14 +4,15 @@ import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.foggyskies.petapp.domain.dao.ChatDao
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
+import com.foggyskies.petapp.routs.Routes
+import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.BASE_URL
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
@@ -21,7 +22,8 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -40,11 +42,51 @@ data class OldListInfo<T>(
     var depricatedItemsList: MutableList<T>
 )
 
-@kotlinx.serialization.Serializable
-data class NewMessagesCollection(
+//data class NewMessagesCollectionWA(
+//    val id: String,
+//    val new_messages: List<ChatMessage>,
+//    var isVisible: MutableState<Boolean> = mutableStateOf(true)
+//)
+
+//@kotlinx.serialization.Serializable
+//data class NewMessagesCollection(
+//    val id: String,
+//    val new_messages: List<ChatMessage>
+//){
+//    fun toNMWA(): NewMessagesCollectionWA {
+//        return NewMessagesCollectionWA(
+//            id = id,
+//            new_messages = new_messages,
+//            isVisible = mutableStateOf(true)
+//        )
+//    }
+//}
+
+data class NewMessagesCollectionWA(
     val id: String,
-    val new_messages: List<ChatMessage>
+    val image: String,
+    val username: String,
+    val new_message: ChatMessageDC,
+    var isVisible: MutableState<Boolean> = mutableStateOf(true)
 )
+
+@kotlinx.serialization.Serializable
+data class WatchNewMessage(
+    val idChat: String,
+    val image: String,
+    val username: String,
+    val new_message: ChatMessageDC
+){
+    fun toNMWA(): NewMessagesCollectionWA {
+        return NewMessagesCollectionWA(
+            id = idChat,
+            image = image,
+            username = username,
+            new_message = new_message,
+            isVisible = mutableStateOf(true)
+        )
+    }
+}
 
 class MainSocketViewModel : ViewModel() {
 
@@ -68,12 +110,12 @@ class MainSocketViewModel : ViewModel() {
 
     fun connectToSearchUsers() {
         if (MainActivity.isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 val client = HttpClient(CIO) {
                     install(WebSockets)
                 }
                 socket = client.webSocketSession {
-                    url("ws://${MainActivity.MAINENDPOINT}/user")
+                    url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/user")
                     header("Auth", MainActivity.TOKEN)
                 }
                 observeMessages().onEach { user ->
@@ -81,7 +123,7 @@ class MainSocketViewModel : ViewModel() {
                     _users.value = users.value.copy(
                         users = user
                     )
-                }.launchIn(viewModelScope)
+                }.launchIn(this)
             }
     }
 
@@ -104,13 +146,13 @@ class MainSocketViewModel : ViewModel() {
 
     fun sendMessage(username: String) {
         if (MainActivity.isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 socket?.send(username)
             }
     }
 
     fun disconnect() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             socket?.close()
             socket = null
             _users.value.clear()
@@ -118,7 +160,7 @@ class MainSocketViewModel : ViewModel() {
     }
 
     fun getFriends() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             HttpClient(Android) {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
@@ -127,7 +169,7 @@ class MainSocketViewModel : ViewModel() {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                listFriends = it.get("http://${MainActivity.MAINENDPOINT}/friends") {
+                listFriends = it.get("$BASE_URL/friends") {
                     this.headers["Auth"] = MainActivity.TOKEN
                 }
             }
@@ -135,7 +177,7 @@ class MainSocketViewModel : ViewModel() {
     }
 
     fun getRequestsFriend() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             HttpClient(Android) {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
@@ -144,7 +186,7 @@ class MainSocketViewModel : ViewModel() {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                listFriends = it.get("http://${MainActivity.MAINENDPOINT}/friends") {
+                listFriends = it.get("$BASE_URL/friends") {
                     this.headers["Auth"] = MainActivity.TOKEN
                 }
             }
@@ -153,7 +195,7 @@ class MainSocketViewModel : ViewModel() {
 
     fun sendAction(action: String) {
         if (MainActivity.isNetworkAvailable.value)
-            viewModelScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 if (mainSocket == null) {
                     createMainSocket()
                     do {
@@ -184,10 +226,11 @@ class MainSocketViewModel : ViewModel() {
 
     var listPagesProfile by mutableStateOf(emptyList<PageProfileFormattedDC>())
 
-    var listNewMessages by mutableStateOf(emptyList<NewMessagesCollection>())
+//    var listNewMessages by mutableStateOf(emptyList<NewMessagesCollection>())
+    var listNewMessages = mutableStateListOf<NewMessagesCollectionWA>()
 
     fun createMainSocket() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
 
             var idUser = ""
 
@@ -199,7 +242,7 @@ class MainSocketViewModel : ViewModel() {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                idUser = it.post<String>("http://${MainActivity.MAINENDPOINT}/createMainSocket") {
+                idUser = it.post<String>("$BASE_URL/createMainSocket") {
                     this.headers["Auth"] = MainActivity.TOKEN
                 }
             }
@@ -208,7 +251,7 @@ class MainSocketViewModel : ViewModel() {
                 install(WebSockets)
             }
             mainSocket = client.webSocketSession {
-                url("ws://${MainActivity.MAINENDPOINT}/mainSocket/$idUser")
+                url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/mainSocket/$idUser")
                 header("Auth", MainActivity.TOKEN)
             }
             observeActions().onEach { user ->
@@ -222,7 +265,7 @@ class MainSocketViewModel : ViewModel() {
                             val json = Json.decodeFromString<List<UserIUSI>>(formatted)
                             val needAddItems: List<UserIUSI> = json - listFriends.toSet()
                             val deletedItems = listFriends - json.toSet()
-                            viewModelScope.launch {
+                            CoroutineScope(Dispatchers.IO).launch {
                                 repositoryUserDB.updateFriends(needAddItems, deletedItems)
                             }
                         },
@@ -230,7 +273,7 @@ class MainSocketViewModel : ViewModel() {
                             val json = Json.decodeFromString<List<FormattedChatDC>>(formatted)
                             val needAddItems: List<FormattedChatDC> = json - listChats.toSet()
                             val deletedItems = listChats - json.toSet()
-                            viewModelScope.launch {
+                            CoroutineScope(Dispatchers.IO).launch {
                                 repositoryUserDB.updateChats(needAddItems, deletedItems)
                             }
                             listChats = json.toMutableList()
@@ -268,16 +311,22 @@ class MainSocketViewModel : ViewModel() {
                         },
                         "getNewMessages" to {
                             val json =
-                                Json.decodeFromString<List<NewMessagesCollection>>(formatted)
-                            listNewMessages = json
+                                Json.decodeFromString<WatchNewMessage>(formatted)
+                            listNewMessages.add(json.toNMWA())
 //                            listPagesProfile = json.toMutableList()
                         }
                     )
                     map_actions[action]?.invoke()
                 }
-            }.launchIn(viewModelScope)
+            }.launchIn(this)
         }
     }
+
+//    val listInternalNotification = derivedStateOf {
+//        if (listNewMessages.isEmpty()){
+//
+//        }
+//    }
 
     var newNotificationList = mutableListOf<Char>()
     var oldNotificationList = mutableListOf<Char>()
@@ -360,7 +409,8 @@ class MainSocketViewModel : ViewModel() {
     var selectedMuteBatItem = mutableStateOf(0)
 
     val isNotifyVisible by derivedStateOf {
-        listNotifications.isNotEmpty()
+//        listNotifications.isNotEmpty()
+        listNewMessages.isNotEmpty() || isMuteBarVisible
     }
 
     var listValuesMute = listOf(
@@ -373,11 +423,35 @@ class MainSocketViewModel : ViewModel() {
     var isMuteBarVisible by mutableStateOf(false)
 
     fun notificationReceived(notification: Notification) {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             mainSocket?.send("INR|N")
         }
     }
+
+//    fun muteChat(){
+//        viewModelScope.launch {
+//            HttpClient(Android) {
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
+//                install(HttpTimeout) {
+//                    requestTimeoutMillis = 30000
+//                }
+//            }.use {
+//                listFriends = it.get("$BASE_URL$MUTE_CHAT") {
+//                    this.headers["Auth"] = MainActivity.TOKEN
+//                    body = MuteChatDC()
+//                }
+//            }
+//        }
+//    }
+
 }
+
+data class MuteChatDC(
+    val idChat: String,
+    val timeMute: String
+)
 
 fun <T> checkOldListByNewList(oldList: MutableList<T>, newList: MutableList<T>): OldListInfo<T> {
     val equalItemsList = mutableListOf<T>()

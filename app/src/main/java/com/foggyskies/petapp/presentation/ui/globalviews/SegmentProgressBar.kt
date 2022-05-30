@@ -1,5 +1,4 @@
 import android.annotation.SuppressLint
-import android.graphics.Paint as OldPaint
 import android.graphics.Typeface
 import android.widget.Toast
 import androidx.compose.animation.core.Animatable
@@ -12,15 +11,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint as ComposePaint
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.PaintingStyle.Companion.Fill
+import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import android.graphics.Paint as OldPaint
+import androidx.compose.ui.graphics.Paint as ComposePaint
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -188,9 +187,25 @@ private fun DrawScope.drawSegment(maxCount: Int, i: Int, color: Animatable<Color
             close()
         }
     }
-    drawPath(
-        path = path,
-        color = color.value,
-        alpha = 1f
-    )
+    drawIntoCanvas { canvas ->
+        canvas.drawOutline(
+            outline = Outline.Generic(path),
+            paint = ComposePaint().apply {
+                this.color =  color.value
+                this.style = if (color.value == Color.Gray) PaintingStyle.Stroke else PaintingStyle.Fill
+                this.strokeWidth = 2.dp.toPx()
+                pathEffect = PathEffect.cornerPathEffect(10.dp.toPx())
+            }
+        )
+    }
+//    drawPath(
+//        path = path,
+//        color = color.value,
+////        style = Fill,
+//        style = Stroke(
+////            width = 2.dp.toPx(),
+//            pathEffect = PathEffect.cornerPathEffect(10.dp.toPx())
+//        ),
+//        alpha = 1f
+//    )
 }

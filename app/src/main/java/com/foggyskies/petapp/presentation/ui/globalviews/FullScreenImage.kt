@@ -32,7 +32,8 @@ import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.SelectedImageMessage
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
+import com.foggyskies.petapp.routs.Routes
 
 @Composable
 fun FullScreenImage(
@@ -40,7 +41,7 @@ fun FullScreenImage(
 //    message: ChatMessage,
     onBackClick: () -> Unit
 ) {
-
+    val context = LocalContext.current
     var scale by remember { mutableStateOf(1f) }
 
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -49,9 +50,31 @@ fun FullScreenImage(
         mutableStateOf(true)
     }
 
+    val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${selectedMessage?.imageRequest}"
+
+    val cached = selectedMessage?.imageRequest?.let { MainActivity.loader.diskCache?.get(it)?.data }
+
     val selectedRequest = remember {
-        mutableStateOf(selectedMessage?.imageRequest)
+        mutableStateOf(
+            if (cached != null) {
+                ImageRequest.Builder(context)
+                    .data(cached.toFile())
+                    .diskCachePolicy(CachePolicy.READ_ONLY)
+//                                .diskCacheKey(it[0])
+                    .crossfade(true)
+                    .build()
+            } else {
+                ImageRequest.Builder(context)
+                    .data(imageLink)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .diskCacheKey(selectedMessage?.imageRequest)
+                    .crossfade(true)
+                    .build()
+            }
+        )
     }
+
+
 
     Box(
         modifier = Modifier
@@ -80,7 +103,7 @@ fun FullScreenImage(
                     detectTransformGestures { centroid, pan, zoom, rotation ->
 //                        Log.e("TEST TRANSFORM", "pan $pan ")
                         if (scale != 1f)
-                            offset += pan
+                            offset += (pan * scale)
                         if (scale < 1f) {
                             scale = 1f
                             offset = Offset.Zero
@@ -150,35 +173,38 @@ private fun BoxScope.TopBar(
 //            Spacer(modifier = Modifier.width(20.dp))
         }
 
-        Row(
-            modifier = Modifier
-                .padding(vertical = 5.dp)
-                .align(Alignment.CenterEnd)
-        ) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(30.dp),
-                    Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(5.dp))
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(30.dp),
-                    Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(5.dp))
-        }
+//        Row(
+//            modifier = Modifier
+//                .padding(vertical = 5.dp)
+//                .align(Alignment.CenterEnd)
+//        ) {
+//            IconButton(onClick = { /*TODO*/ }) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
+//                    contentDescription = null,
+//                    modifier = Modifier.size(30.dp),
+//                    Color.White
+//                )
+//            }
+//            Spacer(modifier = Modifier.width(5.dp))
+//            IconButton(onClick = { /*TODO*/ }) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
+//                    contentDescription = null,
+//                    modifier = Modifier.size(30.dp),
+//                    Color.White
+//                )
+//            }
+//            Spacer(modifier = Modifier.width(5.dp))
+//        }
     }
 }
 
 @Composable
-private fun BoxScope.BottomBar(message: ChatMessage, selectedRequest: MutableState<ImageRequest?>) {
+private fun BoxScope.BottomBar(
+    message: ChatMessageDC,
+    selectedRequest: MutableState<ImageRequest>
+) {
     val context = LocalContext.current
 
     Column(
@@ -201,22 +227,22 @@ private fun BoxScope.BottomBar(message: ChatMessage, selectedRequest: MutableSta
                     .padding(top = 7.dp)
                     .align(CenterHorizontally)
             ) {
-                                    itemsIndexed(message.listImages) { index, item ->
+                itemsIndexed(message.listImages) { index, item ->
 
-                                val imageLink = "http://${MainActivity.MAINENDPOINT}/$item"
+                    val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/$item"
 
-                                val cached = MainActivity.loader.diskCache?.get(item)?.data
-                                val request = if (cached != null) {
-                                    ImageRequest.Builder(context)
-                                        .data(cached.toFile())
-                                        .diskCachePolicy(CachePolicy.READ_ONLY)
-                                        .diskCacheKey(item)
-                                        .crossfade(true)
-                                        .build()
-                                } else {
-                                    ImageRequest.Builder(context)
-                                        .data(imageLink)
-                                        .diskCachePolicy(CachePolicy.ENABLED)
+                    val cached = MainActivity.loader.diskCache?.get(item)?.data
+                    val request = if (cached != null) {
+                        ImageRequest.Builder(context)
+                            .data(cached.toFile())
+                            .diskCachePolicy(CachePolicy.READ_ONLY)
+                            .diskCacheKey(item)
+                            .crossfade(true)
+                            .build()
+                    } else {
+                        ImageRequest.Builder(context)
+                            .data(imageLink)
+                            .diskCachePolicy(CachePolicy.ENABLED)
                             .diskCacheKey(item)
                             .crossfade(true)
                             .build()
@@ -260,26 +286,26 @@ private fun BoxScope.BottomBar(message: ChatMessage, selectedRequest: MutableSta
                     color = Color.White
                 )
             }
-            Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(30.dp),
-                        Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.width(5.dp))
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(30.dp),
-                        Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.width(5.dp))
-            }
+//            Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+//                IconButton(onClick = { /*TODO*/ }) {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
+//                        contentDescription = null,
+//                        modifier = Modifier.size(30.dp),
+//                        Color.White
+//                    )
+//                }
+//                Spacer(modifier = Modifier.width(5.dp))
+//                IconButton(onClick = { /*TODO*/ }) {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.ic_round_arrow_back_24),
+//                        contentDescription = null,
+//                        modifier = Modifier.size(30.dp),
+//                        Color.White
+//                    )
+//                }
+//                Spacer(modifier = Modifier.width(5.dp))
+//            }
         }
     }
 }

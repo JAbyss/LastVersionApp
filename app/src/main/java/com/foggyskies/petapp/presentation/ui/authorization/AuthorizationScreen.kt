@@ -6,7 +6,6 @@ import android.renderscript.Allocation
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -42,7 +41,6 @@ import com.foggyskies.testingscrollcompose.visualtransformations.PhoneVisualTran
 enum class StateAuthorization {
     SIGNIN, SIGNUP
 }
-
 
 
 @Composable
@@ -91,7 +89,7 @@ fun AuthorizationScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .align(Center)
                     .background(Color(0xCC382424))
-                    .requiredWidthIn(max =  300.dp)
+                    .requiredWidthIn(max = 300.dp)
             ) {
                 Text(
                     text = authorizationViewModel.error.value,
@@ -153,7 +151,13 @@ fun BoxScope.AuthBottomSheet(
                             if (it.isDigitsOnly() && it.length < 12)
                                 authorizationViewModel.list_fields[value]!!.value = it
                         } else
-                            authorizationViewModel.list_fields[value]!!.value = it
+                            if (value == "Пароль") {
+                                val a = it.filterNot { it.code in 33..126 }
+                                if (a.isEmpty()) {
+                                    authorizationViewModel.list_fields[value]!!.value = it
+                                }
+                            } else
+                                authorizationViewModel.list_fields[value]!!.value = it
                     },
                     label = { Text(text = value, fontWeight = FontWeight.Black) },
                     colors = TextFieldDefaults.outlinedTextFieldColors(

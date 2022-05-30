@@ -13,10 +13,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -47,18 +44,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import coil.annotation.ExperimentalCoilApi
-import coil.compose.*
+import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
-import com.foggyskies.petapp.MainActivity.Companion.MAINENDPOINT
-import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.customui.ChatTextField
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FullScreenImage
+import com.foggyskies.petapp.routs.Routes
 import kotlinx.coroutines.launch
 
 
@@ -110,42 +107,42 @@ fun ChatScreen(
 //    }
     val state by remember(viewModel.state.value) {
         val messages = viewModel.state.value
-        if (messages.messages.isNotEmpty()) {
-            if (!messages.isLoading) {
-                scope.launch {
-
-                    lazy_state.animateScrollToItem(
-                        messages.messages.size - 1,
-//                        lazy_state.layoutInfo.visibleItemsInfo.last().offset
-                    )
-                }
-                messages.isLoading = true
-            }
-            if (messages.messages.first().author == USERNAME) {
-                scope.launch {
-                    lazy_state.animateScrollToItem(
-                        messages.messages.size - 1,
-//                        lazy_state.layoutInfo.visibleItemsInfo.last().offset
-                    )
-                }
-            }
-            if (lazy_state.layoutInfo.visibleItemsInfo.isNotEmpty())
-                if (lazy_state.layoutInfo.visibleItemsInfo.last().index == messages.messages.lastIndex - 1) {
-                    scope.launch {
-                        lazy_state.animateScrollToItem(
-                            messages.messages.size - 1,
-//                            lazy_state.layoutInfo.visibleItemsInfo.last().offset
-                        )
-                    }
-                } else {
-                    lazy_state.layoutInfo.visibleItemsInfo.last().index
-
-                    val countUnreadMessage =
-                        messages.messages.size - lazy_state.layoutInfo.visibleItemsInfo.last().index - 1
-                    viewModel.countUnreadMessage = countUnreadMessage
-                    viewModel.visibleButtonDown = true
-                }
-        }
+//        if (messages.messages.isNotEmpty()) {
+//            if (!messages.isLoading) {
+//                scope.launch {
+//
+//                    lazy_state.animateScrollToItem(
+//                        messages.messages.size - 1,
+////                        lazy_state.layoutInfo.visibleItemsInfo.last().offset
+//                    )
+//                }
+//                messages.isLoading = true
+//            }
+//            if (messages.messages.first().idUser == USERNAME) {
+//                scope.launch {
+//                    lazy_state.animateScrollToItem(
+//                        messages.messages.size - 1,
+////                        lazy_state.layoutInfo.visibleItemsInfo.last().offset
+//                    )
+//                }
+//            }
+//            if (lazy_state.layoutInfo.visibleItemsInfo.isNotEmpty())
+//                if (lazy_state.layoutInfo.visibleItemsInfo.last().index == messages.messages.lastIndex - 1) {
+//                    scope.launch {
+//                        lazy_state.animateScrollToItem(
+//                            messages.messages.size - 1,
+////                            lazy_state.layoutInfo.visibleItemsInfo.last().offset
+//                        )
+//                    }
+//                } else {
+//                    lazy_state.layoutInfo.visibleItemsInfo.last().index
+//
+//                    val countUnreadMessage =
+//                        messages.messages.size - lazy_state.layoutInfo.visibleItemsInfo.last().index - 1
+//                    viewModel.countUnreadMessage = countUnreadMessage
+//                    viewModel.visibleButtonDown = true
+//                }
+//        }
         mutableStateOf(messages)
     }
 
@@ -168,6 +165,7 @@ fun ChatScreen(
     LaunchedEffect(key1 = sheetState.currentValue) {
         if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
             viewModel.galleryHandler!!.selectedItems = emptyList()
+            viewModel.galleryHandler!!.listPath = emptyList()
             viewModel.stateTextField = StateTextField.EMPTY
         }
     }
@@ -188,12 +186,20 @@ fun ChatScreen(
 //                Box(modifier = Modifier.height(100.dp).fillMaxWidth()) {
 //
 //                }
-                DisposableEffect(key1 = sheetState.isVisible) {
-                    onDispose {
-                        if (!sheetState.isVisible)
-                            keyBoard?.show()
-                    }
-                }
+//                LaunchedEffect(key1 = sheetState.isVisible){
+//                    if (!sheetState.isVisible){
+//                        viewModel.galleryHandler?.listPath = emptyList()
+//                    }
+//                }
+//                DisposableEffect(key1 = sheetState.isVisible) {
+//                    onDispose {
+//                        if (!sheetState.isVisible){
+//                            keyBoard?.show()
+//                        } else {
+//
+//                        }
+//                    }
+//                }
 //                Box() {
 
                 viewModel.galleryHandler!!.GalleryImageSelector(
@@ -257,6 +263,7 @@ fun ChatScreen(
 
                         LazyColumn(
                             state = lazy_state,
+                            reverseLayout = true,
                             modifier = Modifier
                                 .fillMaxWidth()
 //                        .height(kotlin.run {
@@ -265,14 +272,14 @@ fun ChatScreen(
 //                        })
                                 .align(BottomCenter)
                         ) {
-                            items(state.messages.reversed()) { item ->
+                            items(state.messages) { item ->
                                 Message(
                                     message = item,
                                     viewModel,
                                     modifier = Modifier
                                         .padding(horizontal = 10.dp, vertical = 7.dp)
                                         .fillMaxWidth()
-                                        .wrapContentWidth(if (item.author == USERNAME) End else Start)
+                                        .wrapContentWidth(if (item.idUser == IDUSER) End else Start)
                                 )
                             }
                         }
@@ -404,7 +411,7 @@ fun HeaderChat(viewModel: ChatViewModel, item: FormattedChatDC) {
         Spacer(modifier = Modifier.width(15.dp))
         if (item.image != "")
             AsyncImage(
-                model = "http://$MAINENDPOINT/${item.image}",
+                model = "${Routes.SERVER.REQUESTS.BASE_URL}/${item.image}",
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -537,11 +544,10 @@ fun BottomAppBar(
                 onClick = {
                     if (viewModel.stateTextField == StateTextField.WRITING) {
                         if (viewModel.galleryHandler!!.listPath.isNotEmpty()) {
-                            viewModel.addImageToMessage(value) {
-                                scope.launch {
-                                    state.hide()
-                                }
+                            scope.launch {
+                                state.hide()
                             }
+                            viewModel.addImageToMessage(value)
                         } else {
                             if (!value.isBlank()) {
                                 val formattedString =
@@ -605,11 +611,10 @@ fun BottomAppBar(
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun Message(
-    message: ChatMessage,
+    message: ChatMessageDC,
     viewModel: ChatViewModel,
     modifier: Modifier
 ) {
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     BoxWithConstraints(
         modifier = modifier
@@ -624,30 +629,30 @@ fun Message(
 
 
             if (message.listImages.size == 1) {
-                val imageLink = "http://$MAINENDPOINT/${message.listImages[0]}"
+                val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${message.listImages[0]}"
 
                 val cached = loader.diskCache?.get(message.listImages[0])?.data
-                val request = if (cached != null) {
-                    ImageRequest.Builder(context)
-                        .data(cached.toFile())
-                        .size(100, 100)
-                        .diskCachePolicy(CachePolicy.READ_ONLY)
-                        .diskCacheKey(message.listImages[0])
-                        .crossfade(true)
-                        .build()
-                } else {
-                    ImageRequest.Builder(context)
-                        .data(imageLink)
-                        .size(100, 100)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .diskCacheKey(message.listImages[0])
-                        .crossfade(true)
-                        .build()
-                }
-                loader.enqueue(request)
 
                 AsyncImage(
-                    model = request,
+                    model =
+                    if (cached != null) {
+                        ImageRequest.Builder(context)
+                            .data(cached.toFile())
+                            .size(100, 100)
+                            .diskCachePolicy(CachePolicy.READ_ONLY)
+//                            .diskCacheKey(message.listImages[0])
+                            .crossfade(true)
+                            .build()
+                    } else {
+                        ImageRequest.Builder(context)
+                            .data(imageLink)
+                            .size(100, 100)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(message.listImages[0])
+                            .crossfade(true)
+                            .build()
+                    },
+                    imageLoader = loader,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -656,39 +661,58 @@ fun Message(
                         .fillMaxWidth()
                         .clickable {
                             viewModel.selectedImage = SelectedImageMessage(
-                                imageRequest = request,
+                                imageRequest = message.listImages[0],
                                 message = message
                             )
                         }
                 )
             } else if (message.listImages.size > 1) {
-//
-                message.listImages.windowed(2, 2, true).forEach {
+//                LazyColumn(modifier = Modifier.requiredHeightIn(max = 1000.dp)) {
+//               .forEach {
+                message.listImages.windowed(2, 2, true).forEach { list ->
                     Row(Modifier.padding(7.dp)) {
-                        val imageLink = "http://$MAINENDPOINT/${it[0]}"
+                        val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[0]}"
 
-                        val cached = loader.diskCache?.get(it[0])?.data
-                        val request = if (cached != null) {
-                            ImageRequest.Builder(context)
-                                .data(cached.toFile())
-                                .size(100, 100)
-                                .diskCachePolicy(CachePolicy.READ_ONLY)
-                                .diskCacheKey(it[0])
-                                .crossfade(true)
-                                .build()
-                        } else {
-                            ImageRequest.Builder(context)
-                                .data(imageLink)
-                                .size(100, 100)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .diskCacheKey(it[0])
-                                .crossfade(true)
-                                .build()
-                        }
-                        loader.enqueue(request)
+                        val cached = loader.diskCache?.get(list[0])?.data
+//                        val request = if (cached != null) {
+//                            ImageRequest.Builder(context)
+//                                .data(cached.toFile())
+//                                .size(100, 100)
+//                                .diskCachePolicy(CachePolicy.READ_ONLY)
+////                                .diskCacheKey(it[0])
+//                                .crossfade(true)
+//                                .build()
+//                        } else {
+//                            ImageRequest.Builder(context)
+//                                .data(imageLink)
+//                                .size(100, 100)
+//                                .diskCachePolicy(CachePolicy.ENABLED)
+//                                .diskCacheKey(it[0])
+//                                .crossfade(true)
+//                                .build()
+//                        }
+//                        loader.enqueue(request)
 
                         AsyncImage(
-                            model = request,
+                            model =
+                            if (cached != null) {
+                                ImageRequest.Builder(context)
+                                    .data(cached.toFile())
+                                    .size(100, 100)
+                                    .diskCachePolicy(CachePolicy.READ_ONLY)
+//                                    .diskCacheKey(list[0])
+                                    .crossfade(true)
+                                    .build()
+                            } else {
+                                ImageRequest.Builder(context)
+                                    .data(imageLink)
+                                    .size(100, 100)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .diskCacheKey(list[0])
+                                    .crossfade(true)
+                                    .build()
+                            },
+                            imageLoader = loader,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -697,39 +721,57 @@ fun Message(
                                 .weight(1f)
                                 .clickable {
                                     viewModel.selectedImage = SelectedImageMessage(
-                                        imageRequest = request,
+                                        imageRequest = list[0],
                                         message = message
                                     )
                                 }
                         )
 
-                        if (it.size > 1) {
+                        if (list.size > 1) {
                             Spacer(modifier = Modifier.width(10.dp))
 
-                            val imageLink = "http://$MAINENDPOINT/${it[1]}"
+                            val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[1]}"
 
-                            val cached = MainActivity.loader.diskCache?.get(it[1])?.data
-                            val request = if (cached != null) {
-                                ImageRequest.Builder(context)
-                                    .data(cached.toFile())
-                                    .diskCachePolicy(CachePolicy.READ_ONLY)
-                                    .diskCacheKey(it[1])
-                                    .size(100, 100)
-                                    .crossfade(true)
-                                    .build()
-                            } else {
-                                ImageRequest.Builder(context)
-                                    .data(imageLink)
-                                    .size(100, 100)
-                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                    .diskCacheKey(it[1])
-                                    .crossfade(true)
-                                    .build()
-                            }
-                            loader.enqueue(request)
+                            val cached = MainActivity.loader.diskCache?.get(list[1])?.data
+//                            val request = if (cached != null) {
+//                                ImageRequest.Builder(context)
+//                                    .data(cached.toFile())
+//                                    .diskCachePolicy(CachePolicy.READ_ONLY)
+////                                    .diskCacheKey(it[1])
+//                                    .size(100, 100)
+//                                    .crossfade(true)
+//                                    .build()
+//                            } else {
+//                                ImageRequest.Builder(context)
+//                                    .data(imageLink)
+//                                    .size(100, 100)
+//                                    .diskCachePolicy(CachePolicy.ENABLED)
+//                                    .diskCacheKey(it[1])
+//                                    .crossfade(true)
+//                                    .build()
+//                            }
+//                            loader.enqueue(request)
 
                             AsyncImage(
-                                model = request,
+                                model =
+                                if (cached != null) {
+                                    ImageRequest.Builder(context)
+                                        .data(cached.toFile())
+                                        .diskCachePolicy(CachePolicy.READ_ONLY)
+//                                        .diskCacheKey(list[1])
+                                        .size(100, 100)
+                                        .crossfade(true)
+                                        .build()
+                                } else {
+                                    ImageRequest.Builder(context)
+                                        .data(imageLink)
+                                        .size(100, 100)
+                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                        .diskCacheKey(list[1])
+                                        .crossfade(true)
+                                        .build()
+                                },
+                                imageLoader = loader,
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
@@ -738,7 +780,7 @@ fun Message(
                                     .weight(1f)
                                     .clickable {
                                         viewModel.selectedImage = SelectedImageMessage(
-                                            imageRequest = request,
+                                            imageRequest = list[1],
                                             message = message
                                         )
                                     }
@@ -747,6 +789,7 @@ fun Message(
                     }
                 }
             }
+//            }
             if (message.message != "") {
                 Text(
                     text = message.message,

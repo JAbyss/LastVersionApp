@@ -2,6 +2,7 @@ package com.foggyskies.petapp.presentation.ui.chat
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,14 +10,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
+import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
+import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.temppackage.GalleryHandler
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
@@ -29,8 +31,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -46,7 +48,7 @@ enum class StateKeyBoard {
 }
 
 data class ChatState(
-    var messages: List<ChatMessage> = emptyList(),
+    var messages: List<ChatMessageDC> = emptyList(),
     var isLoading: Boolean = false
 ) {
     fun clear() {
@@ -66,7 +68,7 @@ class ChatViewModel : ViewModel() {
 
     var chatEntity: FormattedChatDC? = null
 
-    var galleryHandler :GalleryHandler? = null
+    var galleryHandler: GalleryHandler? = null
 
     init {
         galleryHandler = GalleryHandler()
@@ -107,12 +109,13 @@ class ChatViewModel : ViewModel() {
 
     fun connectToChat(idChat: String, context: Context) {
 
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             repositoryUserDB.dbUser.apply {
                 createTableMessages(idChat)
                 _state.value = state.value.copy(
                     messages = loadFiftyMessages(idChat).asReversed()
                 )
+                Log.e("TEST", _state.value.toString())
             }
             if (isNetworkAvailable.value) {
                 HttpClient(Android) {
@@ -123,17 +126,18 @@ class ChatViewModel : ViewModel() {
                         requestTimeoutMillis = 30000
                     }
                 }.use {
-                    it.get<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/createChatSession?idChat=$idChat")
+                    it.get<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/createChatSession?idChat=$idChat")
                 }
                 val client = HttpClient(CIO) {
                     install(WebSockets)
                 }
                 socket = client.webSocketSession {
-                    url("ws://${MainActivity.MAINENDPOINT}/subscribes/$idChat?username=$USERNAME")
+                    header("Auth", TOKEN)
+                    url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/subscribes/$idChat?username=$USERNAME")
                 }
                 observeMessages()
                     .onEach { message ->
-                        if (!_state.value.messages.contains(message)) {
+                        if (!_state.value.messages.map{ it.id }.contains(message.id)) {
 
                             val newList = state.value.messages.toMutableList().apply {
                                 add(0, message)
@@ -144,12 +148,12 @@ class ChatViewModel : ViewModel() {
                                 messages = newList
                             )
                         }
-                    }.launchIn(viewModelScope)
+                    }.launchIn(this)
             }
         }
     }
 
-    fun observeMessages(): Flow<ChatMessage> {
+    fun observeMessages(): Flow<ChatMessageDC> {
 
         return try {
             socket?.incoming
@@ -157,8 +161,8 @@ class ChatViewModel : ViewModel() {
                 ?.filter { it is Frame.Text }
                 ?.map {
                     val json = (it as? Frame.Text)?.readText() ?: ""
-                    val chatMessage = Json.decodeFromString<ChatMessage>(json)
-                    chatMessage
+                    val chatMessageDC = Json.decodeFromString<ChatMessageDC>(json)
+                    chatMessageDC
                 } ?: flow {}
         } catch (e: Exception) {
             e.printStackTrace()
@@ -167,14 +171,14 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage(message: MessageDC) {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             val json = Json.encodeToString(message)
             socket?.send(json)
         }
     }
 
     fun disconnect() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             socket?.close()
             socket = null
             _state.value.clear()
@@ -183,32 +187,36 @@ class ChatViewModel : ViewModel() {
 
     val listImageAddress = mutableListOf<String>()
 
-    fun addImageToMessage(message: String, callBack: () -> Unit) {
-        viewModelScope.launch {
+    fun addImageToMessage(message: String, callBack: () -> Unit = {}) {
+        CoroutineScope(Dispatchers.Default).launch {
+
+            val asyncList = mutableListOf<Deferred<Unit>>()
 
             galleryHandler!!.selectedItems.forEach {
+                asyncList.add(async {
+                    val bm = BitmapFactory.decodeFile(it)
+                    val string64 = encodeToBase64(bm)
 
-                val bm = BitmapFactory.decodeFile(it)
-                val string64 = encodeToBase64(bm)
-
-                HttpClient(Android) {
+                    HttpClient(Android) {
 //                expectSuccess = false
-                    install(HttpTimeout) {
-                        requestTimeoutMillis = 30000
-                    }
-                }.use {
-
-                    val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/subscribes/addImageToMessage") {
-                            headers["Auth"] = MainActivity.TOKEN
-                            parameter("idChat", chatEntity?.id)
-                            body = string64
+                        install(HttpTimeout) {
+                            requestTimeoutMillis = 30000
                         }
-                    if (response.status.isSuccess()) {
-                        listImageAddress.add(response.readText())
+                    }.use {
+
+                        val response =
+                            it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/addImageToMessage") {
+                                headers["Auth"] = MainActivity.TOKEN
+                                parameter("idChat", chatEntity?.id)
+                                body = string64
+                            }
+                        if (response.status.isSuccess()) {
+                            listImageAddress.add(response.readText())
+                        }
                     }
-                }
+                })
             }
+            asyncList.awaitAll()
             sendMessage(
                 MessageDC(
                     listImages = listImageAddress.toList(),
@@ -217,7 +225,7 @@ class ChatViewModel : ViewModel() {
             )
             listImageAddress.clear()
             galleryHandler!!.selectedItems = emptyList()
-            callBack()
+//            callBack()
         }
     }
 
@@ -226,8 +234,8 @@ class ChatViewModel : ViewModel() {
 }
 
 data class SelectedImageMessage(
-    var message: ChatMessage,
-    var imageRequest: ImageRequest
+    var message: ChatMessageDC,
+    var imageRequest: String
 )
 
 @Serializable

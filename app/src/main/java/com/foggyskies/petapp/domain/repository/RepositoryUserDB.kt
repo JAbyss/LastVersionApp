@@ -4,7 +4,7 @@ import androidx.compose.runtime.toMutableStateList
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.domain.db.UserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
@@ -27,7 +27,7 @@ class RepositoryUserDB(
 
     suspend fun getChats(msViewModel: MainSocketViewModel) {
         val localChats = dbUser.chatDao().getAllChats()
-        var formattedChat = localChats.map {
+        val formattedChat = localChats.map {
             FormattedChatDC(
                 id = it.idChat,
                 nameChat = it.companionName,
@@ -40,7 +40,7 @@ class RepositoryUserDB(
         msViewModel.listNewMessages.forEach { newChat ->
             formattedChat.forEachIndexed { index, it ->
                 if (newChat.id == it.id){
-                    formattedChat[index] = formattedChat[index].copy(lastMessage = newChat.new_messages.last().message)
+                    formattedChat[index] = formattedChat[index].copy(lastMessage = newChat.new_message.message)
                 }
             }
         }
@@ -72,7 +72,7 @@ class RepositoryUserDB(
         }
     }
 
-    suspend fun insertMessage(idChat: String, message: ChatMessage) {
+    suspend fun insertMessage(idChat: String, message: ChatMessageDC) {
         dbUser.insertMessages(idChat, message = message)
     }
 

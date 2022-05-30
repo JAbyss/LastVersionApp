@@ -29,6 +29,7 @@ import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.registation.LoginUserDC
 import com.foggyskies.petapp.presentation.ui.registation.authorization_save
 import com.foggyskies.petapp.presentation.ui.registation.signInRequest
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -52,7 +53,7 @@ fun SplashScreen(nav_controller: NavHostController) {
 
     LaunchedEffect(key1 = Unit, block = {
 
-        delay(1000)
+        delay(500)
 
         TOKEN = context.getSharedPreferences(
             "Token",
@@ -93,7 +94,7 @@ fun SplashScreen(nav_controller: NavHostController) {
                     }
                 }.use {
                     val response =
-                        it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/auth") {
+                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
                             headers["Content-Type"] = "Application/Json"
                             body = LoginUserDC(
                                 username = USERNAME,

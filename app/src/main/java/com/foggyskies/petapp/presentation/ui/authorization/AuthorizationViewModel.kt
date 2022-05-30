@@ -9,7 +9,9 @@ import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.PasswordCoder
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
@@ -177,12 +179,12 @@ private suspend fun signUpRequest(
     }.use {
 //                            val responseRegistration =
         val response =
-            it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/registration") {
+            it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/registration") {
                 headers["Content-Type"] = "Application/Json"
                 body = RegistrationUserDC(
                     username = login.value,
                     e_mail = e_mail.value,
-                    password = password.value
+                    password = PasswordCoder.encodeStringFS(password.value)
                 )
             }
         if (response.status.isSuccess()) {
@@ -217,11 +219,11 @@ suspend fun signInRequest(
             requestTimeoutMillis = 30000
         }
     }.use {
-        val response = it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/auth") {
+        val response = it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
             headers["Content-Type"] = "Application/Json"
             body = LoginUserDC(
                 username = login.value,
-                password = password.value
+                password = PasswordCoder.encodeStringFS(password.value)
             )
         }
         if (!response.status.isSuccess()) {
@@ -234,7 +236,7 @@ suspend fun signInRequest(
             authorization_save(
                 context,
                 login.value,
-                password.value,
+                PasswordCoder.encodeStringFS(password.value),
                 token = response.readText()
             )
             CoroutineScope(Dispatchers.Main).launch {
@@ -253,12 +255,13 @@ fun authorization_save(
     password: String,
     token: String
 ) {
+    val values = token.split("|")
     applicationContext.getSharedPreferences(
         "Token",
         Context.MODE_PRIVATE
     )
         .edit()
-        .putString("Token", token)
+        .putString("Token", values[0])
         .apply()
     applicationContext.getSharedPreferences(
         "User",
@@ -267,8 +270,8 @@ fun authorization_save(
         .edit()
         .putString("username", username)
         .putString("password", password)
+        .putString("idUser", values[1])
         .apply()
-    val values = token.split("|")
     TOKEN = values[0]
     USERNAME = username
     IDUSER = values[1]

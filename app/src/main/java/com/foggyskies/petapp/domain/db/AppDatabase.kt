@@ -1,13 +1,14 @@
 package com.foggyskies.petapp.domain.db
 
 import android.provider.BaseColumns
+import android.util.Log
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.foggyskies.petapp.data.Chat
 import com.foggyskies.petapp.data.FriendTable
 import com.foggyskies.petapp.domain.dao.ChatDao
 import com.foggyskies.petapp.domain.dao.FriendsDao
-import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessage
+import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -40,35 +41,35 @@ abstract class UserDB : RoomDatabase() {
         openHelper.writableDatabase.execSQL(CREATE_TABLE)
     }
 
-    suspend fun insertMessages(idChat: String, message: ChatMessage) {
+    suspend fun insertMessages(idChat: String, message: ChatMessageDC) {
         val listS = Json.encodeToString(message.listImages)
         val INSERT_MESSAGE =
-            "INSERT OR REPLACE INTO ${Messages.TABLE_NAME + idChat} VALUES (" +
+            "INSERT OR IGNORE INTO ${Messages.TABLE_NAME + idChat} VALUES (" +
                     " \"${message.id}\"," +
-                    " \"${message.author}\"," +
+                    " \"${message.idUser}\"," +
                     " \"${message.date}\"," +
                     " \'${message.message}\'," +
                     " \'$listS\') "
         openHelper.writableDatabase.execSQL(INSERT_MESSAGE)
     }
 
-    fun getOneMessage(idChat: String, idMessage: String): ChatMessage? {
-        val SELECT_MESSAGE =
-            "SELECT * FROM ${Messages.TABLE_NAME+idChat} WHERE id LIKE \'$idMessage\'"
-        val cursor = openHelper.readableDatabase.query(SELECT_MESSAGE)
-        var messageGlob: ChatMessage? = null
-        with(cursor){while(moveToNext()){
-            val message = ChatMessage(
-                id = cursor.getString(0),
-                author = cursor.getString(1),
-                date = cursor.getString(2),
-                message = cursor.getString(3),
-                listImages = Json.decodeFromString(cursor.getString(4))
-            )
-            messageGlob = message
-        } }
-        return messageGlob
-    }
+//    fun getOneMessage(idChat: String, idMessage: String): ChatMessageDC? {
+//        val SELECT_MESSAGE =
+//            "SELECT * FROM ${Messages.TABLE_NAME+idChat} WHERE id LIKE \'$idMessage\'"
+//        val cursor = openHelper.readableDatabase.query(SELECT_MESSAGE)
+//        var messageGlob: ChatMessageDC? = null
+//        with(cursor){while(moveToNext()){
+//            val message = ChatMessageDC(
+//                id = cursor.getString(0),
+//                idUser = cursor.getString(1),
+//                date = cursor.getString(2),
+//                message = cursor.getString(3),
+//                listImages = Json.decodeFromString(cursor.getString(4))
+//            )
+//            messageGlob = message
+//        } }
+//        return messageGlob
+//    }
 
     suspend fun getImageList(idChat: String, idMessage: String): List<String> {
         val SELECT_LIST_IMAGES =
@@ -82,7 +83,7 @@ abstract class UserDB : RoomDatabase() {
         return listImages
     }
 
-    suspend fun loadFiftyMessages(idChat: String): MutableList<ChatMessage> {
+    suspend fun loadFiftyMessages(idChat: String): MutableList<ChatMessageDC> {
 //        ORDER BY date ASC !!
         val SELECT_FIFTY_MESSAGES =
             "SELECT * FROM ${Messages.TABLE_NAME + idChat} "
@@ -90,11 +91,11 @@ abstract class UserDB : RoomDatabase() {
 //        ORDER BY date ASC
 //        TOP (50)
         val cursor = openHelper.readableDatabase.query(SELECT_FIFTY_MESSAGES)
-          val listMessages = mutableListOf<ChatMessage>()
+          val listMessages = mutableListOf<ChatMessageDC>()
         with(cursor){while(moveToNext()){
-            val message = ChatMessage(
+            val message = ChatMessageDC(
                 id = cursor.getString(0),
-                author = cursor.getString(1),
+                idUser = cursor.getString(1),
                 date = cursor.getString(2),
                 message = cursor.getString(3),
                 listImages = Json.decodeFromString(cursor.getString(4))
@@ -120,27 +121,27 @@ abstract class UserDB : RoomDatabase() {
         openHelper.writableDatabase.execSQL(CREATE_TABLE)
     }
 
-    suspend fun insertNewMessage(idChat: String, message: ChatMessage) {
+    suspend fun insertNewMessage(idChat: String, message: ChatMessageDC) {
         val images = Json.encodeToString(message.listImages)
         val INSERT_MESSAGE =
-            "INSERT OR REPLACE INTO ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} VALUES (" +
+            "INSERT OR IGNORE INTO ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} VALUES (" +
                     " \"${message.id}\"," +
-                    " \"${message.author}\"," +
+                    " \"${message.idUser}\"," +
                     " \"${message.date}\"," +
                     " \'${message.message}\'," +
                     " \'$images\') "
         openHelper.writableDatabase.execSQL(INSERT_MESSAGE)
     }
 
-    suspend fun loadNewMessages(idChat: String): MutableList<ChatMessage> {
+    suspend fun loadNewMessages(idChat: String): MutableList<ChatMessageDC> {
         val SELECT_NEW_MESSAGES =
             "SELECT * FROM ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} ORDER BY date ASC "
         val cursor = openHelper.readableDatabase.query(SELECT_NEW_MESSAGES)
-        val listNewMessages = mutableListOf<ChatMessage>()
+        val listNewMessages = mutableListOf<ChatMessageDC>()
         with(cursor){ while(moveToNext()){
-            val message = ChatMessage(
+            val message = ChatMessageDC(
                 id = cursor.getString(0),
-                author = cursor.getString(1),
+                idUser = cursor.getString(1),
                 date = cursor.getString(2),
                 message = cursor.getString(3),
                 listImages = Json.decodeFromString(cursor.getString(4))

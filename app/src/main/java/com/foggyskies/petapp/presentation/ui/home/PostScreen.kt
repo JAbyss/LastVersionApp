@@ -11,9 +11,6 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,12 +32,14 @@ import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
+import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.globalviews.post.BottomCommentBar
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.CommentsScreen
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.ImageScreen
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.LikesScreen
 import com.foggyskies.petapp.presentation.ui.profile.human.ContentPreviewDC
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
@@ -48,6 +47,8 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.reflect.KSuspendFunction0
@@ -100,10 +101,11 @@ class PostScreenHandler {
             mutableStateOf(false)
         }
 
-        val scope = rememberCoroutineScope()
+//        val scope = rememberCoroutineScope()
 
         fun doubleTapLike() {
-            scope.launch {
+//            scope.launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 likePost()
 //                doubleTapAction()
                 isVisibleLikeAnimation = true
@@ -116,8 +118,6 @@ class PostScreenHandler {
         }
 
         val context = LocalContext.current
-
-        val display = LocalDensity.current.density
 
         val display_metrics = LocalContext.current.resources.displayMetrics
 
@@ -147,7 +147,6 @@ class PostScreenHandler {
                 .clip(RoundedCornerShape(20.dp))
                 .fillMaxWidth(0.92f)
                 .height(Hheiht.dp)
-//                .fillMaxHeight(0.73f)
                 .background(Color.White)
         ) {
 
@@ -173,8 +172,9 @@ class PostScreenHandler {
                         StatePost.IMAGE -> {
                             ImageScreen(
                                 selectedPost?.item?.address!!,
+                                selectedPost?.description!!,
                                 onDoubleTap = ::doubleTapLike,
-                                onLongPress = onLongPress
+//                                onLongPress = onLongPress
                             )
                         }
                         StatePost.COMMENTS -> {
@@ -231,7 +231,7 @@ class PostScreenHandler {
                             }
                         }
 
-                        androidx.compose.animation.AnimatedVisibility(
+                        AnimatedVisibility(
                             visible = isStartSecondStepAnimation,
                             modifier = Modifier.align(Alignment.Center)
                         ) {
@@ -262,7 +262,7 @@ class PostScreenHandler {
                     requestTimeoutMillis = 30000
                 }
             }.use {
-                isLiked = it.get("http://${MainActivity.MAINENDPOINT}/content/addLikeToPost") {
+                isLiked = it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/addLikeToPost") {
                     this.headers["Auth"] = MainActivity.TOKEN
                     parameter("idPageProfile", selectedPost?.idPageProfile)
                     parameter("idPost", selectedPost?.item?.id)
@@ -287,10 +287,10 @@ class PostScreenHandler {
                         serializer = KotlinxSerializer()
                     }
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 3000
+                        requestTimeoutMillis = 30000
                     }
                 }.use {
-                    it.post<HttpResponse>("http://${MainActivity.MAINENDPOINT}/content/addCommentToPost") {
+                    it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/content/addCommentToPost") {
                         headers["Auth"] = MainActivity.TOKEN
                         headers["Content-Type"] = "Application/Json"
                         parameter("idPageProfile", selectedPost?.idPageProfile)
@@ -313,7 +313,7 @@ class PostScreenHandler {
                 }
             }.use {
                 likedUsersList =
-                    it.get("http://${MainActivity.MAINENDPOINT}/content/getLikedUsers") {
+                    it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getLikedUsers") {
                         this.headers["Auth"] = MainActivity.TOKEN
                         parameter("idPageProfile", selectedPost?.idPageProfile)
                         parameter("idPost", selectedPost?.item?.id!!)
@@ -332,7 +332,7 @@ class PostScreenHandler {
                 }
             }.use {
                 selectedPost =
-                    it.get("http://${MainActivity.MAINENDPOINT}/content/getInfoAboutOnePost") {
+                    it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getInfoAboutOnePost") {
                         this.headers["Auth"] = MainActivity.TOKEN
                         parameter("idPageProfile", selectedPost?.idPageProfile)
                         parameter("idPost", selectedPost?.item?.id!!)
@@ -350,24 +350,24 @@ class PostScreenHandler {
         action()
     }
 
-    suspend fun selectPost(
-        postContentPreview: ContentPreviewDC,
-        page: PageProfileFormattedDC,
-        action: () -> Unit
-    ) {
-
-        selectedPost = SelectedPostWithIdPageProfile(
-            idPageProfile = page.id,
-            item = postContentPreview,
-            author = page.title,
-            image = page.image
-        )
-        getInfoAboutOnePost()
-
-        isLiked = selectedPost?.isLiked!!
-
-        action()
-    }
+//    suspend fun selectPost(
+//        postContentPreview: ContentPreviewDC,
+//        page: PageProfileFormattedDC,
+//        action: () -> Unit
+//    ) {
+//
+//        selectedPost = SelectedPostWithIdPageProfile(
+//            idPageProfile = page.id,
+//            item = postContentPreview,
+//            author = page.title,
+//            image = page.image
+//        )
+//        getInfoAboutOnePost()
+//
+//        isLiked = selectedPost?.isLiked!!
+//
+//        action()
+//    }
 
     suspend fun getComments() {
         if (isNetworkAvailable.value)
@@ -379,11 +379,55 @@ class PostScreenHandler {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                listComments = it.get("http://${MainActivity.MAINENDPOINT}/content/getComments") {
+                listComments = it.get("${Routes.SERVER.REQUESTS.BASE_URL}/content/getComments") {
                     this.headers["Auth"] = MainActivity.TOKEN
                     parameter("idPageProfile", selectedPost?.idPageProfile)
                     parameter("idPost", selectedPost?.item?.id!!)
                 }
             }
     }
+}
+
+data class UsersSearchState(
+    var isLoading: Boolean = false,
+    var users: List<UsersSearch> = listOf()
+) {
+    fun clear() {
+        users = emptyList()
+        isLoading = false
+    }
+}
+
+@kotlinx.serialization.Serializable
+data class SelectedPostWithIdPageProfile(
+    var idPageProfile: String,
+    var item: ContentPreviewDC,
+    var author: String,
+    var image: String,
+    var description: String,
+    var countLikes: String = "",
+    var countComets: String = "",
+    var isLiked: Boolean = false
+)
+
+@kotlinx.serialization.Serializable
+data class ContentUsersDC(
+    var id: String,
+    var type: String,
+    var likes: List<String>,
+    var comments: List<CommentDC>,
+    var address: String,
+    var description: String = ""
+)
+
+@kotlinx.serialization.Serializable
+data class CommentDC(
+    var id: String,
+    var idUser: String,
+    var message: String,
+    var date: String
+)
+
+enum class StatePost {
+    IMAGE, COMMENTS, LIKES
 }

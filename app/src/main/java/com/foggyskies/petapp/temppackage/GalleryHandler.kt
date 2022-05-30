@@ -1,40 +1,45 @@
 package com.foggyskies.petapp.temppackage
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.graphics.Insets
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.view.WindowInsets
+import android.view.WindowMetrics
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.CachePolicy
+import coil.compose.*
 import coil.request.ImageRequest
-import com.foggyskies.petapp.MainActivity
-import com.foggyskies.petapp.MainActivity.Companion.loader
+import coil.size.Size
+import com.foggyskies.petapp.MainActivity.Companion.loaderForGallery
 import com.foggyskies.petapp.R
 import java.io.File
 
@@ -42,7 +47,7 @@ class GalleryHandler {
 
     var listPath by mutableStateOf(emptyList<String>())
 
-    fun getCameraImages(context: Context){
+    fun getCameraImages(context: Context) {
         val uri: Uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val cursor: Cursor?
         val column_index_data: Int
@@ -75,7 +80,11 @@ class GalleryHandler {
     var launcher: ManagedActivityResultLauncher<String, Uri?>? = null
 
     @Composable
-    fun InitGallery(context: Context) {
+    fun InitGallery() {
+//        if (launcher == null) {
+
+        val context = LocalContext.current as Activity
+
         val image_url = remember {
             mutableStateOf<Uri?>(null)
         }
@@ -100,6 +109,7 @@ class GalleryHandler {
                 }
                 imageBitmap.value = source?.let { it1 -> ImageDecoder.decodeBitmap(it1) }
             }
+//            }
         }
     }
 
@@ -115,6 +125,7 @@ class GalleryHandler {
     var selectedItems by mutableStateOf(emptyList<String>())
 
 
+    @SuppressLint("UnrememberedMutableState")
     @OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
     @Composable
     fun GalleryImageSelector(
@@ -157,184 +168,184 @@ class GalleryHandler {
 
         val context = LocalContext.current
 
+        val values = listItems.windowed(3, 3, true)
+
+        val display_metrics = LocalContext.current.resources.displayMetrics
+
+        val height: Int =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val windowMetrics: WindowMetrics =
+                    (context as Activity).windowManager.currentWindowMetrics
+                val insets: Insets = windowMetrics.windowInsets
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+                windowMetrics.bounds.height() - insets.bottom - insets.top
+            } else {
+                val resourceId =
+                    context.resources.getIdentifier("status_bar_height", "dimen", "android")
+                if (resourceId > 0) {
+                    display_metrics.heightPixels - context.resources.getDimensionPixelSize(
+                        resourceId
+                    )
+                } else
+                    0
+            }
+
+        val height_config = (height / display_metrics.density).toInt()
+//        val  density = LocalDensity.current.density
+
+        val state = rememberLazyListState()
+
+        val scope = rememberCoroutineScope()
+
         LazyColumn(
-            modifier = if (!chatMode)
-                Modifier
+            state = state,
+//            flingBehavior = ScrollableDefaults.flingBehavior(),
+            modifier =
+//            if (!chatMode)
+            Modifier
 //                .apply {
 //                    wrapContentSize()
 ////                    if (chatMode)
 //                        padding(bottom = 60.dp)
 //                }
-                    .wrapContentSize()
-            else
-                Modifier
-                    .wrapContentSize()
-                    .padding(bottom = 60.dp)
+//                    .wrapContentSize()
+                .fillMaxWidth()
+                .height(height_config.dp)
+//                    .wrapContentHeight()
+//                    .height(400.dp)
+//                    .fillMaxHeight()
+//            else
+//                Modifier
+//                    .fillMaxWidth()
+//                    .height(400.dp)
+////                    .fillMaxHeight()
+//                    .padding(bottom = 60.dp)
         ) {
 
             item {
                 Spacer(modifier = Modifier.height(10.dp))
             }
-//            val lists =
-//            windowed(1, 1, false))
-            itemsIndexed(listItems.windowed(3, 3, false)) { index, list ->
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 5.dp, vertical = 2.5.dp)
-                        .clip(
-                            if (index == 0) RoundedCornerShape(
-                                topStart = 15.dp,
-                                topEnd = 15.dp
-                            ) else RoundedCornerShape(0.dp)
-                        )
-                        .requiredSizeIn(maxHeight = 100.dp)
-                ) {
-                    val animatables = listOf(
-                        remember { androidx.compose.animation.core.Animatable(1f) },
-                        remember { androidx.compose.animation.core.Animatable(1f) },
-                        remember { androidx.compose.animation.core.Animatable(1f) }
-                    )
-
-                    if (list.isNotEmpty())
-                    //TODO() OPTIMIZE THIS!!!
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 5.dp)
-                                .weight(1f)
-                                .scale(animatables[0].value)
-                        ) {
-                            LaunchedEffect(
-                                key1 = selectedItems.contains(list[0])
-                            ) {
-                                animatables[0].animateTo(
-                                    if (selectedItems.contains(list[0]))
-                                        0.85f
-                                    else
-                                        1f
-                                )
-                            }
-                            var request by remember {
-                                mutableStateOf<ImageRequest?>(null)
-                            }
-                            LaunchedEffect(key1 = Unit ){
-                                request = ImageRequest.Builder(context)
-                                    .data(File(list[0]))
-                                    .crossfade(true)
-                                    .build()
-                                request?.let { loader.enqueue(it) }
-                            }
-
-                            AsyncImage(
-                                model = request,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable(onClick = { mode(list[0]) })
-                            )
-                            androidx.compose.animation.AnimatedContent(
-                                targetState = selectedItems.contains(
-                                    list[0]
-                                ),
-                                modifier = Modifier
-                                    .padding(top = 7.dp, end = 7.dp)
-                                    .align(Alignment.TopEnd)
-                            ) { targerState ->
-                                Image(
-                                    painter = painterResource(id = if (targerState) R.drawable.ic_check else R.drawable.ic_add),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        }
-                    if (list.size > 1)
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 5.dp)
-                                .weight(1f)
-                                .scale(animatables[1].value)
-                        ) {
-                            LaunchedEffect(
-                                key1 = selectedItems.contains(list[1])
-                            ) {
-                                animatables[1].animateTo(
-                                    if (selectedItems.contains(list[1]))
-                                        0.9f
-                                    else
-                                        1f
-                                )
-                            }
-                            Image(
-                                rememberAsyncImagePainter(File(list[1])),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable(onClick = { mode(list[1]) })
-                            )
-                            androidx.compose.animation.AnimatedContent(
-                                targetState = selectedItems.contains(
-                                    list[1]
-                                ),
-                                modifier = Modifier
-                                    .padding(top = 7.dp, end = 7.dp)
-                                    .align(Alignment.TopEnd)
-                            ) { targerState ->
-                                Image(
-                                    painter = painterResource(id = if (targerState) R.drawable.ic_check else R.drawable.ic_add),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        }
-                    if (list.size > 2)
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 5.dp)
-                                .weight(1f)
-                                .scale(animatables[2].value)
-                        ) {
-                            LaunchedEffect(
-                                key1 = selectedItems.contains(list[2])
-                            ) {
-                                animatables[2].animateTo(
-                                    if (selectedItems.contains(list[2]))
-                                        0.85f
-                                    else
-                                        1f
-                                )
-                            }
-                            Image(
-                                rememberAsyncImagePainter(File(list[2])),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable(onClick = { mode(list[2]) })
-                            )
-                            androidx.compose.animation.AnimatedContent(
-                                targetState = selectedItems.contains(
-                                    list[2]
-                                ),
-                                modifier = Modifier
-                                    .padding(top = 7.dp, end = 7.dp)
-                                    .align(Alignment.TopEnd)
-                            ) { targerState ->
-                                Image(
-                                    painter = painterResource(id = if (targerState) R.drawable.ic_check else R.drawable.ic_add),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                )
-                            }
-                        }
-                }
-//                if (index == lists.lastIndex){
-//                    Spacer(modifier = Modifier.padding(bottom = 60.dp))
-//                }
+            itemsIndexed(values) { index, list ->
+                CustomPhotos(list, selectedItems, mode)
             }
         }
+    }
+}
+
+@Composable
+fun CustomPhotos(
+    list: List<String>,
+    selectedItems: List<String>,
+    mode: (String) -> Unit
+) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+    ) {
+
+        val context = LocalContext.current
+
+        Box(
+            modifier = Modifier
+                .padding(end = 5.dp)
+                .scale(if (selectedItems.contains(list[0])) 0.85f else 1f)
+                .weight(1f)
+                .height(150.dp)
+                .background(Color.LightGray)
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(File(list[0]))
+                    .crossfade(true)
+                    .size(Size(150, 150))
+                    .build(),
+                contentDescription = null,
+                imageLoader = loaderForGallery,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = {
+                        mode(list[0])
+                    })
+            )
+            Image(
+                painter = painterResource(id = if (selectedItems.contains(list[0])) R.drawable.ic_check else R.drawable.ic_add),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(top = 7.dp, end = 7.dp)
+                    .align(Alignment.TopEnd)
+                    .size(24.dp),
+            )
+        }
+        if (list.size > 1)
+            Box(
+                modifier = Modifier
+                    .padding(end = 5.dp)
+                    .scale(if (selectedItems.contains(list[1])) 0.85f else 1f)
+                    .weight(1f)
+                    .height(150.dp)
+                    .background(Color.LightGray)
+            ) {
+
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(File(list[1]))
+                        .crossfade(true)
+                        .size(Size(150, 150))
+                        .build(),
+                    contentDescription = null,
+                    imageLoader = loaderForGallery,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = {
+                            mode(list[1])
+                        })
+                )
+                Image(
+                    painter = painterResource(id = if (selectedItems.contains(list[1])) R.drawable.ic_check else R.drawable.ic_add),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(top = 7.dp, end = 7.dp)
+                        .align(Alignment.TopEnd)
+                        .size(24.dp),
+                )
+            }
+        if (list.size > 2)
+            Box(
+                modifier = Modifier
+                    .padding(end = 5.dp)
+                    .scale(if (selectedItems.contains(list[2])) 0.85f else 1f)
+                    .weight(1f)
+                    .height(150.dp)
+//                        .weight(1f)
+                    .background(Color.LightGray)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(File(list[2]))
+                        .crossfade(true)
+                        .size(Size(150, 150))
+                        .build(),
+                    contentDescription = null,
+                    imageLoader = loaderForGallery,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(onClick = {
+                            mode(list[2])
+                        })
+                )
+                Image(
+                    painter = painterResource(id = if (selectedItems.contains(list[2])) R.drawable.ic_check else R.drawable.ic_add),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(top = 7.dp, end = 7.dp)
+                        .align(Alignment.TopEnd)
+                        .size(24.dp),
+                )
+            }
     }
 }

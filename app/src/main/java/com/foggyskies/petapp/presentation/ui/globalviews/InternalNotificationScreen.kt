@@ -22,17 +22,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
 import androidx.navigation.NavHostController
+import androidx.navigation.get
+import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
-import com.foggyskies.petapp.MainSocketViewModel
-import com.foggyskies.petapp.Notification
-import com.foggyskies.petapp.NotificationWithVisilble
+import com.foggyskies.petapp.*
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
-import com.foggyskies.petapp.presentation.ui.home.HomeViewModel
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
+import com.foggyskies.petapp.routs.Routes
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -41,8 +43,8 @@ import kotlin.math.roundToInt
 @Composable
 fun IndicatorLine(
     viewModel: MainSocketViewModel,
-    item: NotificationWithVisilble,
-    timer: HashMap<NotificationWithVisilble, MutableState<Int>>,
+    item: NewMessagesCollectionWA,
+    timer: HashMap<NewMessagesCollectionWA, MutableState<Int>>,
     timerMax: Int = 250
 ) {
 
@@ -50,7 +52,7 @@ fun IndicatorLine(
         timer[item]?.value = timerMax
     }
 
-    LaunchedEffect(key1 = viewModel.listNotifications.size) {
+    LaunchedEffect(key1 = viewModel.listNewMessages.size) {
         while (timer[item]?.value != 0) {
             timer[item]?.value = timer[item]?.value?.minus(1)!!
             delay(10)
@@ -58,7 +60,7 @@ fun IndicatorLine(
         if (timer[item]?.value == 0) {
             item.isVisible.value = false
             delay(300)
-            viewModel.listNotifications.remove(item)
+            viewModel.listNewMessages.remove(item)
             timer.remove(item)
         }
         reset()
@@ -83,22 +85,23 @@ fun IndicatorLine(
 @Composable
 fun OneNotificationMessage(
     msViewModel: MainSocketViewModel,
-    item: NotificationWithVisilble,
+    item: NewMessagesCollectionWA,
     nav_controller: NavHostController,
-    timerMap: HashMap<NotificationWithVisilble, MutableState<Int>>
+    timerMap: HashMap<NewMessagesCollectionWA, MutableState<Int>>
 ) {
     Box(
         modifier = Modifier
             .clickable {
-                val json = Json.encodeToString(item.toFormattedChat())
-                nav_controller.navigate("Chat/$json")
+                val json = Json.encodeToString(item.new_message.toFC().copy(image = item.image, id = item.id, nameChat = item.username))
+                val b = bundleOf("itemChat" to json)
+                nav_controller.navigate(nav_controller.graph[NavTree.ChatSec.name].id, b)
             }
     ) {
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
         ) {
-            Row() {
+            Row {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -106,15 +109,15 @@ fun OneNotificationMessage(
                         .background(Color.White)
                 ) {
                     Spacer(modifier = Modifier.width(15.dp))
-                    if (item.image != "")
-                        Image(
-                            painter = rememberImagePainter(data = item.image),
+                    if (item.image.isNotEmpty())
+                        AsyncImage(
+                            model = "${Routes.SERVER.REQUESTS.BASE_URL}/${item.image}",
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .padding(vertical = 10.dp)
                                 .clip(CircleShape)
-                                .size(70.dp)
+                                .size(45.dp)
                         )
                     else
                         Box(
@@ -126,7 +129,7 @@ fun OneNotificationMessage(
                                 .background(Color(0xFFC4E9FB))
                         ) {
                             Text(
-                                text = item.title[0].toString(),
+                                text = item.username[0].toString(),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF20B6F6)
@@ -135,19 +138,45 @@ fun OneNotificationMessage(
 
                     Spacer(modifier = Modifier.width(20.dp))
                     Column(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(0.9f)
                     ) {
                         Text(
-                            text = item.title,
+                            text = item.username,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(5.dp))
                         Text(
-                            text = item.description,
+                            text = item.new_message.message,
+//                            if (item.new_message.message.isNotEmpty())
+//                                if (item.new_message.listImages.isNotEmpty())
+//                                    "${item.new_message.message}\n${if (item.new_message.listImages.size == 1) "Избражение" else "Изображения: ${item.new_message.listImages.size}"}"
+//                                else
+//                                    item.new_message.message
+//                            else if (item.new_message.listImages.isNotEmpty())
+//                                if (item.new_message.listImages.size == 1)
+//                                    "Избражение"
+//                                else
+//                                    "Изображения: ${item.new_message.listImages.size}"
+//                            else
+//                                "",
+                            overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                             modifier = Modifier.fillMaxWidth()
                         )
+//                        Spacer(modifier = Modifier.height(5.dp))
+                        if (item.new_message.listImages.isNotEmpty())
+                            Text(
+                                text =
+                                if (item.new_message.listImages.size == 1)
+                                    "Избражение"
+                                else
+                                    "Изображения: ${item.new_message.listImages.size}",
+                                maxLines = 1,
+                                color = Color.LightGray,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        Spacer(modifier = Modifier.height(5.dp))
                     }
                 }
             }
@@ -155,7 +184,6 @@ fun OneNotificationMessage(
         }
     }
 }
-
 
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -219,57 +247,57 @@ fun InternalNotificationScreen(
                 .clip(RoundedCornerShape(20.dp))
         ) {
 
-            val map_queue = remember { hashMapOf<NotificationWithVisilble, MutableState<Int>>() }
+            val map_queue = remember { hashMapOf<NewMessagesCollectionWA, MutableState<Int>>() }
 
-            if (msViewModel.listNotifications.isNotEmpty()) {
-                if (!map_queue.containsKey(msViewModel.listNotifications[0])) {
+            if (msViewModel.listNewMessages.isNotEmpty()) {
+                if (!map_queue.containsKey(msViewModel.listNewMessages[0])) {
                     val timer = remember {
                         mutableStateOf(250)
                     }
-                    map_queue[msViewModel.listNotifications[0]] = timer
+                    map_queue[msViewModel.listNewMessages[0]] = timer
                 }
                 AnimatedVisibility(
-                    visible = msViewModel.listNotifications[0].isVisible.value
+                    visible = msViewModel.listNewMessages[0].isVisible.value
                 ) {
                     OneNotificationMessage(
                         msViewModel,
-                        msViewModel.listNotifications[0],
+                        msViewModel.listNewMessages[0],
                         nav_controller,
                         map_queue
                     )
                 }
             }
-            if (msViewModel.listNotifications.size >= 2) {
-                if (!map_queue.containsKey(msViewModel.listNotifications[1])) {
+            if (msViewModel.listNewMessages.size >= 2) {
+                if (!map_queue.containsKey(msViewModel.listNewMessages[1])) {
                     val timer = remember {
                         mutableStateOf(250)
                     }
-                    map_queue[msViewModel.listNotifications[1]] = timer
+                    map_queue[msViewModel.listNewMessages[1]] = timer
                 }
                 AnimatedVisibility(
-                    visible = msViewModel.listNotifications[1].isVisible.value
+                    visible = msViewModel.listNewMessages[1].isVisible.value
                 ) {
                     OneNotificationMessage(
                         msViewModel,
-                        msViewModel.listNotifications[1],
+                        msViewModel.listNewMessages[1],
                         nav_controller,
                         map_queue
                     )
                 }
             }
-            if (msViewModel.listNotifications.size >= 3) {
-                if (!map_queue.containsKey(msViewModel.listNotifications[2])) {
+            if (msViewModel.listNewMessages.size >= 3) {
+                if (!map_queue.containsKey(msViewModel.listNewMessages[2])) {
                     val timer = remember {
                         mutableStateOf(250)
                     }
-                    map_queue[msViewModel.listNotifications[2]] = timer
+                    map_queue[msViewModel.listNewMessages[2]] = timer
                 }
                 AnimatedVisibility(
-                    visible = msViewModel.listNotifications[2].isVisible.value
+                    visible = msViewModel.listNewMessages[2].isVisible.value
                 ) {
                     OneNotificationMessage(
                         msViewModel,
-                        msViewModel.listNotifications[2],
+                        msViewModel.listNewMessages[2],
                         nav_controller,
                         map_queue
                     )
@@ -278,7 +306,7 @@ fun InternalNotificationScreen(
         }
         IconButton(
             onClick = {
-                      msViewModel.isMuteBarVisible = !msViewModel.isMuteBarVisible
+                msViewModel.isMuteBarVisible = !msViewModel.isMuteBarVisible
             },
             modifier = Modifier
                 .offset(y = 40.dp)
@@ -295,16 +323,35 @@ fun InternalNotificationScreen(
         AnimatedVisibility(
             visible = msViewModel.isMuteBarVisible,
             modifier = Modifier
-                .offset(0.dp, 50.dp)
+                .offset(0.dp, 100.dp)
                 .align(Alignment.BottomCenter)
         ) {
-            SegmentProgressBar(
-                msViewModel.selectedMuteBatItem,
-                msViewModel.listValuesMute,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .height(15.dp)
                     .fillMaxWidth()
-            )
+//                    .align(Alignment.Center)
+            ) {
+
+                SegmentProgressBar(
+                    msViewModel.selectedMuteBatItem,
+                    msViewModel.listValuesMute,
+                    modifier = Modifier
+                        .height(15.dp)
+                        .fillMaxWidth()
+                )
+                IconButton(
+                    onClick = {
+                        msViewModel.isMuteBarVisible = false
+                    }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_check),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
     }
 }

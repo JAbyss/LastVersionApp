@@ -22,6 +22,7 @@ import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.network.ConnectionLiveData
 import com.foggyskies.petapp.network.TAG
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
@@ -162,18 +163,17 @@ class PushNotificationService() : LifecycleService() {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                it.get<String>("http://${MainActivity.MAINENDPOINT}/createNotificationSession") {
+                it.get<String>("${Routes.SERVER.REQUESTS.BASE_URL}/createNotificationSession") {
                     parameter("token", Token)
                 }
             }
-
 
             val client = HttpClient(CIO) {
                 install(WebSockets)
             }
             mainSocket = client.webSocketSession {
                 expectSuccess = false
-                url("ws://${MainActivity.MAINENDPOINT}/notify/$Token")
+                url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/notify/$Token")
             }
 
             observeNotifications().onEach { notification ->
