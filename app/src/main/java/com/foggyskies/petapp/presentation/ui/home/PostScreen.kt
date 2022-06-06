@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -22,9 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -32,13 +31,13 @@ import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
+import com.foggyskies.petapp.presentation.ui.chat.entity.CommentDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.globalviews.post.BottomCommentBar
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.CommentsScreen
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.ImageScreen
 import com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens.LikesScreen
 import com.foggyskies.petapp.presentation.ui.profile.human.ContentPreviewDC
-import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
@@ -51,7 +50,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.reflect.KSuspendFunction0
 
 @kotlinx.serialization.Serializable
 data class FormattedCommentDC(
@@ -159,7 +157,7 @@ class PostScreenHandler {
                     .fillMaxHeight(1f)
             ) {
                 AnimatedContent(
-                    targetState = statePost,
+                    targetState = this@PostScreenHandler.statePost,
                     transitionSpec = {
                         slideInVertically(
                             animationSpec = tween(400),
@@ -350,25 +348,6 @@ class PostScreenHandler {
         action()
     }
 
-//    suspend fun selectPost(
-//        postContentPreview: ContentPreviewDC,
-//        page: PageProfileFormattedDC,
-//        action: () -> Unit
-//    ) {
-//
-//        selectedPost = SelectedPostWithIdPageProfile(
-//            idPageProfile = page.id,
-//            item = postContentPreview,
-//            author = page.title,
-//            image = page.image
-//        )
-//        getInfoAboutOnePost()
-//
-//        isLiked = selectedPost?.isLiked!!
-//
-//        action()
-//    }
-
     suspend fun getComments() {
         if (isNetworkAvailable.value)
             HttpClient(Android) {
@@ -418,14 +397,6 @@ data class ContentUsersDC(
     var comments: List<CommentDC>,
     var address: String,
     var description: String = ""
-)
-
-@kotlinx.serialization.Serializable
-data class CommentDC(
-    var id: String,
-    var idUser: String,
-    var message: String,
-    var date: String
 )
 
 enum class StatePost {

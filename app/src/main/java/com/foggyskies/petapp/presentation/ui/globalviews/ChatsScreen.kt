@@ -57,7 +57,6 @@ data class FormattedChatDC(
 fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
     Box(
         modifier = Modifier
-//            .clip(RoundedCornerShape(10.dp))
             .fillMaxWidth()
             .background(Color.White)
             .clickable {
@@ -107,7 +106,7 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
                 Text(text = item.nameChat, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = if (item.lastMessage.isNotEmpty()) item.lastMessage else "Пусто, напишите первым.",
+                    text = item.lastMessage.ifEmpty { "Пусто, напишите первым." },
                     maxLines = 1,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -119,65 +118,40 @@ fun OneItemChat(item: FormattedChatDC, nav_controller: NavHostController?) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatsScreen(
     nav_controller: NavHostController?,
-    viewModel: HomeMVIModel,
     msViewModel: MainSocketViewModel
 ) {
 
-            LazyColumn(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-//                    .padding(5.dp)
-            ) {
-//                stickyHeader {
-//                    Box(
-//                        modifier = Modifier
-//                            .clip(RoundedCornerShape(20.dp))
-//                            .background(Color.White)
-//                    ) {
-//                        Text(
-//                            text = "Чаты",
-//                            fontSize = 20.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            modifier = Modifier
-//                                .padding(7.dp)
-//                                .align(
-//                                    Alignment.Center
-//                                )
-//                        )
-//                    }
-//                }
-//                item { Spacer(modifier = Modifier.height(10.dp)) }
-                if (msViewModel.listChats.isEmpty())
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color.White)
-//                                .align(Alignment.CenterStart)
-                        ) {
-                            Text(
-                                text = "Пустовато",
-                                fontSize = 16.sp,
-                                modifier = Modifier
-                                    .padding(
-                                        horizontal = 12.dp,
-                                        vertical = 7.dp
-                                    )
-                                    .align(
-                                        Alignment.Center
-                                    )
+    LazyColumn(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+    ) {
+        if (msViewModel.listChats.isEmpty())
+            item {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White)
+                ) {
+                    Text(
+                        text = "Пустовато",
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .padding(
+                                horizontal = 12.dp,
+                                vertical = 7.dp
                             )
-                        }
-                    }
-                else
-                    items(msViewModel.listChats) { item ->
-                        OneItemChat(item, nav_controller)
-                    }
+                            .align(
+                                Alignment.Center
+                            )
+                    )
+                }
             }
-//        }
-//    }
+        else
+            items(msViewModel.listChats) { item ->
+                OneItemChat(item, nav_controller)
+            }
+    }
 }

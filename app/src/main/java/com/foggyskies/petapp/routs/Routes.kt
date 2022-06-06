@@ -5,7 +5,8 @@ object Routes {
     object SERVER {
         //        companion object {
 //            const val BASE_IP = "192.168.0.88:2525"
-        const val BASE_IP = "94.41.84.183:2526"
+//        94.41.84.183:2526
+        const val BASE_IP = "192.168.0.88:2525"
 
 //        }
 
@@ -53,6 +54,7 @@ object Routes {
         //        companion object{
         const val ANDROID_DIR = "/storage/emulated/0"
 
+        const val DOWNLOAD_DIR = "/Download"
         const val MAIN_APP_DIR = "$ANDROID_DIR/RusLan"
         const val IMAGES = "/Images"
 //        }

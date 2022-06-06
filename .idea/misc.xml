@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DesignSurface">
+    <option name="filePathToDrawableBackgroundType">
+      <map>
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_dir.xml" value="NONE" />
+      </map>
+    </option>
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/presentation/ui/globalviews/NewHomeScreen.kt" value="0.5" />
@@ -8,6 +13,8 @@
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_baseline_sentiment_satisfied_24.xml" value="0.2015" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_cancel.xml" value="0.23796296296296296" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_check.xml" value="0.107" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_dir.xml" value="0.1995" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_download.xml" value="0.1375" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_male.xml" value="0.20833333333333334" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_1.xml" value="0.24166666666666667" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_2.xml" value="0.24166666666666667" />

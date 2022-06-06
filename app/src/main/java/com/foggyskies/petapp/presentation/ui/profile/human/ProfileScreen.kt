@@ -8,7 +8,6 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -27,7 +26,6 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -35,12 +33,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
@@ -102,7 +98,8 @@ fun ProfileScreen(
         sheetContent = {
             Box(modifier = Modifier.fillMaxSize()) {
 
-                viewModel.profileHandler.GalleryImageSelector(listItems = viewModel.profileHandler.listPath,
+                viewModel.profileHandler.GalleryImageSelector(
+                    listItems = viewModel.profileHandler.listPath,
                     stateSheet = stateSheet,
                     onSelectedImage = {
                         scope.launch {
@@ -114,7 +111,9 @@ fun ProfileScreen(
                             string64
                         )
                         else viewModel.changeAvatarPageProfile(string64)
-                    })
+                    },
+                    bottomSheetState = stateSheet
+                )
             }
         },
         sheetState = stateSheet,
@@ -294,22 +293,23 @@ fun ProfileScreen(
                     AddNewImage(viewModel)
                 }
             }
-            AnimatedVisibility(
-                visible = viewModel.isVisiblePostWindow,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Center)
-                    .testTag("Photos")
-            ) {
-                viewModel.postScreenHandler.PostScreen(onLongPress = {
-
-                    viewModel.swipableMenu.isReadyMenu = false
-                    viewModel.isVisiblePostWindow = false
-                    viewModel.photoScreenClosed()
-
-                })
-            }
+            //FIXME ХУЙ ЗНАЕТ ЧТО ТУТ
+//            AnimatedVisibility(
+//                visible = viewModel.isVisiblePostWindow,
+//                enter = fadeIn(),
+//                exit = fadeOut(),
+//                modifier = Modifier
+//                    .align(Center)
+//                    .testTag("Photos")
+//            ) {
+//                viewModel.postScreenHandler.PostScreen(onLongPress = {
+//
+//                    viewModel.swipableMenu.isReadyMenu = false
+//                    viewModel.isVisiblePostWindow = false
+//                    viewModel.photoScreenClosed()
+//
+//                }, statePost = statePost)
+//            }
             if (viewModel.swipableMenu.isTappedScreen) viewModel.swipableMenu.CircularTouchMenu(
                 param = viewModel.swipableMenu
             )
@@ -376,6 +376,7 @@ fun BoxScope.AddNewImage(
                                 .fillMaxWidth()
                                 .fillMaxHeight(0.7f)
                                 .clickable {
+//                                    launcher.
                                     launcher.launch("image/*")
                                 }
 //                                .size(100.dp, 70.dp)

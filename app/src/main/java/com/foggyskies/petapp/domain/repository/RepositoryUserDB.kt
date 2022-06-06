@@ -75,6 +75,10 @@ class RepositoryUserDB(
     suspend fun insertMessage(idChat: String, message: ChatMessageDC) {
         dbUser.insertMessages(idChat, message = message)
     }
+    //FiXME IN WORK
+    suspend fun deleteMessage(idChat: String, idMessage: String){
+        dbUser.deleteMessage(idChat, idMessage)
+    }
 
     suspend fun getFriends(msViewModel: MainSocketViewModel) {
         val localFriends = dbUser.friendDao().getFriends()

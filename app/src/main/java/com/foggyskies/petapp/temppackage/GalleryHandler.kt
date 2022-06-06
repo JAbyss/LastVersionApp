@@ -16,6 +16,7 @@ import android.view.WindowMetrics
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -23,24 +24,34 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.*
 import coil.request.ImageRequest
 import coil.size.Size
+import coil.size.ViewSizeResolver
 import com.foggyskies.petapp.MainActivity.Companion.loaderForGallery
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.chat.BottomAppBar
 import java.io.File
 
 class GalleryHandler {
@@ -126,7 +137,10 @@ class GalleryHandler {
 
 
     @SuppressLint("UnrememberedMutableState")
-    @OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
+    @OptIn(
+        ExperimentalMaterialApi::class, ExperimentalAnimationApi::class,
+        ExperimentalFoundationApi::class
+    )
     @Composable
     fun GalleryImageSelector(
         listItems: List<String> = emptyList(),
@@ -135,6 +149,7 @@ class GalleryHandler {
         isManySelect: Boolean = false,
         chatMode: Boolean = false,
         bottomBar: @Composable () -> Unit = {},
+        bottomSheetState: ModalBottomSheetState,
     ) {
         DisposableEffect(key1 = stateSheet.isVisible) {
             onDispose {
@@ -225,6 +240,87 @@ class GalleryHandler {
             item {
                 Spacer(modifier = Modifier.height(10.dp))
             }
+            stickyHeader {
+                Column() {
+                    var listDirs by remember {
+                        mutableStateOf(emptyList<String>())
+                    }
+                    var visibleFileTree by remember {
+                        mutableStateOf(false)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                    ) {
+
+                        Text(
+                            text = "Галерея",
+                            fontSize = 20.sp,
+                            modifier = Modifier
+                                .padding(start = 20.dp)
+                                .padding(vertical = 7.dp)
+                                .clickable {
+                                    if (listDirs.isEmpty()) {
+                                        listDirs = File("/storage/emulated/0")
+                                            .list()
+                                            ?.toList()
+                                            ?: emptyList()
+                                    }
+                                    visibleFileTree = !visibleFileTree
+                                }
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = visibleFileTree,
+                        modifier = Modifier
+                            .padding(start = 30.dp)
+                    ) {
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .requiredHeightIn(max = 300.dp)
+                                .background(Color.White)
+                        ) {
+                            items(listDirs) { item ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.6f)
+                                ) {
+//                                    Divider(
+//                                        thickness = 1.5.dp,
+//                                        color = Color.LightGray,
+//                                        modifier = Modifier
+//                                            .padding(vertical = 5.dp)
+//                                            .fillMaxWidth(0.7f)
+//                                            .align(CenterHorizontally)
+//                                    )
+                                    Text(
+                                        text = item,
+                                        fontSize = 20.sp,
+                                        maxLines = 1,
+                                        modifier = Modifier
+                                            .padding(horizontal = 7.dp)
+                                            .align(CenterHorizontally)
+                                    )
+                                    Divider(
+                                        thickness = 1.dp,
+                                        color = Color.LightGray,
+                                        modifier = Modifier
+                                            .padding(vertical = 5.dp)
+                                            .fillMaxWidth(0.8f)
+                                            .align(CenterHorizontally)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+//            item {
+//                Text(text = bottomSheetState.progress.toString())
+//            }
+//            if (bottomSheetState.progress.)
             itemsIndexed(values) { index, list ->
                 CustomPhotos(list, selectedItems, mode)
             }
@@ -232,6 +328,7 @@ class GalleryHandler {
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun CustomPhotos(
     list: List<String>,
@@ -259,7 +356,8 @@ fun CustomPhotos(
                 model = ImageRequest.Builder(context)
                     .data(File(list[0]))
                     .crossfade(true)
-                    .size(Size(150, 150))
+                    .size(Size(200, 200))
+//                    .size(ViewSizeResolver(LocalView.current))
                     .build(),
                 contentDescription = null,
                 imageLoader = loaderForGallery,
@@ -293,7 +391,7 @@ fun CustomPhotos(
                     model = ImageRequest.Builder(context)
                         .data(File(list[1]))
                         .crossfade(true)
-                        .size(Size(150, 150))
+                        .size(Size(200, 200))
                         .build(),
                     contentDescription = null,
                     imageLoader = loaderForGallery,
@@ -320,14 +418,15 @@ fun CustomPhotos(
                     .scale(if (selectedItems.contains(list[2])) 0.85f else 1f)
                     .weight(1f)
                     .height(150.dp)
-//                        .weight(1f)
                     .background(Color.LightGray)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data(File(list[2]))
                         .crossfade(true)
-                        .size(Size(150, 150))
+                        .size(Size(200, 200))
+//                        .size(ViewSizeResolver(LocalView.current))
+//                        .size(Size(150, 150))
                         .build(),
                     contentDescription = null,
                     imageLoader = loaderForGallery,

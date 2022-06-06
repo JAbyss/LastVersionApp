@@ -7,9 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterEnd
@@ -27,14 +25,13 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
 import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.routs.Routes
 import kotlinx.coroutines.launch
 
 enum class Screens {
     FRIENDS, CHATS, SEARCH_USERS, IDLE
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun ColumnScope.BottomSheetMenu(
     viewModel: HomeMVIModel,
@@ -62,7 +59,6 @@ fun ColumnScope.BottomSheetMenu(
             )
             Screens.CHATS -> ChatsScreen(
                 nav_controller = nav_controller,
-                viewModel = viewModel,
                 msViewModel = msViewModel
             )
             Screens.SEARCH_USERS -> SearchUsersScreen(

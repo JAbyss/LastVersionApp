@@ -1,5 +1,6 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens
 
+import android.view.View
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,10 +19,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.memory.MemoryCache
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.size.ViewSizeResolver
+import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.loader
+import com.foggyskies.petapp.MainActivity.Companion.loaderForPost
 import com.foggyskies.petapp.routs.Routes
 import kotlin.reflect.KFunction0
 
@@ -37,11 +47,20 @@ fun ImageScreen(
     var textVisibility by remember {
         mutableStateOf(description.isNotEmpty())
     }
+    val context = LocalContext.current
+
+//    val view = ComposeView(context).apply {
+//        Box() {
+//
+//        }
+//    }
+//    val cah = loaderForPost.memoryCache?.get(MemoryCache.Key())
+//    val a =
 
     Box() {
         AsyncImage(
-            model =
-            "${Routes.SERVER.REQUESTS.BASE_URL}/$image",
+            model ="${Routes.SERVER.REQUESTS.BASE_URL}/$image",
+            imageLoader = MainActivity.loaderForPost,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier

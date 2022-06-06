@@ -40,7 +40,7 @@ enum class StateProfile {
 }
 
 enum class MENUS {
-    NEWCONTENT, POST, RIGHT, SEARCHUSERS, CHATS, FRIENDS
+    NEWCONTENT, POST, RIGHT, SEARCHUSERS, CHATS, FRIENDS, ATTACH
 }
 
 @kotlinx.serialization.Serializable

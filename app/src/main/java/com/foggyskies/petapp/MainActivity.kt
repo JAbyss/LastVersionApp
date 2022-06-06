@@ -8,11 +8,9 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
-import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -33,7 +31,6 @@ import coil.ImageLoader
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
-import coil.size.Precision
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
@@ -56,7 +53,6 @@ import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.registation.AuthorizationViewModel
 import com.foggyskies.petapp.presentation.ui.splash.SplashScreen
 import com.foggyskies.testingscrollcompose.presentation.ui.registation.AuthorizationScreen
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -64,9 +60,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
 
 enum class DBs {
     User
@@ -102,7 +95,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+//    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,22 +112,14 @@ class MainActivity : ComponentActivity() {
 
         }
         loader = ImageLoader.Builder(this)
-//            .memoryCache {
-//                MemoryCache.Builder(this)
-//                    .maxSizePercent(0.2)
-//                    .build()
-//            }
-//            .fetcherDispatcher(Dispatchers.Default)
-//            .decoderDispatcher(Dispatchers.Default)2
-//            .transformationDispatcher(Dispatchers.Default)
-//            .interceptorDispatcher(Dispatchers.Default)
+            .bitmapFactoryMaxParallelism(1)
             .crossfade(true)
             .dispatcher(Dispatchers.Default)
-            .bitmapFactoryMaxParallelism(1)
+//            .bitmapFactoryMaxParallelism(1)
             .diskCache {
                 DiskCache.Builder()
-                    .directory(File("/storage/emulated/0/Download/Images/"))
-//                    .directory(File("/storage/emulated/0/RusLan/Images/"))
+                    .directory(this.cacheDir.resolve("image_cache"))
+//                    .directory(File("/storage/emulated/0/Download/Images/"))
                     .maxSizePercent(0.2)
                     .build()
             }
@@ -143,18 +128,30 @@ class MainActivity : ComponentActivity() {
         loaderForGallery = ImageLoader.Builder(this)
             .crossfade(true)
             .bitmapFactoryMaxParallelism(1)
-//            .precision(Precision.EXACT)
             .dispatcher(Dispatchers.Default)
             .diskCachePolicy(CachePolicy.DISABLED)
             .memoryCachePolicy(CachePolicy.DISABLED)
             .respectCacheHeaders(false)
-//            .memoryCache(MemoryCache.Builder(this)
-//                .weakReferencesEnabled(false)
-//                .strongReferencesEnabled(false)
-//                .build())
             .addLastModifiedToFileCacheKey(false)
             .allowRgb565(true)
             .build()
+        loaderForPost =
+            ImageLoader.Builder(this)
+                .crossfade(true)
+
+                .bitmapFactoryMaxParallelism(1)
+                .dispatcher(Dispatchers.Default)
+                .respectCacheHeaders(false)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .memoryCache {
+                    MemoryCache.Builder(this)
+                        .maxSizePercent(0.20)
+                        .build()
+                }
+//                .respectCacheHeaders(false)
+//                .addLastModifiedToFileCacheKey(false)
+//                .allowRgb565(true)
+                .build()
 //        if (!LIFESERVICE){
 //            Intent(this, PushNotificationService::class.java).also {
 //                startService(it)
@@ -232,19 +229,8 @@ class MainActivity : ComponentActivity() {
         var IDUSER = ""
         lateinit var loader: ImageLoader
         lateinit var loaderForGallery: ImageLoader
+        lateinit var loaderForPost: ImageLoader
 
-
-        /**        194.67.93.244:8089
-        192.168.0.28
-
-        26.228.47.11
-
-        192.168.0.88:2525
-
-        94.41.84.183:2526
-
-         */
-//        val MAINENDPOINT = "94.41.84.183:2526"
         lateinit var isNetworkAvailable: State<Boolean>
     }
 }
@@ -288,9 +274,6 @@ fun LoadingApp() {
                 )
             }
 
-//            if (mainSocketViewModel.mainSocket == null && isNetworkAvailable.value)
-//                mainSocketViewModel.createMainSocket()
-
             viewModel.HomeScreen(nav_controller, mainSocketViewModel)
         }
         composable("AdsHomeless") {
@@ -307,7 +290,7 @@ fun LoadingApp() {
             val item = Json.decodeFromString<FormattedChatDC>(str)
 
             val viewModel = viewModelProvider["ChatViewModel", (ChatViewModel::class.java)]
-            ChatScreen(viewModel, item)
+            ChatScreen(viewModel, item, mainSocketViewModel)
         }
         composable(
             "Chat/{itemChat}",
@@ -331,7 +314,7 @@ fun LoadingApp() {
             val item = Json.decodeFromString<FormattedChatDC>(str)
 
             val viewModel = viewModelProvider["ChatViewModel", (ChatViewModel::class.java)]
-            ChatScreen(viewModel, item)
+            ChatScreen(viewModel, item, mainSocketViewModel)
         }
         composable("Profile") {
             val viewModel =

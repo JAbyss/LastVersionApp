@@ -1,5 +1,6 @@
 package com.foggyskies.petapp
 
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.koin.java.KoinJavaComponent.inject
+import java.io.File
 
 data class FormattedItem<T>(
     var item: T,
@@ -195,6 +197,7 @@ class MainSocketViewModel : ViewModel() {
 
     fun sendAction(action: String) {
         if (MainActivity.isNetworkAvailable.value)
+//            if (action.contains("loadFile|"))
             CoroutineScope(Dispatchers.IO).launch {
                 if (mainSocket == null) {
                     createMainSocket()
@@ -255,7 +258,7 @@ class MainSocketViewModel : ViewModel() {
                 header("Auth", MainActivity.TOKEN)
             }
             observeActions().onEach { user ->
-                val regex = ".+(?=\\|)".toRegex()
+                val regex = "^\\w+(?=\\|)".toRegex()
                 val action = regex.find(user)?.value
                 Log.e("ACTION", action.toString())
                 if (action != null) {
@@ -268,6 +271,7 @@ class MainSocketViewModel : ViewModel() {
                             CoroutineScope(Dispatchers.IO).launch {
                                 repositoryUserDB.updateFriends(needAddItems, deletedItems)
                             }
+                            listFriends = json.toMutableStateList()
                         },
                         "getChats" to {
                             val json = Json.decodeFromString<List<FormattedChatDC>>(formatted)
@@ -314,6 +318,15 @@ class MainSocketViewModel : ViewModel() {
                                 Json.decodeFromString<WatchNewMessage>(formatted)
                             listNewMessages.add(json.toNMWA())
 //                            listPagesProfile = json.toMutableList()
+                        },
+                        "loadFile" to {
+
+                            val nameOperation = ".+(?=\\|)".toRegex().find(formatted)?.value!!
+                            val data = formatted.replaceFirst("$nameOperation|", "")
+                            val file = File("${Routes.FILE.ANDROID_DIR}/Download/$nameOperation")
+                            file.createNewFile()
+                            val bytes = Base64.decode(data, Base64.DEFAULT)
+                            file.appendBytes(bytes)
                         }
                     )
                     map_actions[action]?.invoke()

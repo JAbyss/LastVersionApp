@@ -9,19 +9,27 @@ import android.view.WindowInsets
 import android.view.WindowMetrics
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Alignment.Companion.Start
@@ -39,10 +47,15 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
@@ -50,21 +63,32 @@ import coil.request.ImageRequest
 import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.loader
+import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.customui.ChatTextField
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FullScreenImage
+import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.presentation.ui.profile.human.views.ClosedComposedFun
 import com.foggyskies.petapp.routs.Routes
+import com.foggyskies.petapp.workers.UploadWorker
+import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalComposeUiApi::class, ExperimentalAnimationApi::class,
+    ExperimentalFoundationApi::class
+)
 @ExperimentalMaterialApi
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
     item: FormattedChatDC,
+    msViewModel: MainSocketViewModel,
 ) {
 
     viewModel.chatEntity = item
@@ -102,9 +126,6 @@ fun ChatScreen(
     val lazy_state = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-//    BottomSheetScaffold(sheetContent = ]) {
-//
-//    }
     val state by remember(viewModel.state.value) {
         val messages = viewModel.state.value
 //        if (messages.messages.isNotEmpty()) {
@@ -170,183 +191,202 @@ fun ChatScreen(
         }
     }
 
-    val keyBoard = LocalSoftwareKeyboardController.current
     SideEffect {
         Log.e("MODAL BOTTOM ВЫШЕ", "Утечка")
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+//            .background(Color(0xFFF8F8FF))
+            .background(Color(0xFFFFFFFF))
+    ) {
 
-        ModalBottomSheetLayout(
-            sheetShape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp),
-            sheetContent = {
-                SideEffect {
-                    Log.e("MODAL BOTTOM", "Утечка")
-                }
-//                Box(modifier = Modifier.height(100.dp).fillMaxWidth()) {
-//
-//                }
-//                LaunchedEffect(key1 = sheetState.isVisible){
-//                    if (!sheetState.isVisible){
-//                        viewModel.galleryHandler?.listPath = emptyList()
-//                    }
-//                }
-//                DisposableEffect(key1 = sheetState.isVisible) {
-//                    onDispose {
-//                        if (!sheetState.isVisible){
-//                            keyBoard?.show()
-//                        } else {
-//
-//                        }
-//                    }
-//                }
-//                Box() {
 
-                viewModel.galleryHandler!!.GalleryImageSelector(
-                    listItems = viewModel.galleryHandler!!.listPath,
-                    stateSheet = sheetState,
-                    onSelectedImage = {
-                        if (viewModel.galleryHandler!!.selectedItems.isNotEmpty())
-                            viewModel.stateTextField = StateTextField.WRITING
-                        else
-                            viewModel.stateTextField = StateTextField.EMPTY
-                    },
-                    chatMode = true,
-                    isManySelect = true,
-                )
-//                }
-//                viewModel.galleryHandler.apply {
-//                    GalleryImageSelector(
-////                        stateSheet = sheetState,
-////                        onSelectedImage = {
-//////                            if (selectedItems.isNotEmpty())
-//////                                viewModel.stateTextField = StateTextField.WRITING
-//////                            else
-//////                                viewModel.stateTextField = StateTextField.EMPTY
-////                        },
-//                        chatMode = true,
-//                        isManySelect = true,
-//                    )
-//                }
-
-            },
-            sheetState = sheetState,
-        ) {
-            SideEffect {
-                Log.e("IN                 MODAL BOTTOM", "Утечка")
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .onSizeChanged {
-                        viewModel.height_keyboard = (height - it.height)
-                        if (viewModel.height_keyboard > viewModel.height_config * 0.15) {
-                            Log.e("Here", viewModel.height_keyboard.toString());
-                            viewModel.changeStateChatToVisible()
-                        } else {
-                            viewModel.height_keyboard = 0
-                            viewModel.changeStateChatToHidden()
-                        }
+        SideEffect {
+            Log.e("IN                 MODAL BOTTOM", "Утечка")
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .onSizeChanged {
+                    viewModel.height_keyboard = (height - it.height)
+                    if (viewModel.height_keyboard > viewModel.height_config * 0.15) {
+                        Log.e("Here", viewModel.height_keyboard.toString());
+                        viewModel.changeStateChatToVisible()
+                    } else {
+                        viewModel.height_keyboard = 0
+                        viewModel.changeStateChatToHidden()
                     }
-            ) {
-                Column {
+                }
+        ) {
+            Column {
 
-                    HeaderChat(viewModel, item)
-                    Box(
+                HeaderChat(viewModel, item)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(kotlin.run {
+
+                            return@run viewModel.heightChat
+                        })
+                ) {
+
+
+                    LazyColumn(
+                        state = lazy_state,
+                        reverseLayout = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(kotlin.run {
-
-                                return@run viewModel.heightChat
-                            })
-                    ) {
-
-                        LazyColumn(
-                            state = lazy_state,
-                            reverseLayout = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
 //                        .height(kotlin.run {
 //
 //                            return@run viewModel.heightChat
 //                        })
-                                .align(BottomCenter)
-                        ) {
-                            items(state.messages) { item ->
-                                Message(
-                                    message = item,
-                                    viewModel,
-                                    modifier = Modifier
-                                        .padding(horizontal = 10.dp, vertical = 7.dp)
-                                        .fillMaxWidth()
-                                        .wrapContentWidth(if (item.idUser == IDUSER) End else Start)
-                                )
-                            }
-                        }
-                    }
-                }
-//                BottomAppBar(
-//                    viewModel,
-//                    Modifier
-//                        .clip(RoundedCornerShape(topEnd = 10.dp, topStart = 10.dp))
-//                        .background(Color(0xFFDAE0E4))
-//                        .fillMaxWidth()
-//                        .heightIn(max = 80.dp)
-//                        .align(Alignment.BottomCenter),
-//                    lazy_state,
-//                    sheetState,
-//                )
-                AnimatedVisibility(
-                    visible = viewModel.visibleButtonDown,
-                    modifier = Modifier
-                        .padding(end = 30.dp, bottom = 60.dp)
-                        .align(BottomEnd)
-                ) {
-                    Box {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    viewModel.visibleButtonDown = false
-                                    viewModel.countUnreadMessage = 0
-                                    lazy_state.animateScrollToItem(
-                                        state.messages.size - 1,
-                                        lazy_state.layoutInfo.visibleItemsInfo.last().offset
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Center)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_chat_down),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(40.dp)
-                            )
-                        }
-                        Text(
-                            text = viewModel.countUnreadMessage.toString(),
-                            color = Color.Red,
-                            fontWeight = FontWeight.Black,
-                            modifier = Modifier
-                                .align(TopEnd)
-                        )
-                    }
-                }
-                AnimatedVisibility(
-                    visible = viewModel.selectedImage != null,
-                    modifier = Modifier
-                        .align(Center)
-                ) {
-                    FullScreenImage(
-                        viewModel.selectedImage
+                            .align(BottomCenter)
                     ) {
-                        viewModel.selectedImage = null
+                        stickyHeader {
+                            var isActive = remember {
+                                mutableStateOf(true)
+                            }
+                            LaunchedEffect(key1 = Unit) {
+                                delay(2000)
+                                isActive.value = false
+                            }
+//                                val composition = currentRecomposeScope
+                            Text(text = "nowVisible: ${lazy_state.firstVisibleItemIndex}, max: ${lazy_state.layoutInfo.totalItemsCount}")
+                            if (lazy_state.layoutInfo.visibleItemsInfo.isNotEmpty())
+                                if (lazy_state.layoutInfo.totalItemsCount > 99)
+                                    if (lazy_state.layoutInfo.visibleItemsInfo.last().index in state.messages.lastIndex - 70..state.messages.lastIndex) {
+//                                    LaunchedEffect(key1 = Unit){
+                                        if (!isActive.value) {
+                                            Log.e("LOADING Messages", "START")
+                                            isActive.value = true
+                                            viewModel.loadNextMessages(
+                                                state.messages.last().id,
+                                                isActive
+                                            )
+                                        }
+//                                    }
+                                    } else if (lazy_state.layoutInfo.totalItemsCount > 120 && lazy_state.firstVisibleItemIndex < 5) {
+                                        viewModel.clearMessages()
+                                    }
+                        }
+//                            ClosedComposedFun {
+//
+//                            }
+
+                        items(state.messages) { item ->
+
+                            Message(
+                                message = item,
+                                viewModel,
+                                msViewModel = msViewModel,
+                                modifier = Modifier
+                                    .padding(horizontal = 10.dp, vertical = 7.dp)
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(if (item.idUser == IDUSER) End else Start)
+                            )
+
+                        }
                     }
                 }
             }
+            AnimatedVisibility(
+                visible = viewModel.visibleButtonDown,
+                modifier = Modifier
+                    .padding(end = 30.dp, bottom = 60.dp)
+                    .align(BottomEnd)
+            ) {
+                Box {
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                viewModel.visibleButtonDown = false
+                                viewModel.countUnreadMessage = 0
+                                lazy_state.animateScrollToItem(
+                                    state.messages.size - 1,
+                                    lazy_state.layoutInfo.visibleItemsInfo.last().offset
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .align(Center)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_chat_down),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(40.dp)
+                        )
+                    }
+                    Text(
+                        text = viewModel.countUnreadMessage.toString(),
+                        color = Color.Red,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier
+                            .align(TopEnd)
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = viewModel.selectedImage != null,
+                modifier = Modifier
+                    .align(Center)
+            ) {
+                FullScreenImage(
+                    viewModel.selectedImage
+                ) {
+                    viewModel.selectedImage = null
+                }
+            }
         }
+//        }
+        ClosedComposedFun {
+            val animated =
+                animateDpAsState(targetValue = derivedStateOf { if (sheetState.targetValue == ModalBottomSheetValue.Expanded) 0.dp else 15.dp }.value)
+
+            ModalBottomSheetLayout(
+                sheetShape = RoundedCornerShape(topStart = animated.value, topEnd = animated.value),
+                sheetContent = {
+                    SideEffect {
+                        Log.e("MODAL BOTTOM", "Утечка")
+                    }
+                    if (viewModel.bottomSheetState)
+                        viewModel.galleryHandler!!.GalleryImageSelector(
+                            listItems = viewModel.galleryHandler!!.listPath,
+                            stateSheet = sheetState,
+                            onSelectedImage = {
+                                if (viewModel.galleryHandler!!.selectedItems.isNotEmpty())
+                                    viewModel.stateTextField = StateTextField.WRITING
+                                else
+                                    viewModel.stateTextField = StateTextField.EMPTY
+                            },
+                            chatMode = true,
+                            isManySelect = true,
+                            bottomSheetState = sheetState,
+                        )
+                    else
+                        ContentFilesBottomSheet(
+                            viewModel = viewModel,
+                            bottomSheetState = sheetState
+                        )
+                },
+                sheetState = sheetState,
+            ) {
+            }
+        }
+
+        AnimatedVisibility(
+            visible = viewModel.menuHelper.getMenuVisibleValue(MENUS.ATTACH).value,
+            modifier = Modifier
+//                .padding(end = 10.dp)
+                .offset(x = (-10).dp, y = (-80).dp)
+                .align(BottomEnd)
+        ) {
+            AttachMenuChat(viewModel, sheetState)
+        }
+
         AnimatedVisibility(
             visible = viewModel.selectedImage == null, modifier = Modifier.align(
                 BottomCenter
@@ -361,11 +401,245 @@ fun ChatScreen(
                     .fillMaxWidth()
                     .heightIn(max = 80.dp)
                     .align(Alignment.BottomCenter),
-                lazy_state,
                 sheetState,
             )
         }
     }
+}
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun AttachMenuChat(viewModel: ChatViewModel, sheetState: ModalBottomSheetState) {
+
+    val mapPoints = mapOf(
+        "Галерея" to R.drawable.ic_photo_svgrepo_com,
+        "Файл" to R.drawable.ic_file
+    )
+
+    @Composable
+    fun OneItem(name: String, icon: Int) {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val keyboard = LocalSoftwareKeyboardController.current
+
+        Column {
+            Box(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF0FFFF))
+                    .align(CenterHorizontally)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {
+                            when (name) {
+                                "Галерея" -> {
+                                    viewModel.bottomSheetState = true
+                                    keyboard?.hide()
+                                    viewModel.menuHelper.setVisibilityMenu(MENUS.ATTACH, false)
+                                    viewModel.galleryHandler!!.getCameraImages(context)
+                                    scope.launch {
+//                            state.animateTo(ModalBottomSheetValue.Expanded)
+                                        sheetState.show()
+                                    }
+                                }
+                                "Файл" -> {
+                                    viewModel.bottomSheetState = false
+                                    viewModel.menuHelper.setVisibilityMenu(MENUS.ATTACH, false)
+                                    viewModel.listFiles =
+                                        File(viewModel.selectedPath)
+                                            .list()
+                                            .toList()
+//                                            .reversed()
+                                    scope.launch {
+//                            state.animateTo(ModalBottomSheetValue.Expanded)
+                                        sheetState.show()
+                                    }
+                                }
+                            }
+
+                        }
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    modifier = Modifier.padding(7.dp),
+                    Color(0xFFC0C6CA)
+                )
+            }
+            Text(
+                text = name,
+                modifier = Modifier
+                    .align(CenterHorizontally)
+            )
+        }
+    }
+
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(15.dp))
+            .background(Color(0xFFDAE0E4))
+    ) {
+        Row() {
+            Spacer(
+                modifier = Modifier
+                    .width(15.dp)
+            )
+            mapPoints.forEachKeys { key, item, _ ->
+                OneItem(key, item)
+                Spacer(
+                    modifier = Modifier
+                        .width(15.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ContentFilesBottomSheet(viewModel: ChatViewModel, bottomSheetState: ModalBottomSheetState) {
+
+    fun getSizeFile(size: Long): String {
+        if (size > 8) {
+            val bytes = size / 8f
+            if (bytes > 1024) {
+                val kBytes = bytes / 1024f
+                if (kBytes > 1024) {
+                    val mBytes = kBytes / 1024f
+                    if (mBytes > 1024)
+                        return "${String.format("%.1f", mBytes / 1024f)} GB"
+                    else
+                        return "${String.format("%.1f", mBytes)} MB"
+                } else
+                    return "${String.format("%.1f", kBytes)} KB"
+            } else
+                return "${String.format("%.1f", bytes)} B"
+        } else if (size == 0L)
+            return "0 Bit"
+        else
+            return "${String.format("%.1f", size)} Bit"
+    }
+
+    @Composable
+    fun OneItemFile(item: String) {
+        val file = File("${viewModel.selectedPath}/$item")
+
+        val context = LocalContext.current.applicationContext
+
+        val scope = rememberCoroutineScope()
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(7.dp)
+                .fillMaxWidth(0.9f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+                        if (file.isDirectory) {
+                            viewModel.selectedPath += "/$item"
+                            viewModel.listFiles =
+                                File(viewModel.selectedPath)
+                                    .list()
+                                    .toList()
+//                                    .reversed()
+                        }
+                        if (item == "...") {
+                            viewModel.selectedPath =
+                                viewModel.selectedPath.replace("\\/\\w+\$".toRegex(), "")
+                            viewModel.listFiles =
+                                File(viewModel.selectedPath)
+                                    .list()
+                                    .toList()
+                        }
+                        if (file.isFile) {
+
+                            val taskData = Data
+                                .Builder()
+                                .putString("nameFile", item)
+                                .putString("dirFile", "${viewModel.selectedPath}/")
+                                .putString("idChat", viewModel.chatEntity?.id!!)
+                                .build()
+                            val uploadWorkRequest: WorkRequest =
+                                OneTimeWorkRequestBuilder<UploadWorker>()
+                                    .setInputData(taskData)
+                                    .build()
+                            WorkManager
+                                .getInstance(context.applicationContext)
+                                .enqueue(uploadWorkRequest)
+                            scope.launch {
+                                bottomSheetState.hide()
+                                viewModel.listFiles = emptyList()
+                            }
+                        }
+                    }
+                )
+        ) {
+            Icon(
+                painter = painterResource(id = if (file.isFile) R.drawable.ic_file else R.drawable.ic_dir),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(30.dp),
+                Color(0xFFDAE0E4)
+            )
+            Spacer(modifier = Modifier.width(7.dp))
+            Column {
+                Text(
+                    text = item,
+                    fontSize = 16.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+//                val sizeFile = File("${Routes.FILE.ANDROID_DIR + DOWNLOAD_DIR}/$item").length()
+
+                Text(
+                    text = if (item == "...") "Назад" else getSizeFile(file.length()),
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+
+    LazyColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .requiredHeightIn(min = 1.dp)
+            .wrapContentWidth(unbounded = false)
+    ) {
+        if (viewModel.selectedPath != "/storage/emulated/0")
+            item {
+                OneItemFile("...")
+            }
+        if (viewModel.listFiles.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Файлы не найдены",
+                        fontSize = 22.sp,
+                        modifier = Modifier
+                            .padding(vertical = 30.dp)
+                            .align(Center)
+                    )
+                }
+            }
+        }
+//        if (viewModel.selectedPath != "${Routes.FILE.ANDROID_DIR + Routes.FILE.DOWNLOAD_DIR}"){
+
+//        }
+        items(viewModel.listFiles) { item ->
+            OneItemFile(item)
+        }
+    }
+
 }
 
 @Composable
@@ -377,7 +651,8 @@ fun HeaderChat(viewModel: ChatViewModel, item: FormattedChatDC) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFDAE0E4))
+//            .background(Color(0xFFDAE0E4))
+            .background(Color(0x33E6E6FA))
             .onSizeChanged {
                 viewModel.heightHeaderAppBar = it.height
             }
@@ -453,7 +728,6 @@ fun HeaderChat(viewModel: ChatViewModel, item: FormattedChatDC) {
 fun BottomAppBar(
     viewModel: ChatViewModel,
     modifier: Modifier,
-    lazy_state: LazyListState,
     state: ModalBottomSheetState,
 ) {
 
@@ -558,11 +832,13 @@ fun BottomAppBar(
                         value = ""
                         viewModel.stateTextField = StateTextField.EMPTY
                     } else {
-                        keyboard?.hide()
-                        viewModel.galleryHandler!!.getCameraImages(context)
-                        scope.launch {
-                            state.show()
-                        }
+                        viewModel.menuHelper.changeVisibilityMenu(MENUS.ATTACH)
+//                        keyboard?.hide()
+//                        viewModel.galleryHandler!!.getCameraImages(context)
+//                        scope.launch {
+////                            state.animateTo(ModalBottomSheetValue.Expanded)
+//                            state.show()
+//                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -607,91 +883,118 @@ fun BottomAppBar(
     }
 }
 
-@OptIn(ExperimentalCoilApi::class)
+@OptIn(ExperimentalCoilApi::class, ExperimentalAnimationApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun Message(
     message: ChatMessageDC,
     viewModel: ChatViewModel,
+    msViewModel: MainSocketViewModel,
     modifier: Modifier
 ) {
+//    var messageSelected by remember {
+//        mutableStateOf(false)
+//    }
+//
+//    val images by remember {
+//        mutableStateOf(message.listImages.windowed(2, 2, true))
+//    }
+
     val context = LocalContext.current
     BoxWithConstraints(
         modifier = modifier
+            .clickable {
+                if (viewModel.messageSelected?.id == message.id)
+                    viewModel.messageSelected = null
+                else
+                    viewModel.messageSelected = message
+            }
     ) {
+        AnimatedContent(
+            targetState = viewModel.messageSelected?.id == message.id,
+            transitionSpec = {
+//                fadeIn(animationSpec = tween(500, delayMillis = 90)) +
+                scaleIn(
+                    initialScale = 0.7f,
+                    animationSpec = tween(500, delayMillis = 0)
+                ) with
+                        scaleOut(
+                            targetScale = 0.7f,
+                            animationSpec = tween(500, delayMillis = 0)
+                        )
+            }
+        ) { targerState ->
+            if (!targerState || targerState == null)
 
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFDAE0E4))
-                .requiredWidthIn(max = maxWidth * 0.75f)
-        ) {
-
-
-            if (message.listImages.size == 1) {
-                val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${message.listImages[0]}"
-
-                val cached = loader.diskCache?.get(message.listImages[0])?.data
-
-                AsyncImage(
-                    model =
-                    if (cached != null) {
-                        ImageRequest.Builder(context)
-                            .data(cached.toFile())
-                            .size(100, 100)
-                            .diskCachePolicy(CachePolicy.READ_ONLY)
-//                            .diskCacheKey(message.listImages[0])
-                            .crossfade(true)
-                            .build()
-                    } else {
-                        ImageRequest.Builder(context)
-                            .data(imageLink)
-                            .size(100, 100)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .diskCacheKey(message.listImages[0])
-                            .crossfade(true)
-                            .build()
-                    },
-                    imageLoader = loader,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                Column(
                     modifier = Modifier
-                        .padding(bottom = if (message.message == "") 0.dp else 7.dp)
-                        .requiredHeightIn(max = 300.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                            viewModel.selectedImage = SelectedImageMessage(
-                                imageRequest = message.listImages[0],
-                                message = message
-                            )
-                        }
-                )
-            } else if (message.listImages.size > 1) {
-//                LazyColumn(modifier = Modifier.requiredHeightIn(max = 1000.dp)) {
-//               .forEach {
-                message.listImages.windowed(2, 2, true).forEach { list ->
-                    Row(Modifier.padding(7.dp)) {
-                        val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[0]}"
+                        .clip(RoundedCornerShape(10.dp))
+//                        .background(Color(0xFFDAE0E4))
+//                        .background(Color(0x3366CDAA))
+                        .background(Color(0x22708090))
+                        .requiredWidthIn(max = maxWidth * 0.75f)
+                ) {
 
-                        val cached = loader.diskCache?.get(list[0])?.data
-//                        val request = if (cached != null) {
-//                            ImageRequest.Builder(context)
-//                                .data(cached.toFile())
-//                                .size(100, 100)
-//                                .diskCachePolicy(CachePolicy.READ_ONLY)
-////                                .diskCacheKey(it[0])
-//                                .crossfade(true)
-//                                .build()
-//                        } else {
-//                            ImageRequest.Builder(context)
-//                                .data(imageLink)
-//                                .size(100, 100)
-//                                .diskCachePolicy(CachePolicy.ENABLED)
-//                                .diskCacheKey(it[0])
-//                                .crossfade(true)
-//                                .build()
-//                        }
-//                        loader.enqueue(request)
+                    if (message.listFiles.isNotEmpty()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 7.dp)
+                        ) {
+
+                            IconButton(
+                                onClick = {
+                                    msViewModel.sendAction("loadFile|${message.listFiles.last().path}|${message.listFiles.last().name}|")
+                                },
+                                modifier = Modifier
+                                    .clip(CircleShape)
+//                                .size(100.dp)
+                                    .background(Color.LightGray)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_download),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(50.dp),
+                                    Color(0xFFEBEDEF)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(7.dp))
+                            Column(
+//                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = message.listFiles.last().name,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color.Gray,
+                                )
+//                                Row(
+//                                    modifier = Modifier.align(Start)
+//                                ) {
+
+                                    Text(
+                                        text = "${message.listFiles.last().size} ${message.listFiles.last().type.uppercase()}",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = Color(0xFFD0D0D0),
+                                    )
+//                                    Text(
+//                                        text = " ${message.listFiles.last().type}".uppercase(),
+//                                        fontSize = 13.sp,
+//                                        fontWeight = FontWeight.Normal,
+//                                        color = Color.White,
+//                                    )
+//                                }
+                            }
+                        }
+                    }
+
+                    if (message.listImages.size == 1) {
+                        val imageLink =
+                            "${Routes.SERVER.REQUESTS.BASE_URL}/${message.listImages[0]}"
+
+                        val cached = loader.diskCache?.get(message.listImages[0])?.data
 
                         AsyncImage(
                             model =
@@ -700,7 +1003,6 @@ fun Message(
                                     .data(cached.toFile())
                                     .size(100, 100)
                                     .diskCachePolicy(CachePolicy.READ_ONLY)
-//                                    .diskCacheKey(list[0])
                                     .crossfade(true)
                                     .build()
                             } else {
@@ -708,7 +1010,7 @@ fun Message(
                                     .data(imageLink)
                                     .size(100, 100)
                                     .diskCachePolicy(CachePolicy.ENABLED)
-                                    .diskCacheKey(list[0])
+                                    .diskCacheKey(message.listImages[0])
                                     .crossfade(true)
                                     .build()
                             },
@@ -716,102 +1018,127 @@ fun Message(
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .requiredHeightIn(max = 100.dp)
-                                .weight(1f)
+                                .padding(bottom = if (message.message == "") 0.dp else 7.dp)
+                                .requiredHeightIn(max = 300.dp)
+                                .fillMaxWidth()
                                 .clickable {
                                     viewModel.selectedImage = SelectedImageMessage(
-                                        imageRequest = list[0],
+                                        imageRequest = message.listImages[0],
                                         message = message
                                     )
                                 }
                         )
+                    } else if (message.listImages.size > 1) {
 
-                        if (list.size > 1) {
-                            Spacer(modifier = Modifier.width(10.dp))
+                        message.listImages.windowed(2, 2, false).forEach { list ->
+                            Row(Modifier.padding(7.dp)) {
+                                val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[0]}"
 
-                            val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[1]}"
+                                val cached = loader.diskCache?.get(list[0])?.data
 
-                            val cached = MainActivity.loader.diskCache?.get(list[1])?.data
-//                            val request = if (cached != null) {
-//                                ImageRequest.Builder(context)
-//                                    .data(cached.toFile())
-//                                    .diskCachePolicy(CachePolicy.READ_ONLY)
-////                                    .diskCacheKey(it[1])
-//                                    .size(100, 100)
-//                                    .crossfade(true)
-//                                    .build()
-//                            } else {
-//                                ImageRequest.Builder(context)
-//                                    .data(imageLink)
-//                                    .size(100, 100)
-//                                    .diskCachePolicy(CachePolicy.ENABLED)
-//                                    .diskCacheKey(it[1])
-//                                    .crossfade(true)
-//                                    .build()
-//                            }
-//                            loader.enqueue(request)
+                                AsyncImage(
+                                    model =
+                                    if (cached != null) {
+                                        ImageRequest.Builder(context)
+                                            .data(cached.toFile())
+                                            .size(100, 100)
+                                            .diskCachePolicy(CachePolicy.READ_ONLY)
+                                            .crossfade(true)
+                                            .build()
+                                    } else {
+                                        ImageRequest.Builder(context)
+                                            .data(imageLink)
+                                            .size(100, 100)
+                                            .diskCachePolicy(CachePolicy.ENABLED)
+                                            .diskCacheKey(list[0])
+                                            .crossfade(true)
+                                            .build()
+                                    },
+                                    imageLoader = loader,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .requiredHeightIn(max = 100.dp)
+                                        .weight(1f)
+                                        .clickable {
+                                            viewModel.selectedImage = SelectedImageMessage(
+                                                imageRequest = list[0],
+                                                message = message
+                                            )
+                                        }
+                                )
 
-                            AsyncImage(
-                                model =
-                                if (cached != null) {
-                                    ImageRequest.Builder(context)
-                                        .data(cached.toFile())
-                                        .diskCachePolicy(CachePolicy.READ_ONLY)
-//                                        .diskCacheKey(list[1])
-                                        .size(100, 100)
-                                        .crossfade(true)
-                                        .build()
-                                } else {
-                                    ImageRequest.Builder(context)
-                                        .data(imageLink)
-                                        .size(100, 100)
-                                        .diskCachePolicy(CachePolicy.ENABLED)
-                                        .diskCacheKey(list[1])
-                                        .crossfade(true)
-                                        .build()
-                                },
-                                imageLoader = loader,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .requiredHeightIn(max = 100.dp)
-                                    .weight(1f)
-                                    .clickable {
-                                        viewModel.selectedImage = SelectedImageMessage(
-                                            imageRequest = list[1],
-                                            message = message
-                                        )
-                                    }
-                            )
+                                if (list.size > 1) {
+                                    Spacer(modifier = Modifier.width(10.dp))
+
+                                    val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[1]}"
+
+                                    val cached = MainActivity.loader.diskCache?.get(list[1])?.data
+
+                                    AsyncImage(
+                                        model =
+                                        if (cached != null) {
+                                            ImageRequest.Builder(context)
+                                                .data(cached.toFile())
+                                                .diskCachePolicy(CachePolicy.READ_ONLY)
+                                                .size(100, 100)
+                                                .crossfade(true)
+                                                .build()
+                                        } else {
+                                            ImageRequest.Builder(context)
+                                                .data(imageLink)
+                                                .size(100, 100)
+                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                .diskCacheKey(list[1])
+                                                .crossfade(true)
+                                                .build()
+                                        },
+                                        imageLoader = loader,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .requiredHeightIn(max = 100.dp)
+                                            .weight(1f)
+                                            .clickable {
+                                                viewModel.selectedImage = SelectedImageMessage(
+                                                    imageRequest = list[1],
+                                                    message = message
+                                                )
+                                            }
+                                    )
+                                }
+                            }
                         }
                     }
+                    if (message.message != "") {
+                        Text(
+                            text = message.message,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray,
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp)
+                        )
+                        val regexTime = "(?<=г. ).+(?=:)".toRegex()
+                        val result = regexTime.find(message.date)?.value!!
+                        Text(
+                            text = result,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFD0D0D0),
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp)
+                                .align(End)
+                        )
+                    }
                 }
-            }
-//            }
-            if (message.message != "") {
-                Text(
-                    text = message.message,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .padding(horizontal = 10.dp)
-                )
-                val regexTime = "(?<=г. ).+(?=:)".toRegex()
-                val result = regexTime.find(message.date)?.value!!
-                Text(
-                    text = result,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    modifier = Modifier
-                        .padding(horizontal = 10.dp)
-                        .align(End)
-                )
+            else {
+                ActionMessage(viewModel)
             }
         }
+
         if (message.message == "") {
             val regexTime = "(?<=г. ).+(?=:)".toRegex()
             val result = regexTime.find(message.date)?.value!!
@@ -819,11 +1146,39 @@ fun Message(
                 text = result,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = Color(0xFFD0D0D0),
                 modifier = Modifier
-                    .padding(end = 10.dp, bottom = 7.dp)
+                    .padding(end = 10.dp, bottom = if (message.listFiles.isEmpty()) 7.dp else 2.dp)
                     .align(BottomEnd)
             )
+        }
+    }
+}
+
+@Composable
+fun ActionMessage(viewModel: ChatViewModel) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+//            .padding(horizontal = 10.dp, vertical = 7.dp)
+//            .fillMaxWidth()
+//            .height(40.dp)
+            .background(Color(0xFFDAE0E4))
+    ) {
+        Row() {
+            IconButton(onClick = { viewModel.deleteMessage() }) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = null
+                )
+            }
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = null
+                )
+            }
+            Spacer(modifier = Modifier.width(30.dp))
         }
     }
 }

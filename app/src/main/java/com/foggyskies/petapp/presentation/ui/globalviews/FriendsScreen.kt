@@ -35,6 +35,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
+import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
@@ -134,6 +135,7 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
 
             IconButton(
                 onClick = {
+                    if (isNetworkAvailable.value)
                     CoroutineScope(Dispatchers.IO).launch {
 
                         HttpClient(Android) {
@@ -167,6 +169,15 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                                 )
                             }
                         }
+                    }
+                    else {
+                        //FIXME Надо доделать офлайн версию
+//                        val string = Json.encodeToString(item)
+//                        val b = bundleOf("itemChat" to string)
+//                        nav_controller?.navigate(
+//                            nav_controller.graph[NavTree.ChatSec.name].id,
+//                            b
+//                        )
                     }
                 },
 //            shape = RoundedCornerShape(20.dp),

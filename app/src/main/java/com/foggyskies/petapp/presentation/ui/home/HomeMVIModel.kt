@@ -183,33 +183,33 @@ class HomeMVIModel :
         }
     }
 
-    fun onSelectRightMenu(itemMenu: String, msViewModel: MainSocketViewModel) {
-        viewModelScope.launch {
-
-            when (itemMenu) {
-                "Пользователи" -> {
-                    menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
-                        menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
-                    })
-                    msViewModel.connectToSearchUsers()
-                }
-                "Беседы" -> {
-                    repositoryUserDB.getChats(msViewModel)
-//                    if (msViewModel.listChats.isNotEmpty())
-                    menuHelper.changeVisibilityMenu(MENUS.CHATS)
-//                getChats(msViewModel)
-                }
-                "Друзья" -> {
-                    repositoryUserDB.getFriends(msViewModel)
-//                    if (msViewModel.listFriends.isNotEmpty())
-                    menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
-//                    msViewModel.sendAction("getFriends|")
-                    msViewModel.sendAction("getRequestsFriends|")
-
-                }
-            }
-        }
-    }
+//    fun onSelectRightMenu(itemMenu: String, msViewModel: MainSocketViewModel) {
+//        viewModelScope.launch {
+//
+//            when (itemMenu) {
+//                "Пользователи" -> {
+//                    menuHelper.changeVisibilityMenu(MENUS.SEARCHUSERS, secondAction = {
+//                        menuHelper.setVisibilityMenu(MENUS.RIGHT, false)
+//                    })
+//                    msViewModel.connectToSearchUsers()
+//                }
+//                "Беседы" -> {
+//                    repositoryUserDB.getChats(msViewModel)
+////                    if (msViewModel.listChats.isNotEmpty())
+//                    menuHelper.changeVisibilityMenu(MENUS.CHATS)
+////                getChats(msViewModel)
+//                }
+//                "Друзья" -> {
+//                    repositoryUserDB.getFriends(msViewModel)
+////                    if (msViewModel.listFriends.isNotEmpty())
+//                    menuHelper.changeVisibilityMenu(MENUS.FRIENDS)
+////                    msViewModel.sendAction("getFriends|")
+//                    msViewModel.sendAction("getRequestsFriends|")
+//
+//                }
+//            }
+//        }
+//    }
 
     fun getContent() {
         viewModelScope.launch {

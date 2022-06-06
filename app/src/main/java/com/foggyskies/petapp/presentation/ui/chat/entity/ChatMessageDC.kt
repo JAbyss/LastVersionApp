@@ -12,7 +12,8 @@ data class ChatMessageDC(
     var author: String = "",
     var date: String,
     var message: String,
-    var listImages: List<String> = emptyList()
+    var listImages: List<String> = emptyList(),
+    var listFiles: List<FileDC> = emptyList()
 ){
     fun toFC(): FormattedChatDC {
         return FormattedChatDC(
@@ -24,3 +25,10 @@ data class ChatMessageDC(
         )
     }
 }
+@Serializable
+data class FileDC(
+    val name: String,
+    val size: String,
+    val type: String,
+    val path: String
+)

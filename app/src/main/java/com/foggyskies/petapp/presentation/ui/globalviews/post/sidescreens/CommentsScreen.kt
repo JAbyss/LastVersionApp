@@ -1,10 +1,8 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -16,6 +14,8 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,11 +28,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
-import com.foggyskies.petapp.presentation.ui.home.CommentDC
+import com.foggyskies.petapp.presentation.ui.chat.entity.CommentDC
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
+import com.foggyskies.petapp.presentation.ui.profile.human.views.ClosedComposedFun
 import com.foggyskies.petapp.routs.Routes
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,6 +42,7 @@ fun CommentsScreen(
     postScreenHandler: PostScreenHandler
 ) {
     var context = LocalContext.current
+
 
     @Composable
     fun OneItemComment(users: HashMap<String, UserIUSI>, item: CommentDC) {

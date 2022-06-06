@@ -16,11 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.size.ViewSizeResolver
+import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
@@ -118,9 +124,11 @@ fun BoxScope.BottomCommentBar(
                     .size(33.dp)
                     .background(Color.White)
             ) {
+                val context = LocalContext.current
+
                 AsyncImage(
-                    model = "${Routes.SERVER.REQUESTS.BASE_URL}/${postScreenHandler.selectedPost?.image}",
-//                    imageLoader = loader,
+                    model =  "${Routes.SERVER.REQUESTS.BASE_URL}/${postScreenHandler.selectedPost?.image}",
+                    imageLoader = MainActivity.loaderForPost,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
