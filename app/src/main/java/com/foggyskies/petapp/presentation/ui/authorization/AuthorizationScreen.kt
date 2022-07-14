@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,7 +55,7 @@ fun AuthorizationScreen(
 
         val bitmap = BitmapFactory.decodeResource(
             LocalContext.current.resources,
-            R.drawable.auth_screen
+            R.drawable.back
         )
 
         val rs = RenderScript.create(LocalContext.current)
@@ -66,9 +68,8 @@ fun AuthorizationScreen(
         bitmapAlloc.copyTo(bitmap)
         rs.destroy()
 
-
         Image(
-            bitmap = bitmap.asImageBitmap()
+            painter = painterResource(id = R.drawable.back_2)
 //            painterResource(id = R.drawable.auth_screen)
             ,
             contentDescription = null,
@@ -76,6 +77,15 @@ fun AuthorizationScreen(
             modifier = Modifier
                 .fillMaxSize()
         )
+//        Image(
+//            bitmap = bitmap.asImageBitmap()
+////            painterResource(id = R.drawable.auth_screen)
+//            ,
+//            contentDescription = null,
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier
+//                .fillMaxSize()
+//        )
         AuthBottomSheet(nav_controller, authorizationViewModel)
         AnimatedVisibility(
             visible = authorizationViewModel.error.value != "",
@@ -171,7 +181,7 @@ fun BoxScope.AuthBottomSheet(
                     visualTransformation =
                     when (value) {
                         "Телефон" -> PhoneVisualTransformation()
-                        "Пароль" -> PasswordStartVisualTransformation()
+                        "Пароль" -> PasswordVisualTransformation()
                         else -> VisualTransformation.None
                     },
                     keyboardOptions = if (value == "Телефон") KeyboardOptions(keyboardType = KeyboardType.Phone) else KeyboardOptions.Default,

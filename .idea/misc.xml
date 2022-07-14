@@ -3,30 +3,21 @@
   <component name="DesignSurface">
     <option name="filePathToDrawableBackgroundType">
       <map>
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_dir.xml" value="NONE" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/test.xml" value="NONE" />
       </map>
     </option>
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/presentation/ui/globalviews/NewHomeScreen.kt" value="0.5" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/_3027609016313422384147.xml" value="0.165" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_baseline_sentiment_satisfied_24.xml" value="0.2015" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_cancel.xml" value="0.23796296296296296" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_check.xml" value="0.107" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_dir.xml" value="0.1995" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_download.xml" value="0.1375" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_male.xml" value="0.20833333333333334" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_1.xml" value="0.24166666666666667" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_2.xml" value="0.24166666666666667" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_3.xml" value="0.24166666666666667" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_menu_home_4.xml" value="0.24166666666666667" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_photo_svgrepo_com.xml" value="0.146" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_round_attach_file_24.xml" value="0.24259259259259258" />
-        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_send.xml" value="0.26296296296296295" />
+        <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/temppackage/CloudScreen.kt" value="0.25" />
+        <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/temppackage/DownloadingScreen.kt" value="0.5" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_cancel.xml" value="0.237" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_pause.xml" value="0.237" />
+        <entry key="..\:/All project/PetApp/app/src/main/res/drawable/test.xml" value="0.237" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

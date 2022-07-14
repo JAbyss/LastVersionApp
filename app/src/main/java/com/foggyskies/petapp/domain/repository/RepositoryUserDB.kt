@@ -11,6 +11,7 @@ import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import kotlinx.serialization.json.Json
 
 class RepositoryUserDB(
     val dbUser: UserDB
@@ -20,6 +21,12 @@ class RepositoryUserDB(
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
+//        install(ContentNegotiation){
+//            json(Json {
+//                prettyPrint = true
+//                isLenient = true
+//            })
+//        }
         install(HttpTimeout) {
             requestTimeoutMillis = 3000
         }
@@ -39,8 +46,9 @@ class RepositoryUserDB(
         // FIXME UNKNOWN
         msViewModel.listNewMessages.forEach { newChat ->
             formattedChat.forEachIndexed { index, it ->
-                if (newChat.id == it.id){
-                    formattedChat[index] = formattedChat[index].copy(lastMessage = newChat.new_message.message)
+                if (newChat.id == it.id) {
+                    formattedChat[index] =
+                        formattedChat[index].copy(lastMessage = newChat.new_message.message)
                 }
             }
         }
@@ -63,7 +71,7 @@ class RepositoryUserDB(
     suspend fun updateFriends(
         needAddItems: List<UserIUSI>,
         deletedItems: List<UserIUSI>
-    ){
+    ) {
         needAddItems.forEach {
             dbUser.friendDao().insertOne(it.toFriendTable())
         }
@@ -75,9 +83,14 @@ class RepositoryUserDB(
     suspend fun insertMessage(idChat: String, message: ChatMessageDC) {
         dbUser.insertMessages(idChat, message = message)
     }
+
     //FiXME IN WORK
-    suspend fun deleteMessage(idChat: String, idMessage: String){
+    suspend fun deleteMessage(idChat: String, idMessage: String) {
         dbUser.deleteMessage(idChat, idMessage)
+    }
+
+    suspend fun editMessage(idChat: String, idMessage: String, newValue: String) {
+        dbUser.editMessage(idChat, idMessage, newValue)
     }
 
     suspend fun getFriends(msViewModel: MainSocketViewModel) {

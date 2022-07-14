@@ -159,9 +159,6 @@ class SwappableMenu() : CircularSelector() {
             isMenuOpen = true
         } else {
             // FIXME Не 100 проц что работает
-//            CoroutineScope(Dispatchers.Default).launch {
-//                modalBottomSheetState?.show()
-//            }
             callback()
             isTappedScreen = false
             isMenuOpen = false
@@ -227,6 +224,9 @@ class SwappableMenu() : CircularSelector() {
                                 sizeCS = radiusMenu
                             }
                         }
+                    },
+                    onDragCancel = {
+                        isTappedScreen = false
                     }
                 )
         }

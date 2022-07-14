@@ -1,11 +1,13 @@
 package com.foggyskies.petapp.presentation.ui.registation
 
 import android.content.Context
-import androidx.compose.runtime.*
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
-import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
@@ -13,7 +15,6 @@ import com.foggyskies.petapp.PasswordCoder
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -21,12 +22,13 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.util.*
+import io.ktor.http.ContentType.Application.Json
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import kotlin.reflect.KSuspendFunction1
 
 enum class StateAuthorization {
@@ -172,19 +174,29 @@ private suspend fun signUpRequest(
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
+//        install(ContentNegotiation){
+//            json(Json {
+//                prettyPrint = true
+//                isLenient = true
+//            })
+//        }
         expectSuccess = false
         install(HttpTimeout) {
             requestTimeoutMillis = 3000
         }
     }.use {
 //                            val responseRegistration =
-        val response =
-            it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/registration") {
-                headers["Content-Type"] = "Application/Json"
-                body = RegistrationUserDC(
-                    username = login.value,
-                    e_mail = e_mail.value,
-                    password = PasswordCoder.encodeStringFS(password.value)
+        val response: HttpResponse =
+            it.post("${Routes.SERVER.REQUESTS.BASE_URL}/registration") {
+                headers {
+                    append("Content-Type", "Application/Json")
+                }
+                body = (
+                    RegistrationUserDC(
+                        username = login.value,
+                        e_mail = e_mail.value,
+                        password = PasswordCoder.encodeStringFS(password.value)
+                    )
                 )
             }
         if (response.status.isSuccess()) {
@@ -214,16 +226,26 @@ suspend fun signInRequest(
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
+//        install(ContentNegotiation){
+//            json(Json {
+//                prettyPrint = true
+//                isLenient = true
+//            })
+//        }
         expectSuccess = false
         install(HttpTimeout) {
             requestTimeoutMillis = 30000
         }
     }.use {
-        val response = it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
-            headers["Content-Type"] = "Application/Json"
-            body = LoginUserDC(
-                username = login.value,
-                password = PasswordCoder.encodeStringFS(password.value)
+        val response: HttpResponse = it.post("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
+            headers {
+                append("Content-Type", "Application/Json")
+            }
+            body = (
+                LoginUserDC(
+                    username = login.value,
+                    password = PasswordCoder.encodeStringFS(password.value)
+                )
             )
         }
         if (!response.status.isSuccess()) {
@@ -237,7 +259,7 @@ suspend fun signInRequest(
                 context,
                 login.value,
                 PasswordCoder.encodeStringFS(password.value),
-                token = response.readText()
+                token = response.readText().replace("\"", "")
             )
             CoroutineScope(Dispatchers.Main).launch {
                 list_fields.forEach {

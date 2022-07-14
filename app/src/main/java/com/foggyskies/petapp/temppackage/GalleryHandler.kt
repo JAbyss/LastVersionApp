@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
@@ -36,22 +35,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.*
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
-import coil.size.ViewSizeResolver
 import com.foggyskies.petapp.MainActivity.Companion.loaderForGallery
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.chat.BottomAppBar
+import com.foggyskies.petapp.routs.Routes
 import java.io.File
 
 class GalleryHandler {
@@ -81,7 +77,10 @@ class GalleryHandler {
             absolutePathOfImage = cursor.getString(column_index_data)
             listOfAllImages.add(absolutePathOfImage)
         }
-        listPath = listOfAllImages
+        val downloads = File(Routes.FILE.ANDROID_DIR + Routes.FILE.DOWNLOAD_DIR).list()?.toList()
+            ?.map { Routes.FILE.ANDROID_DIR + Routes.FILE.DOWNLOAD_DIR + "/" + it } ?: emptyList()
+        listOfAllImages.addAll(0, downloads)
+        listPath = listOfAllImages.reversed()
 //        return listOfAllImages
     }
 
@@ -92,7 +91,6 @@ class GalleryHandler {
 
     @Composable
     fun InitGallery() {
-//        if (launcher == null) {
 
         val context = LocalContext.current as Activity
 
@@ -322,7 +320,7 @@ class GalleryHandler {
 //            }
 //            if (bottomSheetState.progress.)
             itemsIndexed(values) { index, list ->
-                CustomPhotos(list, selectedItems, mode)
+                CustomPhotos(list, selectedItems, mode, isManySelect)
             }
         }
     }
@@ -333,7 +331,8 @@ class GalleryHandler {
 fun CustomPhotos(
     list: List<String>,
     selectedItems: List<String>,
-    mode: (String) -> Unit
+    mode: (String) -> Unit,
+    isManySelect: Boolean
 ) {
 
     Row(
@@ -368,14 +367,15 @@ fun CustomPhotos(
                         mode(list[0])
                     })
             )
-            Image(
-                painter = painterResource(id = if (selectedItems.contains(list[0])) R.drawable.ic_check else R.drawable.ic_add),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(top = 7.dp, end = 7.dp)
-                    .align(Alignment.TopEnd)
-                    .size(24.dp),
-            )
+            if (isManySelect)
+                Image(
+                    painter = painterResource(id = if (selectedItems.contains(list[0])) R.drawable.ic_check else R.drawable.ic_add),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(top = 7.dp, end = 7.dp)
+                        .align(Alignment.TopEnd)
+                        .size(24.dp),
+                )
         }
         if (list.size > 1)
             Box(
@@ -402,14 +402,16 @@ fun CustomPhotos(
                             mode(list[1])
                         })
                 )
-                Image(
-                    painter = painterResource(id = if (selectedItems.contains(list[1])) R.drawable.ic_check else R.drawable.ic_add),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(top = 7.dp, end = 7.dp)
-                        .align(Alignment.TopEnd)
-                        .size(24.dp),
-                )
+                if (isManySelect)
+
+                    Image(
+                        painter = painterResource(id = if (selectedItems.contains(list[1])) R.drawable.ic_check else R.drawable.ic_add),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(top = 7.dp, end = 7.dp)
+                            .align(Alignment.TopEnd)
+                            .size(24.dp),
+                    )
             }
         if (list.size > 2)
             Box(
@@ -437,14 +439,16 @@ fun CustomPhotos(
                             mode(list[2])
                         })
                 )
-                Image(
-                    painter = painterResource(id = if (selectedItems.contains(list[2])) R.drawable.ic_check else R.drawable.ic_add),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(top = 7.dp, end = 7.dp)
-                        .align(Alignment.TopEnd)
-                        .size(24.dp),
-                )
+                if (isManySelect)
+
+                    Image(
+                        painter = painterResource(id = if (selectedItems.contains(list[2])) R.drawable.ic_check else R.drawable.ic_add),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(top = 7.dp, end = 7.dp)
+                            .align(Alignment.TopEnd)
+                            .size(24.dp),
+                    )
             }
     }
 }

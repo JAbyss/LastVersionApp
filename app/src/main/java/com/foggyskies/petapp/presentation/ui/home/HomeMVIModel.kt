@@ -1,6 +1,5 @@
 package com.foggyskies.petapp.presentation.ui.home
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,9 +15,9 @@ import com.foggyskies.petapp.presentation.ui.globalviews.Screens
 import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -29,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.koin.java.KoinJavaComponent.inject
 
 enum class Menus {
@@ -172,8 +172,14 @@ class HomeMVIModel :
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
+//        install(ContentNegotiation){
+//            json(Json {
+//                prettyPrint = true
+//                isLenient = true
+//            })
+//        }
         install(HttpTimeout) {
-            requestTimeoutMillis = 3000
+            requestTimeoutMillis = 30000
         }
     }
 

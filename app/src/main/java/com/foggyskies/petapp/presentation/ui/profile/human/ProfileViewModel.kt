@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
-import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
@@ -33,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 
 enum class StateProfile {
@@ -134,6 +134,18 @@ class ProfileViewModel : ViewModel() {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     install(HttpTimeout) {
                         requestTimeoutMillis = 3000
                     }
@@ -171,6 +183,12 @@ class ProfileViewModel : ViewModel() {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     install(HttpTimeout) {
                         requestTimeoutMillis = 3000
                     }
@@ -346,16 +364,22 @@ class ProfileViewModel : ViewModel() {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     expectSuccess = false
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }
                 }.use {
-                    val response =
-                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/createPageProfile") {
+                    val response: HttpResponse =
+                        it.post("${Routes.SERVER.REQUESTS.BASE_URL}/createPageProfile") {
                             headers["Auth"] = TOKEN
                             headers["Content-Type"] = "Application/Json"
-                            body = item
+                            body = (item)
                         }
                     if (response.status.isSuccess()) {
                         isAddingNewCard = false
@@ -376,17 +400,23 @@ class ProfileViewModel : ViewModel() {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     expectSuccess = false
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }
                 }.use {
 //                            val responseRegistration =
-                    val response =
-                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/content/addPostImage") {
+                    val response: HttpResponse =
+                        it.post("${Routes.SERVER.REQUESTS.BASE_URL}/content/addPostImage") {
                             headers["Auth"] = TOKEN
                             headers["Content-Type"] = "Application/Json"
-                            body = item
+                            body = (item)
                         }
                     if (response.status.isSuccess()) {
                         menuHelper.changeVisibilityMenu(MENUS.NEWCONTENT)
@@ -410,12 +440,12 @@ class ProfileViewModel : ViewModel() {
             CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 3000
+                        requestTimeoutMillis = 30000
                     }
                 }.use {
 
-                    val response =
-                        it.get<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/avatar") {
+                    val response: HttpResponse =
+                        it.get("${Routes.SERVER.REQUESTS.BASE_URL}/avatar") {
                             headers["Auth"] = TOKEN
                         }
                     if (response.status.isSuccess()) {
@@ -430,20 +460,26 @@ class ProfileViewModel : ViewModel() {
         if (isNetworkAvailable.value)
             CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
-//                install(JsonFeature) {
-//                    serializer = KotlinxSerializer()
-//                }
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
 //                expectSuccess = false
                     install(HttpTimeout) {
                         requestTimeoutMillis = 3000
                     }
                 }.use {
 
-                    val response =
-                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatar") {
+                    val response: HttpResponse =
+                        it.post("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatar") {
                             headers["Auth"] = TOKEN
 //                        headers["Content-Type"] = "text/plain"
-                            body = image
+                            body = (image)
                         }
                     if (response.status.isSuccess()) {
                         humanPhoto = response.readText()
@@ -457,21 +493,27 @@ class ProfileViewModel : ViewModel() {
         if (isNetworkAvailable.value)
             CoroutineScope(Dispatchers.IO).launch {
                 HttpClient(Android) {
-//                install(JsonFeature) {
-//                    serializer = KotlinxSerializer()
-//                }
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
 //                expectSuccess = false
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 3000
+                        requestTimeoutMillis = 30000
                     }
                 }.use {
 
-                    val response =
-                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatarProfile") {
+                    val response: HttpResponse =
+                        it.post("${Routes.SERVER.REQUESTS.BASE_URL}/changeAvatarProfile") {
                             headers["Auth"] = TOKEN
                             headers["idPage"] = selectedPage.id
 //                        headers["Content-Type"] = "text/plain"
-                            body = image
+                            body = (image)
                         }
                     if (response.status.isSuccess()) {
                         initImagePageProfile = response.readText()
@@ -493,7 +535,19 @@ class ProfileViewModel : ViewModel() {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
 //                expectSuccess = false
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }

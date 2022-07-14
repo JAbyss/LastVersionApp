@@ -15,6 +15,7 @@ import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.MenuVisibilityHelper
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
+import com.foggyskies.petapp.presentation.ui.chat.entity.FileDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.profile.human.encodeToBase64
 import com.foggyskies.petapp.routs.Routes
@@ -39,7 +40,7 @@ import kotlinx.serialization.json.Json
 import org.koin.java.KoinJavaComponent.inject
 
 enum class StateTextField {
-    EMPTY, WRITING
+    EMPTY, WRITING, EDIT
 }
 
 enum class StateKeyBoard {
@@ -157,9 +158,9 @@ class ChatViewModel : ViewModel() {
 
             if (isNetworkAvailable.value) {
                 HttpClient(Android) {
-                    install(JsonFeature) {
-                        serializer = KotlinxSerializer()
-                    }
+//                    install(JsonFeature) {
+//                        serializer = KotlinxSerializer()
+//                    }
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }
@@ -169,19 +170,21 @@ class ChatViewModel : ViewModel() {
                 val client = HttpClient(CIO) {
                     install(WebSockets)
                 }
-                socket = client.webSocketSession {
-                    header("Auth", TOKEN)
-                    url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/subscribes/$idChat?username=$USERNAME")
-                }
+                socket =
+                    client.webSocketSession() {
+                        url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/subscribes/$idChat?username=$USERNAME")
+                        header("Auth", TOKEN)
+                    }
                 observeMessages(
                     callBack = { flowMessage ->
                         flowMessage.onEach { message ->
 
                             if (!_state.value.messages.containsAll(message)) {
 //
-                                val newList = state.value.messages.toMutableList().apply {
-                                    addAll(message)
-                                }
+                                val newList =
+                                    state.value.messages.toMutableList().apply {
+                                        addAll(message)
+                                    }
                                 //FIXME НАДО РАЗОБРАТЬСЯ
 //
                                 _state.value = state.value.copy(
@@ -195,26 +198,27 @@ class ChatViewModel : ViewModel() {
                                 }
 
                             }
-                        }.launchIn(this)
+                        }.launchIn(this@launch)
                     }
                 )
                     .onEach { message ->
                         if (message != null)
                             if (!isElementExist(message)) {
 
-                                val newList = state.value.messages.toMutableList().apply {
-                                    add(0, message)
+                                val newList =
+                                    state.value.messages.toMutableList().apply {
+                                        add(0, message)
 //                                    while (this.size > 30) {
 //                                        removeLast()
 //                                    }
-                                }
+                                    }
                                 repositoryUserDB.insertMessage(idChat, message)
 
                                 _state.value = state.value.copy(
                                     messages = newList
                                 )
                             }
-                    }.launchIn(this)
+                    }.launchIn(this@launch)
             }
         }
     }
@@ -252,6 +256,7 @@ class ChatViewModel : ViewModel() {
     fun sendMessage(message: MessageDC) {
         CoroutineScope(Dispatchers.IO).launch {
             val json = Json.encodeToString(message)
+            Log.e("SOCKET IS", socket.toString())
             socket?.send(json)
         }
     }
@@ -279,16 +284,25 @@ class ChatViewModel : ViewModel() {
 
                         HttpClient(Android) {
 //                expectSuccess = false
+                            install(JsonFeature) {
+                                serializer = KotlinxSerializer()
+                            }
+//                            install(ContentNegotiation) {
+//                                json(Json {
+//                                    prettyPrint = true
+//                                    isLenient = true
+//                                })
+//                            }
                             install(HttpTimeout) {
                                 requestTimeoutMillis = 30000
                             }
                         }.use {
 
-                            val response =
-                                it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/addImageToMessage") {
+                            val response: HttpResponse =
+                                it.post("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/addImageToMessage") {
                                     headers["Auth"] = MainActivity.TOKEN
                                     parameter("idChat", chatEntity?.id)
-                                    body = string64
+                                    body = (string64)
                                 }
                             if (response.status.isSuccess()) {
                                 listImageAddress.add(response.readText())
@@ -326,19 +340,21 @@ class ChatViewModel : ViewModel() {
                 }
             }.use {
 
-                val response =
-                    it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/deleteMessage") {
+                val response: HttpResponse =
+                    it.post("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/deleteMessage") {
                         headers["Auth"] = MainActivity.TOKEN
                         headers["Content-Type"] = "Application/Json"
 //                        parameter("idChat", chatEntity?.id)
-                        body = DeleteMessageEntity(
-                            idUser = if (messageSelected?.idUser!! == IDUSER)
-                                chatEntity?.idCompanion!!
-                            else
-                                IDUSER,
-                            idChat = chatEntity?.id!!,
-                            idMessage = messageSelected?.id!!
-                        )
+                        body = (
+                                DeleteMessageEntity(
+                                    idUser = if (messageSelected?.idUser!! == IDUSER)
+                                        chatEntity?.idCompanion!!
+                                    else
+                                        IDUSER,
+                                    idChat = chatEntity?.id!!,
+                                    idMessage = messageSelected?.id!!
+                                )
+                                )
                     }
                 if (response.status.isSuccess()) {
                     repositoryUserDB.deleteMessage(chatEntity?.id!!, messageSelected?.id!!)
@@ -349,6 +365,66 @@ class ChatViewModel : ViewModel() {
                         messages = newList
                     )
                     messageSelected = null
+//                    listImageAddress.add(response.readText())
+                }
+            }
+        }
+    }
+
+    var lastBottomBatValue = ""
+
+    var bottomBarValue by mutableStateOf("")
+//    var isEdit by mutableStateOf(false)
+//    var editValue = ""
+
+    fun editMessageMode() {
+        lastBottomBatValue = bottomBarValue
+        bottomBarValue = messageSelected?.message!!
+        stateTextField = StateTextField.EDIT
+    }
+
+    fun editMessage() {
+        CoroutineScope(Dispatchers.IO).launch {
+
+            HttpClient(Android) {
+//                expectSuccess = false
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30000
+                }
+            }.use {
+
+                val response: HttpResponse =
+                    it.post("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/editMessage") {
+                        headers["Auth"] = MainActivity.TOKEN
+                        headers["Content-Type"] = "Application/Json"
+//                        parameter("idChat", chatEntity?.id)
+                        body = (
+                                EditMessageEntity(
+                                    idUser = if (messageSelected?.idUser!! == IDUSER)
+                                        chatEntity?.idCompanion!!
+                                    else
+                                        IDUSER,
+                                    idChat = chatEntity?.id!!,
+                                    idMessage = messageSelected?.id!!,
+                                    newMessage = bottomBarValue
+                                )
+                                )
+                    }
+                if (response.status.isSuccess()) {
+                    repositoryUserDB.editMessage(chatEntity?.id!!, messageSelected?.id!!, bottomBarValue)
+                    val newList = state.value.messages.toMutableList().apply {
+//                        remove(messageSelected)
+                        get(indexOf(messageSelected)).message = bottomBarValue
+                    }
+                    _state.value = state.value.copy(
+                        messages = newList
+                    )
+                    messageSelected = null
+                    bottomBarValue = lastBottomBatValue
+                    stateTextField = if (lastBottomBatValue.isEmpty()) StateTextField.EMPTY else StateTextField.WRITING
 //                    listImageAddress.add(response.readText())
                 }
             }
@@ -380,5 +456,14 @@ data class SelectedImageMessage(
 @Serializable
 data class MessageDC(
     var listImages: List<String> = emptyList(),
+    var listFiles: List<FileDC> = emptyList(),
     var message: String
+)
+
+@kotlinx.serialization.Serializable
+data class EditMessageEntity(
+    val idMessage: String,
+    val idUser: String,
+    val idChat: String,
+    val newMessage: String
 )

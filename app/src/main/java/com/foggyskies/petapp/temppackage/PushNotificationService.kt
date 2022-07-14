@@ -31,7 +31,9 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.cio.websocket.*
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.serialization.decodeFromString
@@ -40,6 +42,7 @@ import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.net.InetSocketAddress
 import javax.net.SocketFactory
+import kotlin.io.use
 
 
 @kotlinx.serialization.Serializable
@@ -158,12 +161,18 @@ class PushNotificationService() : LifecycleService() {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 expectSuccess = false
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                it.get<String>("${Routes.SERVER.REQUESTS.BASE_URL}/createNotificationSession") {
+                it.get<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/createNotificationSession") {
                     parameter("token", Token)
                 }
             }

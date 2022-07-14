@@ -48,6 +48,7 @@ import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -146,17 +147,17 @@ fun OneItemFriend(item: UserIUSI, nav_controller: NavHostController?) {
                                 requestTimeoutMillis = 3000
                             }
                         }.use {
-                            val idChat = it.post<String>("${Routes.SERVER.REQUESTS.BASE_URL}/createChat") {
+                            val idChat: HttpResponse = it.post("${Routes.SERVER.REQUESTS.BASE_URL}/createChat") {
                                 this.headers["Auth"] = TOKEN
                                 this.headers["Content-Type"] = "Application/Json"
-                                this.body = CreateChat(
+                                body = (CreateChat(
                                     username = USERNAME,
                                     idUserSecond = item.id
-                                )
+                                ))
                             }
                             CoroutineScope(Dispatchers.Main).launch {
                                 val formattedChat = FormattedChatDC(
-                                    id = idChat,
+                                    id = idChat.readText(),
                                     nameChat = item.username,
                                     idCompanion = item.id,
                                     image = item.image

@@ -12,7 +12,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
@@ -50,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.io.use
 
 @kotlinx.serialization.Serializable
 data class FormattedCommentDC(
@@ -88,7 +88,8 @@ class PostScreenHandler {
     )
     @Composable
     fun PostScreen(
-        onLongPress: (Offset) -> Unit
+        onLongPress: (Offset) -> Unit,
+        isScrollable: MutableState<Boolean>
     ) {
 
         var isVisibleLikeAnimation by remember {
@@ -176,7 +177,7 @@ class PostScreenHandler {
                             )
                         }
                         StatePost.COMMENTS -> {
-                            CommentsScreen(state, this@PostScreenHandler)
+                            CommentsScreen( state,this@PostScreenHandler)
                         }
                         StatePost.LIKES -> {
                             LikesScreen(this@PostScreenHandler)
@@ -246,7 +247,7 @@ class PostScreenHandler {
                     }
                 }
             }
-            BottomCommentBar(this@PostScreenHandler)
+            BottomCommentBar(this@PostScreenHandler, isScrollable)
         }
     }
 
@@ -256,6 +257,12 @@ class PostScreenHandler {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 30000
                 }
@@ -284,6 +291,12 @@ class PostScreenHandler {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }
@@ -293,7 +306,7 @@ class PostScreenHandler {
                         headers["Content-Type"] = "Application/Json"
                         parameter("idPageProfile", selectedPost?.idPageProfile)
                         parameter("idPost", selectedPost?.item?.id!!)
-                        body = comment
+                        body = (comment)
                     }
                 }
             commentValue = TextFieldValue("")
@@ -306,6 +319,12 @@ class PostScreenHandler {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
@@ -325,6 +344,12 @@ class PostScreenHandler {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
@@ -354,6 +379,12 @@ class PostScreenHandler {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }

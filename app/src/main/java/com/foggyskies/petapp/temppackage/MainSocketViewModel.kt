@@ -8,13 +8,16 @@ import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
+import com.foggyskies.petapp.presentation.ui.chat.entity.FileDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
 import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
 import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.BASE_URL
+import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.CLOUD_ALL_TREE
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.features.*
@@ -22,6 +25,8 @@ import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +35,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import okhttp3.Route
 import org.koin.java.KoinJavaComponent.inject
 import java.io.File
 
@@ -78,7 +84,7 @@ data class WatchNewMessage(
     val image: String,
     val username: String,
     val new_message: ChatMessageDC
-){
+) {
     fun toNMWA(): NewMessagesCollectionWA {
         return NewMessagesCollectionWA(
             id = idChat,
@@ -107,7 +113,8 @@ class MainSocketViewModel : ViewModel() {
 
     var listRequests = mutableStateListOf<UserIUSI>()
 
-    var listFriends = mutableStateListOf<UserIUSI>()
+    //    var listFriends = mutableStateListOf<UserIUSI>()
+    var listFriends by mutableStateOf(mutableListOf<UserIUSI>())
 
 
     fun connectToSearchUsers() {
@@ -167,6 +174,12 @@ class MainSocketViewModel : ViewModel() {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
@@ -184,6 +197,12 @@ class MainSocketViewModel : ViewModel() {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
@@ -229,7 +248,7 @@ class MainSocketViewModel : ViewModel() {
 
     var listPagesProfile by mutableStateOf(emptyList<PageProfileFormattedDC>())
 
-//    var listNewMessages by mutableStateOf(emptyList<NewMessagesCollection>())
+    //    var listNewMessages by mutableStateOf(emptyList<NewMessagesCollection>())
     var listNewMessages = mutableStateListOf<NewMessagesCollectionWA>()
 
     fun createMainSocket() {
@@ -241,11 +260,17 @@ class MainSocketViewModel : ViewModel() {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                idUser = it.post<String>("$BASE_URL/createMainSocket") {
+                idUser = it.post("$BASE_URL/createMainSocket") {
                     this.headers["Auth"] = MainActivity.TOKEN
                 }
             }
@@ -364,60 +389,7 @@ class MainSocketViewModel : ViewModel() {
      *  Internal Notifications
      */
 
-    val listNotifications = mutableStateListOf<NotificationWithVisilble>(
-//        NotificationWithVisilble(
-//            id = "пцупупуыуп",
-//            idUser = "rtjtyrjty",
-//            title = "Kalteesfxx crfad",
-//            description = "Приветbcg",
-//            image = "",
-//            status = "sbhfdnb"
-//        ),
-//        NotificationWithVisilble(
-//            id = "jyk454",
-//            idUser = "dwfwagesghdbff",
-//            title = "Kalbcdfterfad",
-//            description = "Приветnmvg",
-//            image = "",
-//            status = "sgesgsg"
-//        ),
-//        NotificationWithVisilble(
-//            id = "hsdhrh4554h",
-//            idUser = "dwgsegsfwaf",
-//            title = "Kalgsghdfhdterfad",
-//            description = "Приветbnvc",
-//            image = "",
-//            status = "ewewwe435"
-//        ), NotificationWithVisilble(
-//            id = "hreherh55e",
-//            idUser = "dwfwsegsegsegaf",
-//            title = "esgsegsegse",
-//            description = "Приветjkj",
-//            image = "",
-//            status = "dsvcbxfbr"
-//        ), NotificationWithVisilble(
-//            id = "wdhehe545yhe5waf",
-//            idUser = "dsgssegwfwaf",
-//            title = "gsdgdbcx bcv",
-//            description = "Приветb j",
-//            image = "",
-//            status = "gshsgdsbdsb"
-//        ), NotificationWithVisilble(
-//            id = "hdeh54eh543",
-//            idUser = "dwfwagreghrehf",
-//            title = "egsgeegere",
-//            description = "Приветkkkkv",
-//            image = "",
-//            status = "gedhsgvsds"
-//        ), NotificationWithVisilble(
-//            id = "hdeh54eh543",
-//            idUser = "dwfwagreghrehf",
-//            title = "egsgeegere",
-//            description = "Приветkkkkv",
-//            image = "",
-//            status = "gedhsgvsds"
-//        )
-    )
+    val listNotifications = mutableStateListOf<NotificationWithVisilble>()
 
     var selectedMuteBatItem = mutableStateOf(0)
 
@@ -458,6 +430,37 @@ class MainSocketViewModel : ViewModel() {
 //            }
 //        }
 //    }
+
+    var isVisibleCloudMenu by mutableStateOf(false)
+
+    var listFiles by mutableStateOf(listOf<FileDC>())
+
+    fun getCloudFiles(){
+        CoroutineScope(Dispatchers.IO).launch {
+
+            HttpClient(Android){
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer()
+                }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 30000
+                }
+            }.use {
+                val response: HttpResponse = it.get(BASE_URL+CLOUD_ALL_TREE){
+                    headers["Auth"] = MainActivity.TOKEN
+                }
+                if (response.status.isSuccess()){
+                    listFiles = response.receive()
+                }
+            }
+        }
+    }
 
 }
 

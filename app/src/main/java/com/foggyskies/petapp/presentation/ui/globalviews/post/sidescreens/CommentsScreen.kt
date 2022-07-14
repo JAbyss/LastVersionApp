@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -112,14 +113,14 @@ fun CommentsScreen(
                     TextButton(
                         onClick = {
                             if (!postScreenHandler.commentValue.text.startsWith('@')) {
-                                val user = "@JAbyss "
+                                val user = "@${users[item.idUser]?.username!!} "
                                 val selection = postScreenHandler.commentValue.selection
                                 val textRange = TextRange(
                                     selection.start + user.length,
                                     selection.end + user.length
                                 )
                                 postScreenHandler.commentValue = TextFieldValue(
-                                    "@JAbyss " + postScreenHandler.commentValue.text,
+                                    user + postScreenHandler.commentValue.text,
                                     selection = textRange
                                 )
                             }
@@ -183,15 +184,16 @@ fun CommentsScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(topEnd = 20.dp))
                     .background(Color.White)
-                    .height(80.dp)
+                    .requiredHeightIn(max = 80.dp)
                     .fillMaxWidth(0.4f)
             ) {
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                 ) {
-                    items(10) {
+
+                    items(postScreenHandler.listComments.users.values.toList()) { user ->
                         Spacer(modifier = Modifier.height(10.dp))
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -201,7 +203,7 @@ fun CommentsScreen(
                                     if (postScreenHandler.commentValue.annotatedString.contains('@')) {
                                         val value = postScreenHandler.commentValue.text
                                         val selection = postScreenHandler.commentValue.selection
-                                        val user = "JAbyss"
+                                        val user = user.username
                                         val text = value.toMutableList()
                                         text.addAll(
                                             postScreenHandler.commentValue.selection.end,
@@ -218,6 +220,15 @@ fun CommentsScreen(
                                                 selection.end + user.length
                                             )
                                         )
+                                    } else if (postScreenHandler.commentValue.annotatedString.isEmpty()){
+                                        val selection = postScreenHandler.commentValue.selection
+                                        postScreenHandler.commentValue = TextFieldValue(
+                                            "@${user.username} ",
+                                            selection = TextRange(
+                                                selection.start + user.username.length,
+                                                selection.end + user.username.length
+                                            )
+                                        )
                                     }
 //
                                     postScreenHandler.isTagMenuOpen = false
@@ -230,7 +241,7 @@ fun CommentsScreen(
                             ) {
                                 Box() {
                                     AsyncImage(
-                                        model = "${Routes.SERVER.REQUESTS.BASE_URL}/images/test_avatar.jpg",
+                                        model = "${Routes.SERVER.REQUESTS.BASE_URL}/${user.image}",
                                         contentDescription = null,
                                         modifier = Modifier
                                             .clip(CircleShape)
@@ -246,14 +257,14 @@ fun CommentsScreen(
                                             radius = 20f,
                                         )
                                         drawCircle(
-                                            color = Color.Gray,
+                                            color = if (user.status == "Не в сети") Color.Gray else Color.Green,
                                             radius = 10f,
                                         )
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(5.dp))
                                 Text(
-                                    text = "JAbyss",
+                                    text = user.username,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 12.sp
                                 )

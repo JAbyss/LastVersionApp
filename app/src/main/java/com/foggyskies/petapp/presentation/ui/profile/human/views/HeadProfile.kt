@@ -81,7 +81,7 @@ fun LazyListScope.HeadProfile(
                             .data("${Routes.SERVER.REQUESTS.BASE_URL}/$targetImage")
                             .crossfade(true)
                             .build()
-                        loader.enqueue(request)
+//                        loader.enqueue(request)
                         // TODO Добавить загрузку аватарки для профиля.
                         AsyncImage(
                             model = request,

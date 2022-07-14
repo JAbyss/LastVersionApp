@@ -1,6 +1,7 @@
 package com.foggyskies.petapp.presentation.ui.home
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
@@ -18,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.presentation.ui.globalviews.*
+import com.foggyskies.petapp.temppackage.CloudScreen
+import com.foggyskies.petapp.temppackage.CloudViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -26,6 +30,12 @@ fun HomeMVIModel.HomeScreen(
     nav_controller: NavHostController? = null,
     msViewModel: MainSocketViewModel
 ) {
+    BackHandler(enabled = msViewModel.isVisibleCloudMenu) {
+        if (msViewModel.isVisibleCloudMenu){
+            msViewModel.isVisibleCloudMenu = false
+        }
+    }
+
     LaunchedEffect(key1 = Unit) {
         checkInternet(this@HomeScreen::getContent)
         if (msViewModel.mainSocket == null)
@@ -83,8 +93,12 @@ fun HomeMVIModel.HomeScreen(
                 }
             )
         ) {
+            val isScrollable = remember{
+                mutableStateOf(true)
+            }
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                userScrollEnabled = isScrollable.value,
                 modifier = Modifier
                     .fillMaxSize()
                     .align(Center)
@@ -102,7 +116,7 @@ fun HomeMVIModel.HomeScreen(
                         }
                     )
 
-                    postScreenHandler.PostScreen(onLongPress = {})
+                    postScreenHandler.PostScreen(onLongPress = {}, isScrollable)
                     if (index != stateUi.value.postsList.lastIndex) {
                         Spacer(modifier = Modifier.height(15.dp))
                         Divider(
@@ -187,6 +201,12 @@ fun HomeMVIModel.HomeScreen(
                     msViewModel,
                     nav_controller!!
                 )
+            }
+            AnimatedVisibility(
+                visible = msViewModel.isVisibleCloudMenu,
+                modifier = Modifier.align(BottomCenter)
+            ) {
+                CloudScreen(msViewModel.listFiles, viewModel = CloudViewModel())
             }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,17 +18,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.size.ViewSizeResolver
 import com.foggyskies.petapp.MainActivity
-import com.foggyskies.petapp.MainActivity.Companion.loader
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
 import com.foggyskies.petapp.presentation.ui.home.StatePost
@@ -43,7 +39,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun BoxScope.BottomCommentBar(
-    postScreenHandler: PostScreenHandler
+    postScreenHandler: PostScreenHandler,
+    isScrollable: MutableState<Boolean>
 ) {
 
     val pagerState = rememberPagerState()
@@ -266,14 +263,19 @@ fun BoxScope.BottomCommentBar(
         verticalAlignment = Alignment.Bottom
     ) { position ->
         when (currentPage) {
-            0 -> postScreenHandler.statePost = StatePost.IMAGE
+            0 -> {
+                isScrollable.value = true
+                postScreenHandler.statePost = StatePost.IMAGE
+            }
             1 -> {
+                isScrollable.value = false
                 postScreenHandler.statePost = StatePost.COMMENTS
                 CoroutineScope(Dispatchers.IO).launch {
                     postScreenHandler.getComments()
                 }
             }
             2 -> {
+                isScrollable.value = false
                 postScreenHandler.statePost = StatePost.LIKES
                 CoroutineScope(Dispatchers.IO).launch {
                     postScreenHandler.getLikedUsers()

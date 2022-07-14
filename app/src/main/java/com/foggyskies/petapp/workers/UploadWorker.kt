@@ -16,6 +16,7 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.io.File
 import kotlin.random.Random
 
@@ -62,6 +63,12 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
                 install(JsonFeature) {
                     serializer = KotlinxSerializer()
                 }
+//                install(ContentNegotiation){
+//                    json(Json {
+//                        prettyPrint = true
+//                        isLenient = true
+//                    })
+//                }
                 install(HttpTimeout) {
                     requestTimeoutMillis = 3000000
                 }
@@ -70,8 +77,8 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
             file.inputStream()
                 .use { input ->
                     var arr =
-                        if (file.length() / 8 < 4096) ByteArray((file.length() / 8).toInt()) else ByteArray(
-                            4096000
+                        if (file.length()  < 409600) ByteArray((file.length()).toInt()) else ByteArray(
+                            409600
                         )
                     var allReaded = 0L
                     val maxSize = file.length()
@@ -99,14 +106,14 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
 //                                    headers["Auth"] = MainActivity.TOKEN
                                 headers["Content-Type"] = "Application/Json"
 //                        parameter("idChat", chatEntity?.id)
-                                body = BodyFile(
+                                body = (BodyFile(
                                     idChat = idChat,
                                     nameFile = name,
                                     contentFile = string,
                                     status = if (allReaded == maxSize) "finish" else "",
                                     idUser = IDUSER,
                                     typeFile = typeFile
-                                )
+                                ))
 //                                    parameter("idChat", "629275cb1372bb3eb625641b")
 //                                    parameter("nameFile", nameFile)
 //                                    parameter("contentFile", string)
@@ -125,6 +132,7 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
                         }
                     } while (true)
                 }
+            client.close()
         }
     }
 }

@@ -3,12 +3,13 @@ package com.foggyskies.petapp.presentation.ui.adhomeless.di
 import com.foggyskies.data.vehicle.room.AdsHomelessRemoteDataSource
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.AdHomelessEntity
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
+import io.ktor.client.features.get
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
-import java.lang.Exception
 
 class RequestModule : AdsHomelessRemoteDataSource {
 
@@ -17,6 +18,12 @@ class RequestModule : AdsHomelessRemoteDataSource {
             install(JsonFeature) {
                 serializer = KotlinxSerializer()
             }
+//            install(ContentNegotiation){
+//                json(Json {
+//                    prettyPrint = true
+//                    isLenient = true
+//                })
+//            }
             install(HttpTimeout){
                 requestTimeoutMillis = 3000
             }

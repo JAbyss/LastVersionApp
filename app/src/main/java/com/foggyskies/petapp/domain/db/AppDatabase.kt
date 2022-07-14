@@ -10,6 +10,7 @@ import com.foggyskies.petapp.data.FriendTable
 import com.foggyskies.petapp.domain.dao.ChatDao
 import com.foggyskies.petapp.domain.dao.FriendsDao
 import com.foggyskies.petapp.domain.db.Messages.COLUMN_ID
+import com.foggyskies.petapp.domain.db.Messages.COLUMN_MESSAGE
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -59,6 +60,12 @@ abstract class UserDB : RoomDatabase() {
         val DELETE_MESSAGE =
             "DELETE FROM ${Messages.TABLE_NAME + idChat} WHERE $COLUMN_ID LIKE '$idMessage'"
         openHelper.writableDatabase.execSQL(DELETE_MESSAGE)
+    }
+
+    suspend fun editMessage(idChat: String, idMessage: String, newValue: String){
+        val EDIT_MESSAGE =
+            "UPDATE ${Messages.TABLE_NAME + idChat} SET $COLUMN_MESSAGE = '$newValue' WHERE $COLUMN_ID LIKE '$idMessage'"
+        openHelper.writableDatabase.execSQL(EDIT_MESSAGE)
     }
 
 //    fun getOneMessage(idChat: String, idMessage: String): ChatMessageDC? {

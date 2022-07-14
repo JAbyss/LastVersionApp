@@ -31,4 +31,6 @@ data class FileDC(
     val size: String,
     val type: String,
     val path: String
-)
+){
+    val fullName = "$name.$type"
+}

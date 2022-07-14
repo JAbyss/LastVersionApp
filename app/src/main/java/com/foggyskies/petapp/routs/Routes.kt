@@ -6,7 +6,7 @@ object Routes {
         //        companion object {
 //            const val BASE_IP = "192.168.0.88:2525"
 //        94.41.84.183:2526
-        const val BASE_IP = "192.168.0.88:2525"
+        const val BASE_IP = "109.195.147.44:2525"
 
 //        }
 
@@ -45,6 +45,7 @@ object Routes {
             const val CREATE_CHAT_SESSION = "/subscribes/createChatSession?idChat="
             const val ADD_IMAGE_TO_POST = "/subscribes/addImageToMessage"
             const val MUTE_CHAT = "/muteChat"
+            const val CLOUD_ALL_TREE = "/cloud/allTree"
 //            }
         }
     }

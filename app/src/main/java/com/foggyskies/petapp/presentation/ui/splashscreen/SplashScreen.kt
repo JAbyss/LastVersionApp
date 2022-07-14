@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.foggyskies.petapp.MainActivity
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
@@ -27,11 +26,8 @@ import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.registation.LoginUserDC
-import com.foggyskies.petapp.presentation.ui.registation.authorization_save
-import com.foggyskies.petapp.presentation.ui.registation.signInRequest
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
@@ -39,12 +35,7 @@ import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.utils.io.core.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.io.use
 
 @Composable
 fun SplashScreen(nav_controller: NavHostController) {
@@ -88,18 +79,30 @@ fun SplashScreen(nav_controller: NavHostController) {
                     install(JsonFeature) {
                         serializer = KotlinxSerializer()
                     }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
+//                    install(ContentNegotiation){
+//                        json(Json {
+//                            prettyPrint = true
+//                            isLenient = true
+//                        })
+//                    }
                     expectSuccess = false
                     install(HttpTimeout) {
                         requestTimeoutMillis = 30000
                     }
                 }.use {
-                    val response =
-                        it.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
+                    val response: HttpResponse =
+                        it.post("${Routes.SERVER.REQUESTS.BASE_URL}/auth") {
                             headers["Content-Type"] = "Application/Json"
-                            body = LoginUserDC(
+                            body = (LoginUserDC(
                                 username = USERNAME,
                                 password = PASSWORD
-                            )
+                            ))
                         }
                     if (!response.status.isSuccess()) {
                         nav_controller.navigate(NavTree.Authorization.name) {
@@ -151,7 +154,7 @@ fun SplashScreen(nav_controller: NavHostController) {
             Box() {
 
                 Text(
-                    text = "ZUM      PER",
+                    text = "TIXIS",
                     style = TextStyle(
                         fontFamily = FontFamily(
                             Font(
@@ -161,24 +164,20 @@ fun SplashScreen(nav_controller: NavHostController) {
                         ),
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Black,
-                        color = Color.White
+                        color = Color.White,
+                        letterSpacing = 20.sp
                     ),
                     modifier = Modifier
                         .align(Alignment.Center)
                 )
             }
             Text(
-                text = "Foggy Skies production",
+                text = "Not Moron production",
                 color = Color.White,
-                fontSize = 14.sp,
+                fontSize = 16.sp,
+                letterSpacing = 1.5.sp,
                 modifier = Modifier
             )
         }
-
-        CircularProgressIndicator(
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.Center)
-        )
     }
 }

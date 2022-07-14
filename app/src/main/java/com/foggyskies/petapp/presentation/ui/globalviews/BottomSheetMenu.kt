@@ -82,7 +82,7 @@ fun ColumnScope.BottomSheetMenu(
         modifier = Modifier.align(CenterHorizontally)
     ) { targetState ->
         if (targetState == Screens.IDLE)
-            BottomNavigationMenu(nav_controller)
+            BottomNavigationMenu(nav_controller, msViewModel)
         else
             BottomMenu(
                 viewModel,
@@ -246,7 +246,10 @@ fun ColumnScope.DashBoardMenu(
 }
 
 @Composable
-private fun ColumnScope.BottomNavigationMenu(nav_controller: NavHostController) {
+private fun ColumnScope.BottomNavigationMenu(
+    nav_controller: NavHostController,
+    msViewModel: MainSocketViewModel
+) {
 
     Row(
         modifier = Modifier
@@ -257,12 +260,39 @@ private fun ColumnScope.BottomNavigationMenu(nav_controller: NavHostController) 
     ) {
         IconButton(
             onClick = {
-                nav_controller.navigate(NavTree.Profile.name)
+
             },
             modifier = Modifier.weight(1f)
         ) {
             Image(
+                painter = painterResource(id = R.drawable.ic_cloud),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(33.dp)
+            )
+        }
+        IconButton(
+            onClick = {
+                nav_controller.navigate(NavTree.Profile.name)
+            },
+            modifier = Modifier.weight(7f)
+        ) {
+            Image(
                 painter = painterResource(id = R.drawable.ic_menu_profile),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(33.dp)
+            )
+        }
+        IconButton(
+            onClick = {
+                msViewModel.getCloudFiles()
+                msViewModel.isVisibleCloudMenu = true
+            },
+            modifier = Modifier.weight(1f)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_cloud),
                 contentDescription = null,
                 modifier = Modifier
                     .size(33.dp)
