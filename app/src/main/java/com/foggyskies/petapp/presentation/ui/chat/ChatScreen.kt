@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Alignment.Companion.Start
+import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -36,22 +37,25 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModelProvider
 import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.data.sharedpreference.MainPreference
 import com.foggyskies.petapp.presentation.ui.chat.customui.*
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.FullScreenImage
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
-import com.foggyskies.petapp.presentation.ui.profile.human.views.ClosedComposedFun
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.profile.MENUS
+import com.foggyskies.petapp.presentation.ui.profile.views.ClosedComposedFun
+import com.foggyskies.petapp.temppackage.DownloadingScreen
+import com.foggyskies.petapp.temppackage.DownloadingScreenMini
+import com.foggyskies.petapp.workers.UploadFileViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent.inject
 
 
 @OptIn(
-    ExperimentalComposeUiApi::class, ExperimentalAnimationApi::class,
     ExperimentalFoundationApi::class
 )
 @ExperimentalMaterialApi
@@ -64,7 +68,6 @@ fun ChatScreen(
 
     viewModel.chatEntity = item
 
-    val lifecycleOwner = LocalLifecycleOwner.current
     val display_metrics = LocalContext.current.resources.displayMetrics
     val context = LocalContext.current
 
@@ -97,31 +100,18 @@ fun ChatScreen(
     val lazy_state = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    val state by remember(viewModel.state.value) {
-        val messages = viewModel.state.value
-        mutableStateOf(messages)
-    }
+//    val state by remember(viewModel._state) {
+//        val messages = viewModel._state
+//        mutableStateOf(messages)
+//    }
 
-    DisposableEffect(key1 = Unit){
+    DisposableEffect(key1 = Unit) {
         onDispose {
             viewModel.disconnect()
         }
     }
 
-//    DisposableEffect(key1 = lifecycleOwner) {
-//        val observer = LifecycleEventObserver { _, event ->
-//            if (event == Lifecycle.Event.ON_START) {
-//                viewModel.connectToChat(item.id, context)
-//            } else if (event == Lifecycle.Event.ON_STOP) {
-////                viewModel.disconnect()
-//            }
-//        }
-//        lifecycleOwner.lifecycle.addObserver(observer)
-//        onDispose {
-//            lifecycleOwner.lifecycle.removeObserver(observer)
-//        }
-//    }
-    LaunchedEffect(key1 = Unit){
+    LaunchedEffect(key1 = Unit) {
         viewModel.connectToChat(item.id, context)
     }
     val sheetState = rememberModalBottomSheetState(
@@ -145,7 +135,6 @@ fun ChatScreen(
 //            .background(Color(0xFFF8F8FF))
             .background(Color(0xFFFFFFFF))
     ) {
-
 
         SideEffect {
             Log.e("IN                 MODAL BOTTOM", "Утечка")
@@ -176,7 +165,6 @@ fun ChatScreen(
                         })
                 ) {
 
-
                     LazyColumn(
                         state = lazy_state,
                         reverseLayout = true,
@@ -200,13 +188,13 @@ fun ChatScreen(
                             Text(text = "nowVisible: ${lazy_state.firstVisibleItemIndex}, max: ${lazy_state.layoutInfo.totalItemsCount}")
                             if (lazy_state.layoutInfo.visibleItemsInfo.isNotEmpty())
                                 if (lazy_state.layoutInfo.totalItemsCount > 99)
-                                    if (lazy_state.layoutInfo.visibleItemsInfo.last().index in state.messages.lastIndex - 70..state.messages.lastIndex) {
+                                    if (lazy_state.layoutInfo.visibleItemsInfo.last().index in viewModel._state.lastIndex - 70..viewModel._state.lastIndex) {
 //                                    LaunchedEffect(key1 = Unit){
                                         if (!isActive.value) {
                                             Log.e("LOADING Messages", "START")
                                             isActive.value = true
                                             viewModel.loadNextMessages(
-                                                state.messages.last().id,
+                                                viewModel._state.last().id,
                                                 isActive
                                             )
                                         }
@@ -219,7 +207,7 @@ fun ChatScreen(
 //
 //                            }
 
-                        items(state.messages) { item ->
+                        items(viewModel._state) { item ->
 
                             Message(
                                 message = item,
@@ -228,9 +216,8 @@ fun ChatScreen(
                                 modifier = Modifier
                                     .padding(horizontal = 10.dp, vertical = 7.dp)
                                     .fillMaxWidth()
-                                    .wrapContentWidth(if (item.idUser == IDUSER) End else Start)
+                                    .wrapContentWidth(if (item.idUser == MainPreference.IdUser) End else Start)
                             )
-
                         }
                     }
                 }
@@ -248,7 +235,7 @@ fun ChatScreen(
                                 viewModel.visibleButtonDown = false
                                 viewModel.countUnreadMessage = 0
                                 lazy_state.animateScrollToItem(
-                                    state.messages.size - 1,
+                                    viewModel._state.size - 1,
                                     lazy_state.layoutInfo.visibleItemsInfo.last().offset
                                 )
                             }
@@ -348,5 +335,15 @@ fun ChatScreen(
                 sheetState,
             )
         }
+//        val provider by inject<ViewModelProvider>(ViewModelProvider::class.java)
+//        val uploadViewModel = provider["UploadFileViewModel", UploadFileViewModel::class.java]
+//        AnimatedVisibility(
+//            visible = uploadViewModel.nowUploadingFile.value != null,
+//            modifier = Modifier
+//                .align(TopCenter)
+//        ) {
+//            DownloadingScreenMini(uploadViewModel)
+////            DownloadingScreen(viewModel = uploadViewModel)
+//        }
     }
 }

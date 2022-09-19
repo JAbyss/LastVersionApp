@@ -4,45 +4,38 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.Observer
-import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
-import com.foggyskies.petapp.network.ConnectionLiveData
 import com.foggyskies.petapp.network.TAG
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.websocket.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.utils.io.core.*
-import kotlinx.coroutines.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.IOException
 import java.net.InetSocketAddress
 import javax.net.SocketFactory
-import kotlin.io.use
 
 
 @kotlinx.serialization.Serializable
@@ -158,9 +151,9 @@ class PushNotificationService() : LifecycleService() {
             ).getString("Token", "").toString()
 
             HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -172,7 +165,7 @@ class PushNotificationService() : LifecycleService() {
                     requestTimeoutMillis = 3000
                 }
             }.use {
-                it.get<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/createNotificationSession") {
+                it.get("${Routes.SERVER.REQUESTS.BASE_URL}/createNotificationSession") {
                     parameter("token", Token)
                 }
             }

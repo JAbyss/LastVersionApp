@@ -41,7 +41,8 @@ abstract class UserDB : RoomDatabase() {
                     " ${Messages.COLUMN_AUTHOR} TEXT, ${Messages.COLUMN_DATE} TEXT," +
                     " ${Messages.COLUMN_MESSAGE} TEXT," +
                     " ${Messages.COLUMN_LIST_IMAGES} TEXT )"
-        openHelper.writableDatabase.execSQL(CREATE_TABLE)
+
+        getOpenHelper().writableDatabase.execSQL(CREATE_TABLE)
     }
 
     suspend fun insertMessages(idChat: String, message: ChatMessageDC) {
@@ -53,19 +54,19 @@ abstract class UserDB : RoomDatabase() {
                     " '${message.date}'," +
                     " '${message.message}'," +
                     " '$listS') "
-        openHelper.writableDatabase.execSQL(INSERT_MESSAGE)
+        getOpenHelper().writableDatabase.execSQL(INSERT_MESSAGE)
     }
 
     suspend fun deleteMessage(idChat: String, idMessage: String) {
         val DELETE_MESSAGE =
             "DELETE FROM ${Messages.TABLE_NAME + idChat} WHERE $COLUMN_ID LIKE '$idMessage'"
-        openHelper.writableDatabase.execSQL(DELETE_MESSAGE)
+        getOpenHelper().writableDatabase.execSQL(DELETE_MESSAGE)
     }
 
     suspend fun editMessage(idChat: String, idMessage: String, newValue: String){
         val EDIT_MESSAGE =
             "UPDATE ${Messages.TABLE_NAME + idChat} SET $COLUMN_MESSAGE = '$newValue' WHERE $COLUMN_ID LIKE '$idMessage'"
-        openHelper.writableDatabase.execSQL(EDIT_MESSAGE)
+        getOpenHelper().writableDatabase.execSQL(EDIT_MESSAGE)
     }
 
 //    fun getOneMessage(idChat: String, idMessage: String): ChatMessageDC? {
@@ -89,7 +90,7 @@ abstract class UserDB : RoomDatabase() {
     suspend fun getImageList(idChat: String, idMessage: String): List<String> {
         val SELECT_LIST_IMAGES =
             "SELECT listImages FROM message_$idChat WHERE id LIKE \'$idMessage\'"
-        val cursor = openHelper.readableDatabase.query(SELECT_LIST_IMAGES)
+        val cursor = getOpenHelper().readableDatabase.query(SELECT_LIST_IMAGES)
         var stringList = ""
         with(cursor) {
             while (moveToNext()) {
@@ -104,7 +105,7 @@ abstract class UserDB : RoomDatabase() {
         val SELECT_NEXT_MESSAGES =
             "SELECT * FROM ${Messages.TABLE_NAME + idChat} WHERE id  < '$lastMessageID' ORDER BY 1 DESC LIMIT 100"
 
-        val cursor = openHelper.readableDatabase.query(SELECT_NEXT_MESSAGES)
+        val cursor = getOpenHelper().readableDatabase.query(SELECT_NEXT_MESSAGES)
 //        val listMessages = mutableListOf<ChatMessageDC>()
         with(cursor) {
 
@@ -129,7 +130,7 @@ abstract class UserDB : RoomDatabase() {
 //        Limit 50
 //        ORDER BY date ASC
 //        TOP (50)
-        val cursor = openHelper.readableDatabase.query(SELECT_FIFTY_MESSAGES)
+        val cursor = getOpenHelper().readableDatabase.query(SELECT_FIFTY_MESSAGES)
         val listMessages = mutableListOf<ChatMessageDC>()
 //        CoroutineScope(Dispatchers.Default).launch {
         with(cursor) {
@@ -175,7 +176,7 @@ abstract class UserDB : RoomDatabase() {
                     " ${Messages.COLUMN_AUTHOR} TEXT, ${Messages.COLUMN_DATE} TEXT," +
                     " ${Messages.COLUMN_MESSAGE} TEXT," +
                     " ${Messages.COLUMN_LIST_IMAGES} TEXT )"
-        openHelper.writableDatabase.execSQL(CREATE_TABLE)
+        getOpenHelper().writableDatabase.execSQL(CREATE_TABLE)
     }
 
     suspend fun insertNewMessage(idChat: String, message: ChatMessageDC) {
@@ -187,13 +188,13 @@ abstract class UserDB : RoomDatabase() {
                     " \"${message.date}\"," +
                     " \'${message.message}\'," +
                     " \'$images\') "
-        openHelper.writableDatabase.execSQL(INSERT_MESSAGE)
+        getOpenHelper().writableDatabase.execSQL(INSERT_MESSAGE)
     }
 
     suspend fun loadNewMessages(idChat: String): MutableList<ChatMessageDC> {
         val SELECT_NEW_MESSAGES =
             "SELECT * FROM ${Messages.TABLE_NAME_NEW_MESSAGES + idChat} ORDER BY date ASC "
-        val cursor = openHelper.readableDatabase.query(SELECT_NEW_MESSAGES)
+        val cursor = getOpenHelper().readableDatabase.query(SELECT_NEW_MESSAGES)
         val listNewMessages = mutableListOf<ChatMessageDC>()
         with(cursor) {
             while (moveToNext()) {

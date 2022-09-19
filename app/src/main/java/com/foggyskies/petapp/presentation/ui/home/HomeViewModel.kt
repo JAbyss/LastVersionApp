@@ -16,7 +16,7 @@
 //import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 //import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 //import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
-//import com.foggyskies.petapp.presentation.ui.profile.human.ContentPreviewDC
+//import com.foggyskies.petapp.presentation.ui.profile.ContentPreviewDC
 //import io.ktor.client.*
 //import io.ktor.client.engine.android.*
 //import io.ktor.client.features.*

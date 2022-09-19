@@ -8,6 +8,7 @@
     </option>
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/presentation/ui/authorization/AuthorizationScreen.kt" value="0.5" />
         <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/temppackage/CloudScreen.kt" value="0.25" />
         <entry key="..\:/All project/PetApp/app/src/main/java/com/foggyskies/petapp/temppackage/DownloadingScreen.kt" value="0.5" />
         <entry key="..\:/All project/PetApp/app/src/main/res/drawable/ic_cancel.xml" value="0.237" />

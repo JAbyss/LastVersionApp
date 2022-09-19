@@ -2,7 +2,7 @@ package com.foggyskies.petapp.presentation.ui
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.presentation.ui.profile.MENUS
 
 open class MenuVisibilityHelper(
     private val action: ((Boolean) -> Unit)? = null

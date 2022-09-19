@@ -7,3 +7,13 @@ data class CommentDC(
     var message: String,
     var date: String
 )
+
+@kotlinx.serialization.Serializable
+data class CommentWithIdPageAndPost(
+    val idPageProfile: String,
+    val idPost: String,
+    var id: String,
+    var idUser: String,
+    var message: String,
+    var date: String
+)

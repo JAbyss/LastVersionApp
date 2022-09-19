@@ -3,9 +3,9 @@ package com.foggyskies.petapp.data
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.foggyskies.petapp.data.Chat.Companion.TABLE_CHAT
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 
-@Entity(tableName = TABLE_CHAT)
+@Entity(tableName = "Chat")
 data class Chat(
     @PrimaryKey
     @ColumnInfo(name = "idChat")
@@ -19,6 +19,15 @@ data class Chat(
     @ColumnInfo(name = "lastMessage")
     val lastMessage: String
 ){
+    fun toFormattedChat(): FormattedChatDC {
+        return FormattedChatDC(
+            id = idChat,
+            nameChat = companionName,
+            idCompanion = companionId,
+            image = imageCompanion,
+            lastMessage = lastMessage
+        )
+    }
     companion object {
         const val TABLE_CHAT = "Chat"
     }

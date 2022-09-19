@@ -3,10 +3,10 @@ package com.foggyskies.petapp.presentation.ui.chat.customui
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -19,12 +19,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.foggyskies.petapp.MainActivity
+import androidx.lifecycle.ViewModelProvider
 import com.foggyskies.petapp.R
-import com.foggyskies.petapp.presentation.ui.chat.*
-import com.foggyskies.petapp.presentation.ui.chat.customui.*
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
+import com.foggyskies.petapp.presentation.ui.chat.MessageDC
+import com.foggyskies.petapp.presentation.ui.chat.StateTextField
+import com.foggyskies.petapp.presentation.ui.chat.requests.editMessage
+import com.foggyskies.petapp.presentation.ui.chat.requests.messageWithContent
+import com.foggyskies.petapp.presentation.ui.profile.MENUS
+import com.foggyskies.petapp.workers.TypeLoadFile
+import com.foggyskies.petapp.workers.UploadFileViewModel
+import com.foggyskies.petapp.workers.uploadFile
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent
 
 
 @OptIn(
@@ -56,7 +63,8 @@ fun BottomAppBar(
                 viewModel.changeStateChatToVisible()
             }
     ) {
-
+        val modelProvider by KoinJavaComponent.inject<ViewModelProvider>(ViewModelProvider::class.java)
+        val uploadModel = modelProvider["UploadFileViewModel", UploadFileViewModel::class.java]
         Row(
             verticalAlignment = Alignment.Bottom,
         ) {
@@ -125,18 +133,56 @@ fun BottomAppBar(
             )
             Button(
                 onClick = {
-                    when(viewModel.stateTextField){
+                    when (viewModel.stateTextField) {
                         StateTextField.WRITING -> {
                             if (viewModel.galleryHandler!!.listPath.isNotEmpty()) {
                                 scope.launch {
                                     state.hide()
                                 }
-                                viewModel.addImageToMessage(viewModel.bottomBarValue)
+                                val listImageAddress = mutableListOf<String>()
+//                                viewModel.backgroundScope.launch {
+
+
+                                uploadModel.uploadImagesToChat(
+                                    message = viewModel.bottomBarValue,
+                                    idChat = viewModel.chatEntity?.id!!,
+                                    dirFile = viewModel.galleryHandler!!.selectedItems.toTypedArray(),
+                                    typeLoad = TypeLoadFile.CHAT,
+                                    infoData = viewModel.chatEntity?.id!!,
+                                )
+//                                        listImageAddress.add(
+//                                            uploadFile(
+//                                                it,
+//                                                typeLoad = TypeLoadFile.CHAT,
+//                                                infoData = viewModel.chatEntity?.id!!,
+//                                            )
+//                                        )
+//                                    }
+//                                    viewModel.messageWithContent(
+//                                        message = MessageDC(
+//                                            message = viewModel.bottomBarValue,
+//                                            listImages = listImageAddress
+//                                        )
+//                                    )
+//                                viewModel.galleryHandler!!.listPath.forEach {
+//                                    uploadFile(
+//                                        it,
+//                                        typeLoad = TypeLoadFile.CHAT,
+//                                        infoData = viewModel.chatEntity?.id!!,
+//                                    ) { path ->
+//                                        listImageAddress.add(path)
+//                                    }
+//                                }
+
+//                                viewModel.addImageToMessage(viewModel.bottomBarValue)
                             } else {
                                 if (!viewModel.bottomBarValue.isBlank()) {
                                     val formattedString =
-                                        viewModel.bottomBarValue.replace(regex = "(^\\s+)|(\\s+\$)".toRegex(), "")
-                                    viewModel.sendMessage(MessageDC(message = formattedString))
+                                        viewModel.bottomBarValue.replace(
+                                            regex = "(^\\s+)|(\\s+\$)".toRegex(),
+                                            ""
+                                        )
+                                    viewModel.sendMessage(formattedString)
                                 }
                             }
                             viewModel.bottomBarValue = ""
@@ -145,8 +191,8 @@ fun BottomAppBar(
                         StateTextField.EMPTY -> {
                             viewModel.menuHelper.changeVisibilityMenu(MENUS.ATTACH)
                         }
-                        StateTextField.EDIT ->{
-                                viewModel.editMessage()
+                        StateTextField.EDIT -> {
+                            viewModel.editMessage()
                         }
                     }
                 },

@@ -5,22 +5,19 @@ import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.domain.db.UserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import kotlinx.serialization.json.Json
+import io.ktor.client.plugins.*
 
 class RepositoryUserDB(
     val dbUser: UserDB
 ) {
 
     val client = HttpClient(Android) {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
-        }
+//        install(JsonFeature) {
+//            serializer = KotlinxSerializer()
+//        }
 //        install(ContentNegotiation){
 //            json(Json {
 //                prettyPrint = true
@@ -32,29 +29,29 @@ class RepositoryUserDB(
         }
     }
 
-    suspend fun getChats(msViewModel: MainSocketViewModel) {
-        val localChats = dbUser.chatDao().getAllChats()
-        val formattedChat = localChats.map {
-            FormattedChatDC(
-                id = it.idChat,
-                nameChat = it.companionName,
-                image = it.imageCompanion,
-                idCompanion = it.companionId,
-                lastMessage = it.lastMessage
-            )
-        }.toMutableList()
-        // FIXME UNKNOWN
-        msViewModel.listNewMessages.forEach { newChat ->
-            formattedChat.forEachIndexed { index, it ->
-                if (newChat.id == it.id) {
-                    formattedChat[index] =
-                        formattedChat[index].copy(lastMessage = newChat.new_message.message)
-                }
-            }
-        }
-        msViewModel.listChats = formattedChat.toMutableList()
-        msViewModel.sendAction("getChats|")
-    }
+//    suspend fun getChats(msViewModel: MainSocketViewModel) {
+//        val localChats = dbUser.chatDao().getAllChats()
+//        val formattedChat = localChats.map {
+//            FormattedChatDC(
+//                id = it.idChat,
+//                nameChat = it.companionName,
+//                image = it.imageCompanion,
+//                idCompanion = it.companionId,
+//                lastMessage = it.lastMessage
+//            )
+//        }.toMutableList()
+//        // FIXME UNKNOWN
+//        msViewModel.listNewMessages.forEach { newChat ->
+//            formattedChat.forEachIndexed { index, it ->
+//                if (newChat.id == it.id) {
+//                    formattedChat[index] =
+//                        formattedChat[index].copy(lastMessage = newChat.new_message.message)
+//                }
+//            }
+//        }
+//        msViewModel.listChats = formattedChat.toMutableList()
+//        msViewModel.sendAction("getChats|")
+//    }
 
     suspend fun updateChats(
         needAddItems: List<FormattedChatDC>,
@@ -93,10 +90,10 @@ class RepositoryUserDB(
         dbUser.editMessage(idChat, idMessage, newValue)
     }
 
-    suspend fun getFriends(msViewModel: MainSocketViewModel) {
-        val localFriends = dbUser.friendDao().getFriends()
-        val formattedList = localFriends.map { it.toIUSI() }
-        msViewModel.listFriends = formattedList.toMutableStateList()
-        msViewModel.sendAction("getFriends|")
-    }
+//    suspend fun getFriends(msViewModel: MainSocketViewModel) {
+//        val localFriends = dbUser.friendDao().getFriends()
+//        val formattedList = localFriends.map { it.toIUSI() }
+//        msViewModel.listFriends = formattedList.toMutableStateList()
+//        msViewModel.sendAction("getFriends|")
+//    }
 }

@@ -4,20 +4,18 @@ import android.content.Context
 import android.os.Build
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.foggyskies.petapp.MainActivity.Companion.IDUSER
+import com.foggyskies.petapp.presentation.ui.chat.customui.getSizeFile
+import com.foggyskies.petapp.presentation.ui.chat.entity.FileDC
 import com.foggyskies.petapp.routs.Routes
 import io.ktor.client.*
 import io.ktor.client.engine.android.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import java.io.File
+import java.util.UUID
 import kotlin.random.Random
 
 class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
@@ -60,9 +58,9 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
             val nameOperation = "fileSending|$codeOperation|"
 
             val client = HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -77,7 +75,7 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
             file.inputStream()
                 .use { input ->
                     var arr =
-                        if (file.length()  < 409600) ByteArray((file.length()).toInt()) else ByteArray(
+                        if (file.length() < 409600) ByteArray((file.length()).toInt()) else ByteArray(
                             409600
                         )
                     var allReaded = 0L
@@ -102,18 +100,23 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
                                 android.util.Base64.encodeToString(arr, android.util.Base64.NO_WRAP)
                             }
 
-                            client.post<HttpResponse>("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/fileUpload") {
+                            client.post("${Routes.SERVER.REQUESTS.BASE_URL}/subscribes/fileUpload") {
 //                                    headers["Auth"] = MainActivity.TOKEN
                                 headers["Content-Type"] = "Application/Json"
 //                        parameter("idChat", chatEntity?.id)
-                                body = (BodyFile(
-                                    idChat = idChat,
-                                    nameFile = name,
-                                    contentFile = string,
-                                    status = if (allReaded == maxSize) "finish" else "",
-                                    idUser = IDUSER,
-                                    typeFile = typeFile
-                                ))
+                                setBody(
+                                    BodyFile(
+                                        idUpload = "",
+//                                    idChat = idChat,
+                                        nameFile = name,
+                                        contentFile = string,
+                                        status = if (allReaded == maxSize) "finish" else "",
+//                                    idUser = IDUSER,
+                                        extension = typeFile,
+                                        infoData = "",
+                                        typeLoad = TypeLoadFile.CHAT
+                                    )
+                                )
 //                                    parameter("idChat", "629275cb1372bb3eb625641b")
 //                                    parameter("nameFile", nameFile)
 //                                    parameter("contentFile", string)
@@ -137,12 +140,77 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters) :
     }
 }
 
+//@kotlinx.serialization.Serializable
+//data class BodyFile(
+//    val idChat: String,
+//    val nameFile: String,
+//    val contentFile: String,
+//    val status: String,
+//    val idUser: String,
+//    val typeFile: String
+//)
+enum class TypeLoadFile {
+    CHAT, PROFILE, AVATAR, CONTENT_PROFILE
+}
+
 @kotlinx.serialization.Serializable
 data class BodyFile(
-    val idChat: String,
+    val idUpload: String,
+//    val idChat: String,
     val nameFile: String,
     val contentFile: String,
     val status: String,
-    val idUser: String,
-    val typeFile: String
-)
+//    val idUser: String,
+    val extension: String,
+    val typeLoad: TypeLoadFile,
+    val infoData: String,
+) {
+    companion object {
+        fun generate(path: String, typeLoad: TypeLoadFile, infoData: String): BodyFile {
+            val file = File(path)
+            return BodyFile(
+                idUpload = UUID.randomUUID().toString(),
+                nameFile = file.nameWithoutExtension,
+                contentFile = "",
+                status = "",
+                extension = file.extension,
+                typeLoad,
+                infoData
+            )
+        }
+    }
+}
+
+data class BodyFileQueue(
+    val idUpload: String,
+    val file: File,
+//    val idChat: String,
+//    val nameFile: String,
+//    val contentFile: String,
+//    val status: String,
+//    val idUser: String,
+//    val typeFile: String,
+    val typeLoad: TypeLoadFile,
+    val infoData: String,
+) {
+    fun toBodyFile(): BodyFile {
+        return BodyFile(
+            idUpload,
+            nameFile = file.nameWithoutExtension,
+            contentFile = "",
+            status = "",
+            extension = file.extension,
+            typeLoad = typeLoad,
+            infoData = infoData
+        )
+    }
+
+    fun toFileDC(): FileDC {
+        return FileDC(
+            name = file.nameWithoutExtension,
+            size = getSizeFile(file.length()),
+            type = file.extension,
+            path = file.path
+        )
+    }
+}

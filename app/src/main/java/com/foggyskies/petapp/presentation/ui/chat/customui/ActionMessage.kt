@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
+import com.foggyskies.petapp.presentation.ui.chat.requests.deleteMessage
 
 
 @Composable
@@ -24,9 +25,6 @@ fun ActionMessage(viewModel: ChatViewModel) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
-//            .padding(horizontal = 10.dp, vertical = 7.dp)
-//            .fillMaxWidth()
-//            .height(40.dp)
             .background(Color(0xFFDAE0E4))
     ) {
         Row() {

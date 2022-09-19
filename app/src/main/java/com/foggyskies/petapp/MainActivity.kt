@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -11,15 +12,26 @@ import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,35 +43,39 @@ import coil.ImageLoader
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
-import com.foggyskies.petapp.MainActivity.Companion.IDUSER
 import com.foggyskies.petapp.MainActivity.Companion.TOKEN
 import com.foggyskies.petapp.MainActivity.Companion.USERNAME
-import com.foggyskies.petapp.MainActivity.Companion.isNetworkAvailable
 import com.foggyskies.petapp.PushNotificationService.Companion.ISAPPLIFE
 import com.foggyskies.petapp.PushNotificationService.Companion.notificationsList
+import com.foggyskies.petapp.data.sharedpreference.MainPreference
+import com.foggyskies.petapp.data.sharedpreference.PreferencesRepositoryImpl
 import com.foggyskies.petapp.domain.db.UserDB
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
-import com.foggyskies.petapp.network.ConnectionLiveData
-import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessScreen
-import com.foggyskies.petapp.presentation.ui.adhomeless.AdsHomelessViewModel
+import com.foggyskies.petapp.network.ConnectivityObserver
+import com.foggyskies.petapp.network.NetworkConnectivityObserver
+import com.foggyskies.petapp.presentation.ui.authorization.AuthorizationScreen
+import com.foggyskies.petapp.presentation.ui.authorization.AuthorizationViewModel
 import com.foggyskies.petapp.presentation.ui.chat.ChatScreen
 import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.home.HomeMVIModel
 import com.foggyskies.petapp.presentation.ui.home.HomeScreen
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.presentation.ui.profile.human.ProfileScreen
-import com.foggyskies.petapp.presentation.ui.profile.human.ProfileViewModel
-import com.foggyskies.petapp.presentation.ui.registation.AuthorizationViewModel
-import com.foggyskies.petapp.presentation.ui.splash.SplashScreen
-import com.foggyskies.testingscrollcompose.presentation.ui.registation.AuthorizationScreen
+import com.foggyskies.petapp.presentation.ui.profile.ProfileScreen
+import com.foggyskies.petapp.presentation.ui.profile.ProfileViewModel
+import com.foggyskies.petapp.presentation.ui.splashscreen.SplashScreen
+import com.foggyskies.petapp.temppackage.DownloadingScreen
+import com.foggyskies.petapp.temppackage.DownloadingScreenMini
+import com.foggyskies.petapp.workers.UploadFileViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.scope.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.java.KoinJavaComponent.inject
 
 enum class DBs {
     User
@@ -78,6 +94,16 @@ val mainModule = module {
     single {
         RepositoryUserDB(get(named(DBs.User)))
     }
+    single {
+        val SP = androidContext().getSharedPreferences("1", Context.MODE_PRIVATE)
+        PreferencesRepositoryImpl(SP)
+    }
+    single {
+        NetworkConnectivityObserver(androidContext())
+    }
+    single {
+        ViewModelProvider(androidContext() as ComponentActivity)
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -95,12 +121,12 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-//    @RequiresApi(Build.VERSION_CODES.O)
+    //    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ISAPPLIFE = true
-
+        sharedPreference = application.getSharedPreferences("1", Context.MODE_PRIVATE)
         requestPermissions(PERMISSIONS, MY_PERMISSIONS_REQUEST)
         try {
 
@@ -193,14 +219,34 @@ class MainActivity : ComponentActivity() {
 //        val readyPath = "$originString/image_12_123.png"
 //        File(readyPath).writeText("awfawfawf")
 
+        val connectivityObserver = NetworkConnectivityObserver(applicationContext)
 
         setContent {
-            val context = LocalContext.current
-
-            val connection_live_data = ConnectionLiveData(context)
-            isNetworkAvailable = connection_live_data.observeAsState(false)
-            Surface(color = MaterialTheme.colors.background) {
-                LoadingApp()
+            isNetworkAvailable = connectivityObserver.observe()
+                .collectAsState(initial = ConnectivityObserver.Status.Unavailable)
+//            val connection_live_data = ConnectionLiveData(context)
+//            isNetworkAvailable = connection_live_data.observeAsState(false)
+            Box(modifier = Modifier.background(MaterialTheme.colors.background)) {
+                val nav_controller = rememberNavController()
+                LoadingApp(nav_controller)
+                val provider by inject<ViewModelProvider>(ViewModelProvider::class.java)
+                val uploadModel = provider["UploadFileViewModel", UploadFileViewModel::class.java]
+                AnimatedVisibility(
+                    visible = uploadModel.miniDownloadVisible.value,
+                    modifier = Modifier
+                        .padding(top = 15.dp, end = 7.dp)
+                        .align(Alignment.TopEnd)
+                        .alpha(uploadModel.alphaForMini.value)
+                ) {
+                    DownloadingScreenMini(viewModel = uploadModel)
+                }
+                AnimatedVisibility(
+                    visible = uploadModel.fullDownloadVisible.value,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                ) {
+                    DownloadingScreen(viewModel = uploadModel)
+                }
             }
         }
 //        window.setFlags(
@@ -230,17 +276,17 @@ class MainActivity : ComponentActivity() {
         lateinit var loader: ImageLoader
         lateinit var loaderForGallery: ImageLoader
         lateinit var loaderForPost: ImageLoader
+        lateinit var sharedPreference: SharedPreferences
 
-        lateinit var isNetworkAvailable: State<Boolean>
+        lateinit var isNetworkAvailable: State<ConnectivityObserver.Status>
     }
 }
 
 @SuppressLint("SuspiciousIndentation")
 @ExperimentalMaterialApi
 @Composable
-fun LoadingApp() {
+fun LoadingApp(nav_controller: NavHostController) {
     val uri = "https://www.example.com"
-    val nav_controller = rememberNavController()
 
     val context = LocalContext.current
 
@@ -249,10 +295,8 @@ fun LoadingApp() {
     window.statusBarColor = statusBarColor
 
     val viewModelProvider = ViewModelProvider(context as ComponentActivity)
-
     val mainSocketViewModel =
         viewModelProvider["MainSocketViewModel", (MainSocketViewModel::class.java)]
-
 
     NavHost(navController = nav_controller, startDestination = NavTree.Splash.name) {
         composable(NavTree.Splash.name) {
@@ -274,13 +318,7 @@ fun LoadingApp() {
                 )
             }
 
-            viewModel.HomeScreen(nav_controller, mainSocketViewModel)
-        }
-        composable("AdsHomeless") {
-            val viewModel =
-                viewModelProvider["AdsHomelessViewModel", (AdsHomelessViewModel::class.java)]
-
-            AdsHomelessScreen(nav_controller, viewModel = viewModel)
+            HomeScreen(viewModel, nav_controller)
         }
         composable(
             NavTree.ChatSec.name
@@ -306,7 +344,7 @@ fun LoadingApp() {
                     "User",
                     Context.MODE_PRIVATE
                 ).getString("username", "").toString()
-                mainSocketViewModel.sendAction("deleteAllSentNotifications|")
+//                mainSocketViewModel.sendAction("deleteAllSentNotifications|")
                 notificationsList = mutableListOf()
             }
 
@@ -317,20 +355,23 @@ fun LoadingApp() {
             ChatScreen(viewModel, item, mainSocketViewModel)
         }
         composable("Profile") {
+
             val viewModel =
                 viewModelProvider["ProfileViewModel", (ProfileViewModel::class.java)]
-
-            LaunchedEffect(key1 = isNetworkAvailable.value) {
+            MainPreference.Username?.let {_ ->
                 val isOwnerMode = it.arguments?.getBoolean("mode", true) ?: true
-                val username = it.arguments?.getString("username", USERNAME)!!
+                val username = it.arguments?.getString("username", MainPreference.Username)!!
                 val image = it.arguments?.getString("image", "")!!
-                val idUser = it.arguments?.getString("idUser", IDUSER)!!
+                val idUser = it.arguments?.getString("idUser", MainPreference.IdUser)!!
                 viewModel.stateUserProfile(username, image, idUser, isOwnerMode)
             }
+
+//            LaunchedEffect(key1 = Unit) {
+//
+//            }
             ProfileScreen(
                 nav_controller = nav_controller,
-                viewModel,
-                mainSocketViewModel
+                viewModel
             )
         }
     }

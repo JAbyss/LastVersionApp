@@ -258,15 +258,15 @@ class GalleryHandler {
                             modifier = Modifier
                                 .padding(start = 20.dp)
                                 .padding(vertical = 7.dp)
-                                .clickable {
-                                    if (listDirs.isEmpty()) {
-                                        listDirs = File("/storage/emulated/0")
-                                            .list()
-                                            ?.toList()
-                                            ?: emptyList()
-                                    }
-                                    visibleFileTree = !visibleFileTree
-                                }
+//                                .clickable {
+//                                    if (listDirs.isEmpty()) {
+//                                        listDirs = File("/storage/emulated/0")
+//                                            .list()
+//                                            ?.toList()
+//                                            ?: emptyList()
+//                                    }
+//                                    visibleFileTree = !visibleFileTree
+//                                }
                         )
                     }
                     AnimatedVisibility(

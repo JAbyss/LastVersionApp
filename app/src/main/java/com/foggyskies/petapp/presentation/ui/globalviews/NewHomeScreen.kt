@@ -12,10 +12,10 @@
 //import androidx.compose.ui.graphics.Color
 //import androidx.compose.ui.tooling.preview.Preview
 //import androidx.compose.ui.unit.dp
-//import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
-//import com.foggyskies.petapp.presentation.ui.home.SelectedPostWithIdPageProfile
-//import com.foggyskies.petapp.presentation.ui.profile.human.ContentPreviewDC
-//import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+//import com.foggyskies.petapp.presentation.ui.home.widgets.post.PostScreenHandler
+//import com.foggyskies.petapp.presentation.ui.home.widgets.post.SelectedPostWithIdPageProfile
+//import com.foggyskies.petapp.presentation.ui.profile.ContentPreviewDC
+//import com.foggyskies.petapp.presentation.ui.profile.MENUS
 //
 ////@Preview
 ////@Composable

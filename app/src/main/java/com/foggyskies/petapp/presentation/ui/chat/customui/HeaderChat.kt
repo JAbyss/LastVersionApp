@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 import com.foggyskies.petapp.routs.Routes
 
 @Composable

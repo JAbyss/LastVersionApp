@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
+import com.foggyskies.petapp.presentation.ui.home.widgets.post.PostScreenHandler
 import com.foggyskies.petapp.routs.Routes
 
 @Composable

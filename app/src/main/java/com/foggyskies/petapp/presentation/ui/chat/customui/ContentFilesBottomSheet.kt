@@ -1,7 +1,5 @@
 package com.foggyskies.petapp.presentation.ui.chat.customui
 
-import android.util.Log
-import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -10,7 +8,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -18,40 +15,42 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
+import androidx.lifecycle.ViewModelProvider
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
-import com.foggyskies.petapp.workers.UploadWorker
+import com.foggyskies.petapp.workers.BodyFileQueue
+import com.foggyskies.petapp.workers.TypeLoadFile
+import com.foggyskies.petapp.workers.UploadFileViewModel
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent.inject
 import java.io.File
+import java.util.UUID
 
+fun getSizeFile(size: Long): String {
+    if (size > 8) {
+        val bytes = size
+        return if (bytes > 1024) {
+            val kBytes = bytes / 1024f
+            if (kBytes > 1024) {
+                val mBytes = kBytes / 1024f
+                if (mBytes > 1024)
+                    "${String.format("%.1f", mBytes / 1024f)} GB"
+                else
+                    "${String.format("%.1f", mBytes)} MB"
+            } else
+                "${String.format("%.1f", kBytes)} KB"
+        } else
+            "$bytes B"
+    } else if (size == 0L)
+        return "0 Bit"
+    else
+        return "${String.format("%.1f", size)} Bit"
+}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ContentFilesBottomSheet(viewModel: ChatViewModel, bottomSheetState: ModalBottomSheetState) {
 
-    fun getSizeFile(size: Long): String {
-        if (size > 8) {
-            val bytes = size
-            if (bytes > 1024) {
-                val kBytes = bytes / 1024f
-                if (kBytes > 1024) {
-                    val mBytes = kBytes / 1024f
-                    if (mBytes > 1024)
-                        return "${String.format("%.1f", mBytes / 1024f)} GB"
-                    else
-                        return "${String.format("%.1f", mBytes)} MB"
-                } else
-                    return "${String.format("%.1f", kBytes)} KB"
-            } else
-                return "${String.format("%.1f", bytes)} B"
-        } else if (size == 0L)
-            return "0 Bit"
-        else
-            return "${String.format("%.1f", size)} Bit"
-    }
+
 
     @Composable
     fun OneItemFile(item: String) {
@@ -60,6 +59,8 @@ fun ContentFilesBottomSheet(viewModel: ChatViewModel, bottomSheetState: ModalBot
         val context = LocalContext.current.applicationContext
 
         val scope = rememberCoroutineScope()
+        val modelProvider by inject<ViewModelProvider>(ViewModelProvider::class.java)
+        val uploadModel = modelProvider["UploadFileViewModel", UploadFileViewModel::class.java]
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -87,23 +88,58 @@ fun ContentFilesBottomSheet(viewModel: ChatViewModel, bottomSheetState: ModalBot
                                     ?.toList() ?: emptyList()
                         }
                         if (file.isFile) {
-
-                            val taskData = Data
-                                .Builder()
-                                .putString("nameFile", item)
-                                .putString("dirFile", "${viewModel.selectedPath}/")
-                                .putString("idChat", viewModel.chatEntity?.id!!)
-                                .build()
-                            val uploadWorkRequest: WorkRequest =
-                                OneTimeWorkRequestBuilder<UploadWorker>()
-                                    .setInputData(taskData)
-                                    .build()
-                            val man = WorkManager
-                                .getInstance(context.applicationContext)
-                                .enqueue(uploadWorkRequest)
-                            if (man.result.isDone) {
-                                Log.e("MANAGERRRR", "DOMEEEEEEEEEEEE")
-                            }
+                            uploadModel.addFileToQueue(
+                                body = BodyFileQueue(
+                                    idUpload = UUID.randomUUID().toString(),
+                                    file = File(viewModel.selectedPath + '/' + item),
+                                    typeLoad = TypeLoadFile.CHAT,
+                                    infoData = viewModel.chatEntity?.id!!
+                                )
+                            )
+//                            viewModel.backgroundScope.launch {
+//                                uploadModel.uploadFilesToChat(
+//                                    idChat = viewModel.chatEntity?.id!!,
+//                                    dirFile = arrayOf(viewModel.selectedPath + '/' + item),
+//                                    typeLoad = TypeLoadFile.CHAT,
+//                                    infoData = viewModel.chatEntity?.id!!
+//                                    )
+//                                val model by KoinJavaComponent.inject<ViewModelProvider>(
+//                                    ViewModelProvider::class.java
+//                                )
+//                                val path = uploadFile(
+//                                    dirFile = viewModel.selectedPath + '/' + item,
+//                                    typeLoad = TypeLoadFile.CHAT,
+//                                    isCompressed = false,
+//                                    infoData = viewModel.chatEntity?.id!!
+//                                )
+//                                viewModel.messageWithContent(
+//                                    MessageDC(
+//                                        message = "",
+//                                        listFiles = listOf(FileDC(
+//                                            name = item,
+//                                            size = "",
+//                                            type = "",
+//                                            path = path
+//                                        ))
+//                                    )
+//                                )
+//                            }
+//                            val taskData = Data
+//                                .Builder()
+//                                .putString("nameFile", item)
+//                                .putString("dirFile", "${viewModel.selectedPath}/")
+//                                .putString("idChat", viewModel.chatEntity?.id!!)
+//                                .build()
+//                            val uploadWorkRequest: WorkRequest =
+//                                OneTimeWorkRequestBuilder<UploadWorker>()
+//                                    .setInputData(taskData)
+//                                    .build()
+//                            val man = WorkManager
+//                                .getInstance(context.applicationContext)
+//                                .enqueue(uploadWorkRequest)
+//                            if (man.result.isDone) {
+//                                Log.e("MANAGERRRR", "DOMEEEEEEEEEEEE")
+//                            }
 
                             scope.launch {
                                 bottomSheetState.hide()
@@ -171,7 +207,7 @@ fun ContentFilesBottomSheet(viewModel: ChatViewModel, bottomSheetState: ModalBot
 
 //        }
         items(viewModel.listFiles) { item ->
-                OneItemFile(item)
+            OneItemFile(item)
         }
     }
 

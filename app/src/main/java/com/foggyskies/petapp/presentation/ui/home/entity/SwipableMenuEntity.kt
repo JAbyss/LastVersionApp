@@ -1,13 +1,11 @@
 package com.foggyskies.petapp.presentation.ui.home.entity
 
-import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -17,23 +15,32 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.profile.views.ClosedComposedFun
 import kotlinx.coroutines.*
 
 enum class SideScreen {
     TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT
 }
 
+//data class ItemSwappableMenu(
+//    var Image: Int,
+//    var isAnimate: Boolean = false,
+//    var animationImages: List<Int> = emptyList(),
+//    var offset: Offset,
+//    var onValueSelected: (NavHostController) -> Unit = {}
+//)
+
 data class ItemSwappableMenu(
     var Image: Int,
     var isAnimate: Boolean = false,
     var animationImages: List<Int> = emptyList(),
-    var offset: Offset,
+    var position: SwappableMenu.PositionsIcons,
     var onValueSelected: (NavHostController) -> Unit = {}
 )
 
@@ -45,28 +52,39 @@ data class ItemSwappableMenu(
 class SwappableMenu() : CircularSelector() {
 
 
-    fun Modifier(modifier: Modifier, callback: () -> Unit = {}): Modifier {
-        return modifier.touchMenuListener(callback)
-    }
-
-    @OptIn(ExperimentalMaterialApi::class)
-    var modalBottomSheetState: ModalBottomSheetState? = null
+    private val radiusCircle = 80f
+    private val radiusMenu = 320f
+    var sizeIcon = 35.dp
+    private val centerIcon = sizeIcon / 2
 
     lateinit var navController: NavHostController
 
     var sizeScreen by mutableStateOf(Size(0f, 0f))
 
-    var offsetStart by mutableStateOf(Offset.Zero)
+    private var offsetStart by mutableStateOf(Offset.Zero)
     var density by mutableStateOf(2.75f)
 
     var isReadyMenu by mutableStateOf(true)
     var isMenuOpen by mutableStateOf(false)
     var isTappedScreen by mutableStateOf(false)
 
-    private val listItems by derivedStateOf {
-        listIcon.map {
-            Offset(x = it.offset.x * density, y = it.offset.y * density)
-        }
+    private val mapOffsetItems = mapOf(
+        PositionsIcons.TOP to Offset(x = 0f, y = -75f * density),
+        PositionsIcons.TOP_RIGHT to Offset(x = 49.5f * density, y = -49.5f * density),
+        PositionsIcons.RIGHT to Offset(x = 75f * density, y = 0f),
+        PositionsIcons.RIGHT_BOTTOM to Offset(x = 49.5f * density, y = -49.5f * density),
+        PositionsIcons.BOTTOM to Offset(x = 0f, y = 75f * density),
+        PositionsIcons.LEFT_BOTTOM to Offset(x = -49.5f * density, y = 49.5f * density),
+        PositionsIcons.LEFT to Offset(x = -75f * density, y = 0f),
+        PositionsIcons.TOP_LEFT to Offset(x = -49.5f * density, y = -49.5f * density)
+    )
+
+    enum class PositionsIcons {
+        TOP, TOP_RIGHT, RIGHT, RIGHT_BOTTOM, BOTTOM, LEFT_BOTTOM, LEFT, TOP_LEFT
+    }
+
+    private val listIconsOffsets by derivedStateOf {
+        listIcon.map { mapOffsetItems[it.position]!! }
     }
 
     private val sideScreen by derivedStateOf {
@@ -83,9 +101,12 @@ class SwappableMenu() : CircularSelector() {
                 SideScreen.TOP_RIGHT
     }
 
-    val listOffsetsForCircle by derivedStateOf {
+    /**
+     * Зеркалит иконки в меню
+     * */
+    private val listOffsetsForCircle by derivedStateOf {
 
-        val a = listItems.map { item ->
+        listIconsOffsets.map { item ->
             var x: Float = 0f
             var y: Float = 0f
             when (sideScreen) {
@@ -109,32 +130,25 @@ class SwappableMenu() : CircularSelector() {
             }
             Offset(x, y)
         }
-        a
     }
 
-    val radiusCircle = 80f
-
-    val radiusMenu = 320f
-
-    val offsetStartDp by derivedStateOf {
+    private val offsetStartDp by derivedStateOf {
         DpOffset(x = (offsetStart.x / density).dp, y = (offsetStart.y / density).dp)
     }
-
-    var sizeIcon = 35.dp
 
     var listIcon by mutableStateOf(
         listOf(
             ItemSwappableMenu(
                 Image = R.drawable.ic_sleep,
-                offset = Offset(x = 10f, y = -70f)
+                position = PositionsIcons.TOP
             ),
             ItemSwappableMenu(
                 Image = R.drawable.ic_walk,
-                offset = Offset(x = -50f, y = -45f)
+                position = PositionsIcons.TOP_LEFT
             ),
             ItemSwappableMenu(
                 Image = R.drawable.ic_gamepad,
-                offset = Offset(x = -70f, y = 10f),
+                position = PositionsIcons.LEFT,
             )
         )
     )
@@ -145,7 +159,6 @@ class SwappableMenu() : CircularSelector() {
         }
     }
 
-    @OptIn(ExperimentalMaterialApi::class)
     fun onDragStart(startOffsetPx: Offset, callback: () -> Unit) {
 
         if (
@@ -165,83 +178,160 @@ class SwappableMenu() : CircularSelector() {
         }
     }
 
-    suspend fun menuClosing() {
+    private suspend fun menuClosing() {
         isMenuOpen = true
         delay(300)
         isMenuOpen = false
     }
 
-    @SuppressLint("SuspiciousIndentation")
-    fun Modifier.touchMenuListener(callback: () -> Unit): Modifier {
-        return pointerInput(Unit) {
+    suspend fun touchMenuListener(pis: PointerInputScope, onDragStart: () -> Unit) =
+        pis.run {
             var offset = Offset.Zero
-                detectDragGesturesAfterLongPress(
-                    onDragStart = {
-                        if (isReadyMenu) {
-                            offset = it
-                            onDragStart(it, callback)
-                            startOffsetCS = offsetStartDp
-                            radius = radiusMenu
-                        }
-                    },
-                    onDragEnd = {
-                        if (isReadyMenu) {
-                            val listDistance = listOffsetGlobal.map {
-                                (it - offset).getDistance()
-                            }
-                            val minDistance = listDistance.minOrNull()
-
-                            if (minDistance!! < radiusCircle) {
-                                listIcon[listDistance.indexOf(minDistance)].onValueSelected.invoke(
-                                    navController
-                                )
-//                        listenerSelector(listDistance.indexOf(minDistance))
-                            }
-                            isTappedScreen = false
-                            CoroutineScope(Dispatchers.IO).launch {
-                                menuClosing()
-                            }
-                            selectedTarget = StateCS.IDLE
-                        }
-                    },
-                    onDrag = { change, dragAmount ->
-                        if (isReadyMenu) {
-                            offset = change.position
-
-                            val listDistance = listOffsetGlobal.map {
-                                (it - offset).getDistance()
-                            }
-                            val minDistance = listDistance.minOrNull()
-
-                            if (minDistance!! < radiusCircle) {
-                                sizeCS = radiusCircle
-                                selectedTargetOffset =
-                                    listOffsetsForCircle[listDistance.indexOf(minDistance)]
-                                selectedTarget = StateCS.SELECTED
-                            } else {
-                                selectedTarget = StateCS.IDLE
-                                startOffsetCS = offsetStartDp
-                                sizeCS = radiusMenu
-                            }
-                        }
-                    },
-                    onDragCancel = {
-                        isTappedScreen = false
+            detectDragGesturesAfterLongPress(
+                onDragStart = {
+                    if (isReadyMenu) {
+                        offset = it
+                        onDragStart(it, onDragStart)
+                        startOffsetCS = offsetStartDp
+                        radius = radiusMenu
                     }
-                )
+                },
+                onDragEnd = {
+                    if (isReadyMenu) {
+                        val listDistance = listOffsetGlobal.map {
+                            (it - offset).getDistance()
+                        }
+                        val minDistance = listDistance.minOrNull()
+
+                        if (minDistance!! < radiusCircle) {
+                            listIcon[listDistance.indexOf(minDistance)].onValueSelected.invoke(
+                                navController
+                            )
+                        }
+                        isTappedScreen = false
+                        CoroutineScope(Dispatchers.IO).launch {
+                            menuClosing()
+                        }
+                        selectedTarget = StateCS.IDLE
+                    }
+                },
+                onDrag = { change, _ ->
+                    if (isReadyMenu) {
+                        offset = change.position
+
+                        val listDistance = listOffsetGlobal.map {
+                            (it - offset).getDistance()
+                        }
+                        val minDistance = listDistance.minOrNull()
+
+                        if (minDistance!! < radiusCircle) {
+                            sizeCS = radiusCircle
+                            selectedTargetOffset =
+                                listOffsetsForCircle[listDistance.indexOf(minDistance)]
+                            selectedTarget = StateCS.SELECTED
+                        } else {
+                            selectedTarget = StateCS.IDLE
+                            startOffsetCS = offsetStartDp
+                            sizeCS = radiusMenu
+                        }
+                    }
+                },
+                onDragCancel = {
+                    isTappedScreen = false
+                }
+            )
         }
+
+    private val animates = derivedStateOf {
+        val list = listIcon.map {
+            listOf(
+                Animatable(0f),
+                Animatable(0f)
+            )
+        }.toMutableList()
+        list.add(
+            listOf(
+                Animatable(0f),
+                Animatable(0f)
+            )
+        )
+        list
     }
 
+    private val animationStart by mutableStateOf(Animatable(0f))
+
+    private val offsetDpList = derivedStateOf {
+        listIconsOffsets.map {
+            DpOffset(
+                offsetStartDp.x + (it.x / density).dp - centerIcon,
+                offsetStartDp.y + (it.y / density).dp - centerIcon
+            )
+        }.toMutableList()
+    }
+
+    private val deferredList = mutableListOf<Deferred<Unit>>()
+
     @Composable
-    fun CircularTouchMenu(
-        param: SwappableMenu,
-    ) {
+    fun CircularTouchMenu() {
+
+        val animationSpec = infiniteRepeatable<Float>(
+            animation = tween(1300, easing = LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        )
+
+        DisposableEffect(key1 = isMenuOpen) {
+            onDispose {
+                animates.value.clear()
+                val list = listIcon.map {
+                    listOf(
+                        Animatable(0f),
+                        Animatable(0f)
+                    )
+                }.toMutableList()
+                list.add(
+                    listOf(
+                        Animatable(0f),
+                        Animatable(0f)
+                    )
+                )
+                animates.value.addAll(list)
+                offsetDpList.value.clear()
+                deferredList.forEach { it.cancel() }
+                deferredList.clear()
+//                offsetDpList.value.addAll(listIconsOffsets.map {
+//                    DpOffset(
+//                        offsetStartDp.x + (it.x / density).dp - centerIcon,
+//                        offsetStartDp.y + (it.y / density).dp - centerIcon
+//                    )
+//                })
+            }
+        }
+
+        LaunchedEffect(key1 = isMenuOpen) {
+
+            animationStart.animateTo(1f, animationSpec = tween(300))
+
+            animates.value.forEachIndexed { index, animatable ->
+                val deferred = async {
+                    delay(index * 125L)
+                    animatable[1].animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(
+                            durationMillis = 100
+                        )
+                    )
+                    animatable[0].animateTo(
+                        targetValue = 1f,
+                        animationSpec = animationSpec
+                    )
+                    Unit
+                }
+                deferredList.add(deferred)
+            }
+        }
 
         @Composable
-        fun CircularSelectorWidget(
-            swappableMenu: SwappableMenu,
-            animationStart: Animatable<Float, AnimationVector1D>,
-        ) {
+        fun CircularSelectorWidget() {
 
             val infiniteTransition = rememberInfiniteTransition()
 
@@ -276,34 +366,25 @@ class SwappableMenu() : CircularSelector() {
                 )
             )
 
-            val animationSize by animateFloatAsState(targetValue = if (swappableMenu.selectedTarget == StateCS.IDLE) 320f * animationStart.value else 80f)
+            val animationSize by animateFloatAsState(targetValue = if (selectedTarget == StateCS.IDLE) radiusMenu * animationStart.value else radiusCircle)
 
             val animationOffset by animateOffsetAsState(
-                targetValue = if (swappableMenu.selectedTarget == StateCS.IDLE) Offset(
-                    x = -(swappableMenu.radius * animationSpecStart) * 1.15f,
-                    y = -(swappableMenu.radius * animationSpecStart) * 1.15f,
+                targetValue = if (selectedTarget == StateCS.IDLE) Offset(
+                    x = -(radius * animationSpecStart) * 1.15f,
+                    y = -(radius * animationSpecStart) * 1.15f,
                 ) else Offset(
-                    x = -(swappableMenu.radius) * animationSpecStart / 4f + swappableMenu.selectedTargetOffset.x,
-                    y = -(swappableMenu.radius) * animationSpecStart / 4f + swappableMenu.selectedTargetOffset.y,
+                    x = -(radius) * animationSpecStart / 4f + selectedTargetOffset.x,
+                    y = -(radius) * animationSpecStart / 4f + selectedTargetOffset.y,
                 )
             )
 
             Canvas(
                 modifier = Modifier
-                    .offset(x = swappableMenu.startOffsetCS.x, y = swappableMenu.startOffsetCS.y)
-                    .rotate(if (swappableMenu.selectedTarget == StateCS.IDLE) animationRotation else 0f)
+                    .offset(x = startOffsetCS.x, y = startOffsetCS.y)
+                    .rotate(if (selectedTarget == StateCS.IDLE) animationRotation else 0f)
             ) {
 
-                val offset = if (swappableMenu.selectedTarget == StateCS.IDLE)
-                    Offset(
-                        x = -(swappableMenu.radius * animationSpecStart) * 1.15f,
-                        y = -(swappableMenu.radius * animationSpecStart) * 1.15f,
-                    ) else
-                    Offset(
-                        x = -(swappableMenu.radius) / 4f + swappableMenu.selectedTargetOffset.x,
-                        y = -(swappableMenu.radius) / 4f + swappableMenu.selectedTargetOffset.y,
-                    )
-                val size = if (swappableMenu.selectedTarget == StateCS.IDLE)
+                val size = if (selectedTarget == StateCS.IDLE)
                     Size(
                         animationSize * animationSpecStart * 2.3f,
                         animationSize * animationSpecStart * 2.3f,
@@ -312,8 +393,6 @@ class SwappableMenu() : CircularSelector() {
                         animationSize * animationSpecStart * 2f,
                         animationSize * animationSpecStart * 2f,
                     )
-
-                val widthStroke = swappableMenu.widthArcs
 
                 drawArc(
                     color = Color.White,
@@ -322,7 +401,7 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
                 drawArc(
                     color = Color.White,
@@ -331,7 +410,7 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
                 drawArc(
                     color = Color.White,
@@ -340,7 +419,7 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
                 drawArc(
                     color = Color.White,
@@ -349,7 +428,7 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
                 drawArc(
                     color = Color.White,
@@ -358,7 +437,7 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
                 drawArc(
                     color = Color.White,
@@ -367,29 +446,10 @@ class SwappableMenu() : CircularSelector() {
                     useCenter = false,
                     topLeft = animationOffset,
                     size = size,
-                    style = Stroke(width = widthStroke, cap = StrokeCap.Round)
+                    style = Stroke(width = widthArcs, cap = StrokeCap.Round)
                 )
             }
         }
-
-        val centerIcon = param.sizeIcon / 2
-
-        val animationSpec = infiniteRepeatable<Float>(
-            animation = tween(1300, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        )
-        val animatables = mutableListOf(listOf(
-            remember { Animatable(0f) },
-            remember { Animatable(0f) }
-        ))
-        param.listIcon.forEach { _ ->
-            animatables.add(listOf(
-                remember { Animatable(0f) },
-                remember { Animatable(0f) }
-            ))
-        }
-
-        val animationStart = remember { Animatable(0f) }
 
         val infiniteTransition = rememberInfiniteTransition()
 
@@ -407,117 +467,93 @@ class SwappableMenu() : CircularSelector() {
             )
         )
 
-        LaunchedEffect(key1 = Unit) {
-            animationStart.animateTo(1f, animationSpec = tween(300))
-        }
-
-        animatables.forEachIndexed { index, animatable ->
-            LaunchedEffect(Unit) {
-
-                delay(index * 200L)
-                animatable[1].animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = 100
-                    )
-                )
-//            animationStart.animateTo(1f, animationSpec = tween(300))
-                animatable[0].animateTo(
-                    targetValue = 1f,
-                    animationSpec = animationSpec
-                )
-            }
-        }
-
-        val values_list = mutableListOf<List<Float>>()
-
-        animatables.forEachIndexed { index, list ->
-            val dys = list.map { it.value }
-            values_list.add(dys)
-        }
-
         Box(
             modifier = Modifier
                 .wrapContentSize()
-        ) {
+        )
+        {
 
 
-            Canvas(
-                modifier = Modifier
-                    .offset(x = param.offsetStartDp.x, y = param.offsetStartDp.y)
-                    .wrapContentSize()
-            ) {
+            ClosedComposedFun {
+                Canvas(
+                    modifier = Modifier
+                        .offset(x = offsetStartDp.x, y = offsetStartDp.y)
+                        .wrapContentSize()
+                ) {
 
-                drawCircle(
-                    color = Color.Black,
-                    center = Offset.Zero,
-                    radius = param.radiusMenu * animationSpecStart * animationStart.value,
-                    alpha = 0.9f
-                )
-
-                values_list.forEachIndexed { index, list ->
                     drawCircle(
-                        color = Color.White,
-                        radius = param.radiusCircle * list[0],
-                        center = if (index == 0) Offset.Zero else param.listOffsetsForCircle[index - 1],
-                        alpha = 1f - list[0]
+                        color = Color.Black,
+                        center = Offset.Zero,
+                        radius = radiusMenu * animationSpecStart * animationStart.value,
+                        alpha = 0.9f
                     )
+
+                    animates.value.forEachIndexed { index, list ->
+                        drawCircle(
+                            color = Color.White,
+                            radius = radiusCircle * list[0].value,
+                            center = if (index == 0) Offset.Zero else listOffsetsForCircle[index - 1],
+                            alpha = 1f - list[0].value
+                        )
+                    }
                 }
             }
 
-            CircularSelectorWidget(
-                param,
-                animationStart
-            )
+            ClosedComposedFun {
+                CircularSelectorWidget()
+            }
 
-            values_list.forEachIndexed { index, list ->
-                if (index > 0) {
+            ClosedComposedFun {
 
-                    val item = param.listIcon[index - 1]
+                animates.value.forEachIndexed { index, list ->
+                    if (index > 0) {
 
-                    val offsetS = DpOffset(
-                        param.offsetStartDp.x + (param.listOffsetsForCircle[index - 1].x / param.density).dp - centerIcon,
-                        param.offsetStartDp.y + (param.listOffsetsForCircle[index - 1].y / param.density).dp - centerIcon
-                    )
-                    if (item.isAnimate) {
-                        repeat(item.animationImages.size) { index ->
+                        val item = listIcon[index - 1]
 
-                            var degrees = 0f
-
-                            val offset = when (index) {
-                                0 -> {
-                                    degrees = -15f
-                                    DpOffset(offsetS.x - 12.dp, offsetS.y)
-                                }
-                                2 -> DpOffset(offsetS.x, offsetS.y)
-                                1 -> {
-                                    degrees = 15f
-                                    DpOffset(offsetS.x + 12.dp, offsetS.y)
-                                }
-                                else -> {
-                                    DpOffset.Zero
-                                }
-                            }
-
+//                        val offsetS = DpOffset(
+//                            offsetStartDp.x + (listOffsetsForCircle[index - 1].x / density).dp - centerIcon,
+//                            offsetStartDp.y + (listOffsetsForCircle[index - 1].y / density).dp - centerIcon
+//                        )
+//                        if (item.isAnimate) {
+//                            repeat(item.animationImages.size) { index ->
+//
+//                                var degrees = 0f
+//
+//                                val offset = when (index) {
+//                                    0 -> {
+//                                        degrees = -15f
+//                                        DpOffset(offsetS.x - 12.dp, offsetS.y)
+//                                    }
+//                                    2 -> DpOffset(offsetS.x, offsetS.y)
+//                                    1 -> {
+//                                        degrees = 15f
+//                                        DpOffset(offsetS.x + 12.dp, offsetS.y)
+//                                    }
+//                                    else -> {
+//                                        DpOffset.Zero
+//                                    }
+//                                }
+//
+//                                Image(
+//                                    painter = painterResource(id = item.animationImages[index]),
+//                                    contentDescription = null,
+//                                    modifier = Modifier
+//                                        .offset(x = offset.x, y = offset.y)
+//                                        .size(sizeIcon)
+//                                        .rotate(degrees)
+//                                        .alpha(1f),
+//                                )
+//                            }
+//                        } else
                             Image(
-                                painter = painterResource(id = item.animationImages[index]),
+                                painter = painterResource(id = item.Image),
                                 contentDescription = null,
                                 modifier = Modifier
-                                    .offset(x = offset.x, y = offset.y)
-                                    .size(param.sizeIcon)
-                                    .rotate(degrees)
-                                    .alpha(1f),
+                                    .offset(x = offsetDpList.value[index-1].x, y = offsetDpList.value[index-1].y)
+                                    .size(sizeIcon)
+                                    .alpha(list[0].value),
                             )
-                        }
-                    } else
-                        Image(
-                            painter = painterResource(id = item.Image),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .offset(x = offsetS.x, y = offsetS.y)
-                                .size(param.sizeIcon)
-                                .alpha(list[1]),
-                        )
+                    }
                 }
             }
         }

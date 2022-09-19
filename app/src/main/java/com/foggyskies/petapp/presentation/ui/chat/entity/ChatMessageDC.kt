@@ -1,12 +1,13 @@
 package com.foggyskies.petapp.presentation.ui.chat.entity
 
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ChatMessageDC(
 //    @SerialName(value = "_id")
+    @SerialName("_id")
     var id: String,
     var idUser: String,
     var author: String = "",
@@ -27,9 +28,9 @@ data class ChatMessageDC(
 }
 @Serializable
 data class FileDC(
-    val name: String,
-    val size: String,
-    val type: String,
+    val name: String = "",
+    val size: String = "",
+    val type: String = "",
     val path: String
 ){
     val fullName = "$name.$type"

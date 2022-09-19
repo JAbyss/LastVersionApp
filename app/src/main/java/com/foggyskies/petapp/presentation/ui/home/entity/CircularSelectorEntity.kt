@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpOffset
 
-enum class StateCS{
+enum class StateCS {
     IDLE, SELECTED
 }
 
@@ -18,8 +18,8 @@ open class CircularSelector {
     var sizeCS by mutableStateOf(0f)
 
     val widthArcs by derivedStateOf {
-       if (selectedTarget == StateCS.IDLE)
-           30f
+        if (selectedTarget == StateCS.IDLE)
+            30f
         else
             10f
     }

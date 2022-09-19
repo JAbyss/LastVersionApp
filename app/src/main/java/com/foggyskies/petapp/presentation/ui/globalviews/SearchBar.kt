@@ -32,13 +32,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.foggyskies.petapp.MainSocketViewModel
 import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.mainmenu.MenuViewModel
+import com.foggyskies.petapp.presentation.ui.mainmenu.requests.searchUser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @SuppressLint("MutatingSharedPrefs")
 @Composable
-fun SearchBar(msViewModel: MainSocketViewModel) {
+fun SearchBar(viewModel: MenuViewModel) {
 
     val focus_manager = LocalFocusManager.current
 
@@ -93,9 +95,8 @@ fun SearchBar(msViewModel: MainSocketViewModel) {
                                     focus_manager.clearFocus()
                                 }
                             }
-                        } else {
-                            msViewModel.sendMessage(search_value.value)
-                            }
+                        } else
+                            viewModel.searchUser(search_value.value)
                     },
                     label = {
                         Text(

@@ -1,8 +1,9 @@
 package com.foggyskies.petapp.presentation.ui.globalviews.post.sidescreens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.stopScroll
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -15,14 +16,11 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -31,19 +29,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.chat.entity.CommentDC
-import com.foggyskies.petapp.presentation.ui.home.PostScreenHandler
-import com.foggyskies.petapp.presentation.ui.profile.human.views.ClosedComposedFun
+import com.foggyskies.petapp.presentation.ui.home.widgets.post.PostScreenHandler
 import com.foggyskies.petapp.routs.Routes
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CommentsScreen(
     state: LazyListState,
     postScreenHandler: PostScreenHandler
 ) {
-    var context = LocalContext.current
-
 
     @Composable
     fun OneItemComment(users: HashMap<String, UserIUSI>, item: CommentDC) {
@@ -51,7 +44,6 @@ fun CommentsScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-//                .fillMaxHeight(0.85f)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,7 +56,7 @@ fun CommentsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    Box() {
+                    Box {
                         AsyncImage(
                             model = "${Routes.SERVER.REQUESTS.BASE_URL}/${users[item.idUser]?.image}",
                             contentDescription = null,
@@ -112,15 +104,15 @@ fun CommentsScreen(
                     )
                     TextButton(
                         onClick = {
-                            if (!postScreenHandler.commentValue.text.startsWith('@')) {
+                            if (!postScreenHandler.commentValue.value.text.startsWith('@')) {
                                 val user = "@${users[item.idUser]?.username!!} "
-                                val selection = postScreenHandler.commentValue.selection
+                                val selection = postScreenHandler.commentValue.value.selection
                                 val textRange = TextRange(
                                     selection.start + user.length,
                                     selection.end + user.length
                                 )
-                                postScreenHandler.commentValue = TextFieldValue(
-                                    user + postScreenHandler.commentValue.text,
+                                postScreenHandler.commentValue.value = TextFieldValue(
+                                    user + postScreenHandler.commentValue.value.text,
                                     selection = textRange
                                 )
                             }
@@ -200,29 +192,29 @@ fun CommentsScreen(
                             modifier = Modifier
                                 .fillMaxWidth(0.9f)
                                 .clickable {
-                                    if (postScreenHandler.commentValue.annotatedString.contains('@')) {
-                                        val value = postScreenHandler.commentValue.text
-                                        val selection = postScreenHandler.commentValue.selection
+                                    if (postScreenHandler.commentValue.value.annotatedString.contains('@')) {
+                                        val value = postScreenHandler.commentValue.value.text
+                                        val selection = postScreenHandler.commentValue.value.selection
                                         val user = user.username
                                         val text = value.toMutableList()
                                         text.addAll(
-                                            postScreenHandler.commentValue.selection.end,
+                                            postScreenHandler.commentValue.value.selection.end,
                                             user.toList()
                                         )
                                         var string = ""
                                         text.map {
                                             string += it
                                         }
-                                        postScreenHandler.commentValue = TextFieldValue(
+                                        postScreenHandler.commentValue.value = TextFieldValue(
                                             string,
                                             selection = TextRange(
                                                 selection.start + user.length,
                                                 selection.end + user.length
                                             )
                                         )
-                                    } else if (postScreenHandler.commentValue.annotatedString.isEmpty()){
-                                        val selection = postScreenHandler.commentValue.selection
-                                        postScreenHandler.commentValue = TextFieldValue(
+                                    } else if (postScreenHandler.commentValue.value.annotatedString.isEmpty()){
+                                        val selection = postScreenHandler.commentValue.value.selection
+                                        postScreenHandler.commentValue.value = TextFieldValue(
                                             "@${user.username} ",
                                             selection = TextRange(
                                                 selection.start + user.username.length,
@@ -230,7 +222,6 @@ fun CommentsScreen(
                                             )
                                         )
                                     }
-//
                                     postScreenHandler.isTagMenuOpen = false
                                 }
                         ) {

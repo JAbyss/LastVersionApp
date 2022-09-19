@@ -1,11 +1,9 @@
 package com.foggyskies.petapp.presentation.ui.chat.customui
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -21,7 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.chat.ChatViewModel
-import com.foggyskies.petapp.presentation.ui.profile.human.MENUS
+import com.foggyskies.petapp.presentation.ui.profile.MENUS
 import com.foggyskies.testingscrollcompose.extendfun.forEachKeys
 import kotlinx.coroutines.launch
 import java.io.File

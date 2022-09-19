@@ -148,18 +148,6 @@ fun OneNotificationMessage(
                         Spacer(modifier = Modifier.height(5.dp))
                         Text(
                             text = item.new_message.message,
-//                            if (item.new_message.message.isNotEmpty())
-//                                if (item.new_message.listImages.isNotEmpty())
-//                                    "${item.new_message.message}\n${if (item.new_message.listImages.size == 1) "Избражение" else "Изображения: ${item.new_message.listImages.size}"}"
-//                                else
-//                                    item.new_message.message
-//                            else if (item.new_message.listImages.isNotEmpty())
-//                                if (item.new_message.listImages.size == 1)
-//                                    "Избражение"
-//                                else
-//                                    "Изображения: ${item.new_message.listImages.size}"
-//                            else
-//                                "",
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                             modifier = Modifier.fillMaxWidth()

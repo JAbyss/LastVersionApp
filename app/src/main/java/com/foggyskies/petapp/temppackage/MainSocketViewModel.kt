@@ -4,15 +4,14 @@ import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.foggyskies.petapp.domain.repository.RepositoryUserDB
 import com.foggyskies.petapp.presentation.ui.adhomeless.entity.UserIUSI
 import com.foggyskies.petapp.presentation.ui.chat.entity.ChatMessageDC
 import com.foggyskies.petapp.presentation.ui.chat.entity.FileDC
-import com.foggyskies.petapp.presentation.ui.globalviews.FormattedChatDC
 import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
-import com.foggyskies.petapp.presentation.ui.home.UsersSearchState
-import com.foggyskies.petapp.presentation.ui.profile.human.PageProfileFormattedDC
+import com.foggyskies.petapp.presentation.ui.home.widgets.post.UsersSearchState
+import com.foggyskies.petapp.presentation.ui.mainmenu.screens.FormattedChatDC
+import com.foggyskies.petapp.presentation.ui.profile.PageProfileFormattedDC
 import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.BASE_URL
 import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.CLOUD_ALL_TREE
@@ -20,22 +19,18 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.websocket.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.cio.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import okhttp3.Route
 import org.koin.java.KoinJavaComponent.inject
 import java.io.File
 
@@ -117,24 +112,24 @@ class MainSocketViewModel : ViewModel() {
     var listFriends by mutableStateOf(mutableListOf<UserIUSI>())
 
 
-    fun connectToSearchUsers() {
-        if (MainActivity.isNetworkAvailable.value)
-            CoroutineScope(Dispatchers.IO).launch {
-                val client = HttpClient(CIO) {
-                    install(WebSockets)
-                }
-                socket = client.webSocketSession {
-                    url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/user")
-                    header("Auth", MainActivity.TOKEN)
-                }
-                observeMessages().onEach { user ->
-
-                    _users.value = users.value.copy(
-                        users = user
-                    )
-                }.launchIn(this)
-            }
-    }
+//    fun connectToSearchUsers() {
+//        if (MainActivity.isNetworkAvailable.value)
+//            CoroutineScope(Dispatchers.IO).launch {
+//                val client = HttpClient(CIO) {
+//                    install(WebSockets)
+//                }
+//                socket = client.webSocketSession {
+//                    url("${Routes.SERVER.WEBSOCKETCOMMANDS.BASE_URL}/user")
+//                    header("Auth", MainActivity.TOKEN)
+//                }
+//                observeMessages().onEach { user ->
+//
+//                    _users.value = users.value.copy(
+//                        users = user
+//                    )
+//                }.launchIn(this)
+//            }
+//    }
 
     suspend fun observeMessages(): Flow<List<UsersSearch>> {
 
@@ -153,12 +148,12 @@ class MainSocketViewModel : ViewModel() {
         }
     }
 
-    fun sendMessage(username: String) {
-        if (MainActivity.isNetworkAvailable.value)
-            CoroutineScope(Dispatchers.IO).launch {
-                socket?.send(username)
-            }
-    }
+//    fun sendMessage(username: String) {
+//        if (MainActivity.isNetworkAvailable.value)
+//            CoroutineScope(Dispatchers.IO).launch {
+//                socket?.send(username)
+//            }
+//    }
 
     fun disconnect() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -171,9 +166,9 @@ class MainSocketViewModel : ViewModel() {
     fun getFriends() {
         CoroutineScope(Dispatchers.IO).launch {
             HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -186,7 +181,7 @@ class MainSocketViewModel : ViewModel() {
             }.use {
                 listFriends = it.get("$BASE_URL/friends") {
                     this.headers["Auth"] = MainActivity.TOKEN
-                }
+                }.body()
             }
         }
     }
@@ -194,9 +189,9 @@ class MainSocketViewModel : ViewModel() {
     fun getRequestsFriend() {
         CoroutineScope(Dispatchers.IO).launch {
             HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -209,26 +204,26 @@ class MainSocketViewModel : ViewModel() {
             }.use {
                 listFriends = it.get("$BASE_URL/friends") {
                     this.headers["Auth"] = MainActivity.TOKEN
-                }
+                }.body()
             }
         }
     }
 
-    fun sendAction(action: String) {
-        if (MainActivity.isNetworkAvailable.value)
-//            if (action.contains("loadFile|"))
-            CoroutineScope(Dispatchers.IO).launch {
-                if (mainSocket == null) {
-                    createMainSocket()
-                    do {
-                        delay(500)
-                        mainSocket?.send(action)
-                    } while (mainSocket == null)
-                } else {
-                    mainSocket?.send(action)
-                }
-            }
-    }
+//    fun sendAction(action: String) {
+//        if (MainActivity.isNetworkAvailable.value)
+////            if (action.contains("loadFile|"))
+//            CoroutineScope(Dispatchers.IO).launch {
+//                if (mainSocket == null) {
+//                    createMainSocket()
+//                    do {
+//                        delay(500)
+//                        mainSocket?.send(action)
+//                    } while (mainSocket == null)
+//                } else {
+//                    mainSocket?.send(action)
+//                }
+//            }
+//    }
 
     private fun observeActions(): Flow<String> {
 
@@ -257,9 +252,9 @@ class MainSocketViewModel : ViewModel() {
             var idUser = ""
 
             HttpClient(Android) {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -272,7 +267,7 @@ class MainSocketViewModel : ViewModel() {
             }.use {
                 idUser = it.post("$BASE_URL/createMainSocket") {
                     this.headers["Auth"] = MainActivity.TOKEN
-                }
+                }.bodyAsText()
             }
 
             val client = HttpClient(CIO) {
@@ -439,9 +434,9 @@ class MainSocketViewModel : ViewModel() {
         CoroutineScope(Dispatchers.IO).launch {
 
             HttpClient(Android){
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer()
-                }
+//                install(JsonFeature) {
+//                    serializer = KotlinxSerializer()
+//                }
 //                install(ContentNegotiation){
 //                    json(Json {
 //                        prettyPrint = true
@@ -456,7 +451,7 @@ class MainSocketViewModel : ViewModel() {
                     headers["Auth"] = MainActivity.TOKEN
                 }
                 if (response.status.isSuccess()){
-                    listFiles = response.receive()
+                    listFiles = response.body()
                 }
             }
         }

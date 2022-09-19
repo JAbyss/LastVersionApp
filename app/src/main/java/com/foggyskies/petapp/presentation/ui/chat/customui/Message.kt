@@ -77,8 +77,6 @@ fun Message(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-//                        .background(Color(0xFFDAE0E4))
-//                        .background(Color(0x3366CDAA))
                         .background(Color(0x22708090))
                         .requiredWidthIn(max = maxWidth * 0.75f)
                 ) {
@@ -95,8 +93,8 @@ fun Message(
 
                             IconButton(
                                 onClick = {
-                                    if (!isFileExist)
-                                        msViewModel.sendAction("loadFile|${message.listFiles.last().path}|${message.listFiles.last().name}|")
+//                                    if (!isFileExist)
+//                                        msViewModel.sendAction("loadFile|${message.listFiles.last().path}|${message.listFiles.last().name}|")
                                 },
                                 modifier = Modifier
                                     .clip(CircleShape)
@@ -182,7 +180,7 @@ fun Message(
                         )
                     } else if (message.listImages.size > 1) {
 
-                        message.listImages.windowed(2, 2, false).forEach { list ->
+                        message.listImages.windowed(2, 2, true).forEach { list ->
                             Row(Modifier.padding(7.dp)) {
                                 val imageLink = "${Routes.SERVER.REQUESTS.BASE_URL}/${list[0]}"
 
@@ -273,7 +271,7 @@ fun Message(
                             modifier = Modifier
                                 .padding(horizontal = 10.dp)
                         )
-                        val regexTime = "(?<=г. ).+(?=:)".toRegex()
+                        val regexTime = "(?<= г. ).+(?=:)".toRegex()
                         val result = regexTime.find(message.date)?.value!!
                         Text(
                             text = result,
@@ -292,7 +290,7 @@ fun Message(
         }
 
         if (message.message == "") {
-            val regexTime = "(?<=г. ).+(?=:)".toRegex()
+            val regexTime = "(?<= г. ).+(?=:)".toRegex()
             val result = regexTime.find(message.date)?.value!!
             Text(
                 text = result,
