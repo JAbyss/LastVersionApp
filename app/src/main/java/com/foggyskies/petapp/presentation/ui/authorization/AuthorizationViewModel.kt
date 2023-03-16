@@ -50,7 +50,7 @@ class AuthorizationViewModel : ViewModel(), CustomError {
 
     var selectedTextField by mutableStateOf("")
 
-    var login = mutableStateOf("JAbyss")
+    var login = mutableStateOf("QWer")
     var email = mutableStateOf("")
     var password = mutableStateOf("563214789Qq")
 
@@ -114,7 +114,7 @@ class AuthorizationViewModel : ViewModel(), CustomError {
 
                         val loginUserDC = LoginUserDC(
                             username = login.value,
-                            password = PasswordCoder.encodeStringFS(password.value)
+                            password = password.value
                         )
                         Log.e("TOKENNNNNNN", loginUserDC.toString())
                         Log.e("NETWORK", MainActivity.isNetworkAvailable.value.toString())

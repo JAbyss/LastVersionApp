@@ -15,8 +15,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.foggyskies.petapp.R
+import com.foggyskies.petapp.presentation.ui.home.entity.ItemSwappableMenu
+import com.foggyskies.petapp.presentation.ui.home.entity.SwappableMenu
 import com.foggyskies.petapp.presentation.ui.home.widgets.post.PostScreenHandler
 import com.foggyskies.petapp.presentation.ui.mainmenu.BottomSheetMenu
+import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -25,6 +29,30 @@ fun HomeScreen(
     viewModel: HomeMVIModel,
     nav_controller: NavHostController
 ) {
+    val listIconHome = listOf(
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_profile,
+            position = SwappableMenu.PositionsIcons.TOP,
+            onValueSelected = {
+                nav_controller.navigate(NavTree.Profile.name)
+            }),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_menu_ads,
+            position = SwappableMenu.PositionsIcons.TOP_LEFT,
+            onValueSelected = {
+//                nav_controller.navigate(NavTree.AdsHomeless.name)
+            }
+        ),
+        ItemSwappableMenu(
+            Image = R.drawable.ic_gamepad,
+            position = SwappableMenu.PositionsIcons.LEFT,
+            onValueSelected = {
+//                nav_controller.navigate(NavTree.Home.name)
+            })
+    )
+
+    viewModel.initCustomMenu(listIconHome)
+
 //    BackHandler(enabled = msViewModel.isVisibleCloudMenu) {
 //        if (msViewModel.isVisibleCloudMenu) {
 //            msViewModel.isVisibleCloudMenu = false
@@ -39,8 +67,8 @@ fun HomeScreen(
     val displayMetrics = LocalContext.current.resources.displayMetrics
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.swipableMenu.density = displayMetrics.density
-        viewModel.swipableMenu.sizeScreen =
+        viewModel.swipableMenu?.density = displayMetrics.density
+        viewModel.swipableMenu?.sizeScreen =
             Size(
                 width = displayMetrics.widthPixels.toFloat(),
                 height = displayMetrics.heightPixels.toFloat()
@@ -94,7 +122,7 @@ fun ContentScreen(bottomSheetState: ModalBottomSheetState, viewModel: HomeMVIMod
     Box(
         modifier = Modifier
             .pointerInput(Unit) {
-                viewModel.swipableMenu.touchMenuListener(this) {
+                viewModel.swipableMenu?.touchMenuListener(this) {
                     scope.launch {
                         bottomSheetState.animateTo(ModalBottomSheetValue.Expanded)
                     }
@@ -144,6 +172,7 @@ fun ContentScreen(bottomSheetState: ModalBottomSheetState, viewModel: HomeMVIMod
         SideEffect {
             Log.e("ТУТ ПЗИДЕЦ", "animatables[0][0].value.value .toString()")
         }
+
         if (viewModel.swipableMenu.isTappedScreen)
             viewModel.swipableMenu.CircularTouchMenu()
 

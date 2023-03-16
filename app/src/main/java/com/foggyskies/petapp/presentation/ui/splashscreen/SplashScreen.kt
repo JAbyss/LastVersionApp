@@ -16,15 +16,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.foggyskies.petapp.PasswordCoder
 import com.foggyskies.petapp.R
 import com.foggyskies.petapp.data.sharedpreference.MainPreference
 import com.foggyskies.petapp.presentation.ui.authorization.models.LoginUserDC
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
-import com.foggyskies.petapp.presentation.ui.splashscreen.requests.auth
 import com.foggyskies.petapp.presentation.ui.splashscreen.requests.checkToken
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(nav_controller: NavHostController) {
@@ -36,46 +33,67 @@ fun SplashScreen(nav_controller: NavHostController) {
                     inclusive = true
                 }
             }
-        } else
+        } else {
             checkToken(
-                onOk = {
-//                        CoroutineScope(Main).launch {
+                data = LoginUserDC(
+                    username = MainPreference.Username ?: "",
+                    password = MainPreference.Password
+                ),
+                onSuccess = {
                     nav_controller.navigate(NavTree.Home.name) {
                         popUpTo(NavTree.Splash.name) {
                             inclusive = true
                         }
                     }
-//                        }
                 },
-                onError = {
-                    this.launch {
-                        auth(
-                            data = LoginUserDC(
-                                username = MainPreference.Username ?: "",
-                                password = PasswordCoder.encodeStringFS(MainPreference.Password)
-                            ),
-                            onOk = {
-//                                    CoroutineScope(Main).launch {
-                                nav_controller.navigate(NavTree.Home.name) {
+                onFailure = {
+                    nav_controller.navigate(NavTree.Authorization.name) {
                                     popUpTo(NavTree.Splash.name) {
                                         inclusive = true
                                     }
-                                }
-//                                    }
-                            },
-                            onError = {
-//                                    CoroutineScope(Main).launch {
-                                nav_controller.navigate(NavTree.Authorization.name) {
-                                    popUpTo(NavTree.Splash.name) {
-                                        inclusive = true
-                                    }
-                                }
-//                                    }
-                            }
-                        )
                     }
                 }
             )
+        }
+//            checkToken(
+//                onOk = {
+////                        CoroutineScope(Main).launch {
+//                    nav_controller.navigate(NavTree.Home.name) {
+//                        popUpTo(NavTree.Splash.name) {
+//                            inclusive = true
+//                        }
+//                    }
+////                        }
+//                },
+//                onError = {
+//                    this.launch {
+//                        auth(
+//                            data = LoginUserDC(
+//                                username = MainPreference.Username ?: "",
+//                                password = PasswordCoder.encodeStringFS(MainPreference.Password)
+//                            ),
+//                            onOk = {
+////                                    CoroutineScope(Main).launch {
+//                                nav_controller.navigate(NavTree.Home.name) {
+//                                    popUpTo(NavTree.Splash.name) {
+//                                        inclusive = true
+//                                    }
+//                                }
+////                                    }
+//                            },
+//                            onError = {
+////                                    CoroutineScope(Main).launch {
+//                                nav_controller.navigate(NavTree.Authorization.name) {
+//                                    popUpTo(NavTree.Splash.name) {
+//                                        inclusive = true
+//                                    }
+//                                }
+////                                    }
+//                            }
+//                        )
+//                    }
+//                }
+//            )
     }
 
     Content()

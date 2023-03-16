@@ -96,7 +96,8 @@ fun LazyListScope.HeadProfile(
                             }
                         } else {
                             val request = ImageRequest.Builder(context)
-                                .data("${Routes.SERVER.REQUESTS.BASE_URL}/$targetImage")
+                                .data("${Routes.UploadSever.BASE_URL}/$targetImage")
+//                                .data("${Routes.SERVER.REQUESTS.BASE_URL}/$targetImage")
                                 .crossfade(true)
                                 .build()
 //                        loader.enqueue(request)

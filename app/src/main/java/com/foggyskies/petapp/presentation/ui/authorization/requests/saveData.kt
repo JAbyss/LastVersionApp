@@ -9,7 +9,16 @@ fun saveData(
     data: SaveAuthData
 ) {
     MainPreference.Token = data.idToken
-    MainPreference.IdUser = data.idUser
+    //fixme Надо разобраться
+//    MainPreference.IdUser = data.idUser
     MainPreference.Username = data.username
     MainPreference.Password = data.password
+}
+
+fun saveToken(
+    token: String
+) {
+    MainPreference.Token = token
+    //fixme Надо разобраться
+//    MainPreference.IdUser = data.idUser
 }

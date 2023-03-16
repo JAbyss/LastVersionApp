@@ -66,7 +66,9 @@ import java.io.File
 )
 @Composable
 fun ProfileScreen(
-    nav_controller: NavHostController, viewModel: ProfileViewModel
+    nav_controller: NavHostController,
+    viewModel: ProfileViewModel,
+    uploadingViewModel: UploadFileViewModel
 ) {
     LaunchedEffect(key1 = Unit) {
         if (viewModel.userMode == UserMode.OWNER) {
@@ -125,18 +127,29 @@ fun ProfileScreen(
                                 MainPreference.IdUser
                             )
 
-                            val readyPath = uploadFile(
+                            val readyPath = uploadingViewModel.uploadFile(
                                 File(it),
                                 bodyFile,
                                 isCompressed = true
                             )
-                            if (viewModel.stateProfile == StateProfile.HUMAN) {
-                                viewModel.changeAvatar(readyPath)
-                            } else
-                                viewModel.changeAvatarProfile(
-                                    readyPath,
-                                    viewModel.selectedPage.id
-                                )
+                            readyPath.onSuccess { path ->
+                                if (viewModel.stateProfile == StateProfile.HUMAN) {
+
+                                    viewModel.changeAvatar(path)
+                                } else
+                                    viewModel.changeAvatarProfile(
+                                        path,
+                                        viewModel.selectedPage.id
+                                    )
+                            }
+//                            if (viewModel.stateProfile == StateProfile.HUMAN) {
+//                                //fixme надо переделать
+//                                viewModel.changeAvatar(readyPath!!)
+//                            } else
+//                                viewModel.changeAvatarProfile(
+//                                    readyPath!!,
+//                                    viewModel.selectedPage.id
+//                                )
                         }
                     },
                     bottomSheetState = stateSheet
@@ -164,7 +177,7 @@ fun ProfileScreen(
 
                 HeadProfile(viewModel = viewModel, state = state, context, stateSheet)
 
-                MainProfilePages(viewModel)
+                MainProfilePages(viewModel, uploadingViewModel)
 
                 item {
                     AnimatedVisibility(visible = viewModel.stateProfile == StateProfile.PET) {
@@ -321,7 +334,8 @@ fun ProfileScreen(
                             .clip(RoundedCornerShape(20.dp))
                             .height(345.dp)
                             .width(287.5.dp)
-                            .align(Center)
+                            .align(Center),
+                        uploadFileViewModel = uploadingViewModel
                     )
                 }
             }
@@ -330,7 +344,7 @@ fun ProfileScreen(
                 modifier = Modifier.align(Center)
             ) {
                 FullInvisibleBack(onBackClick = { viewModel.menuHelper.changeVisibilityMenu(MENUS.NEWCONTENT) }) {
-                    AddNewImage(viewModel)
+                    AddNewImage(viewModel, uploadingViewModel)
                 }
             }
             //FIXME ХУЙ ЗНАЕТ ЧТО ТУТ
@@ -371,7 +385,8 @@ fun ProfileScreen(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BoxScope.AddNewImage(
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel,
+    uploadingViewModel: UploadFileViewModel
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -485,7 +500,8 @@ fun BoxScope.AddNewImage(
                     viewModel.newPost(
                         path,
                         idPage = viewModel.selectedPage.id,
-                        description = viewModel.descriptionMenuNewContent
+                        description = viewModel.descriptionMenuNewContent,
+                        uploadViewModel = uploadingViewModel
                     )
                 }
             }, modifier = Modifier.padding(top = 22.dp)

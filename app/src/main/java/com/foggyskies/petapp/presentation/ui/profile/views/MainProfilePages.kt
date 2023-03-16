@@ -16,9 +16,10 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.profile.StateProfile
 import com.foggyskies.petapp.presentation.ui.profile.UserMode
+import com.foggyskies.petapp.workers.UploadFileViewModel
 
 //@Composable
-fun LazyListScope.MainProfilePages(viewModel: ProfileViewModel) {
+fun LazyListScope.MainProfilePages(viewModel: ProfileViewModel,uploadFileViewModel: UploadFileViewModel) {
 
     item {
 
@@ -58,7 +59,8 @@ fun LazyListScope.MainProfilePages(viewModel: ProfileViewModel) {
                                 },
                                 index,
                                 item,
-                                viewModel
+                                viewModel,
+                                uploadFileViewModel = uploadFileViewModel
                             )
                             Spacer(modifier = Modifier.height(30.dp))
 //                        }

@@ -12,13 +12,15 @@ import com.foggyskies.petapp.R
 import com.foggyskies.petapp.presentation.ui.profile.PageProfileFormattedDC
 import com.foggyskies.petapp.presentation.ui.profile.ProfileViewModel
 import com.foggyskies.petapp.presentation.ui.profile.UserMode
+import com.foggyskies.petapp.workers.UploadFileViewModel
 
 @Composable
 fun PetsWidget(
     onClickPetCard: (String, String) -> Unit,
     index: Int,
     item: PageProfileFormattedDC,
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel,
+    uploadFileViewModel: UploadFileViewModel
 ) {
 
     if (index == 0 && viewModel.userMode == UserMode.OWNER) {
@@ -46,7 +48,8 @@ fun PetsWidget(
     PetCard(
         item = item,
         onClickPetCard,
-        viewModel
+        viewModel,
+        uploadFileViewModel = uploadFileViewModel
     )
     Spacer(modifier = Modifier.width(20.dp))
 }

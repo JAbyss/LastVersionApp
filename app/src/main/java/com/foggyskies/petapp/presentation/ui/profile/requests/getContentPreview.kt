@@ -5,6 +5,8 @@ import com.foggyskies.petapp.BuildConfig
 import com.foggyskies.petapp.cRequest
 import com.foggyskies.petapp.checkInternet
 import com.foggyskies.petapp.data.sharedpreference.MainPreference
+import com.foggyskies.petapp.httpRequest
+import com.foggyskies.petapp.presentation.ui.authorization.client.AuthHeader
 import com.foggyskies.petapp.presentation.ui.authorization.client.clientJson
 import com.foggyskies.petapp.presentation.ui.profile.ContentPreviewDC
 import com.foggyskies.petapp.presentation.ui.profile.ProfileViewModel
@@ -18,26 +20,32 @@ import kotlinx.coroutines.withContext
 
 fun ProfileViewModel.contentPreview(idPageProfile: String){
     backgroundScope.launch {
-        checkInternet(
-            request = {
-                cRequest<List<ContentPreviewDC>>(
-                    response = getContentPreview(idPageProfile),
-                    onOk = {
-                        withContext(Main){
-                            listPostImages = it
-                        }
-                    }
-                )
+        val response = httpRequest<List<ContentPreviewDC>>(getContentPreviewRaw(idPageProfile))
+        response.onSuccess {
+            withContext(Main){
+                listPostImages = it
             }
-        )
+        }
+//        checkInternet(
+//            request = {
+//                cRequest<List<ContentPreviewDC>>(
+//                    response = getContentPreview(idPageProfile),
+//                    onOk = {
+//                        withContext(Main){
+//                            listPostImages = it
+//                        }
+//                    }
+//                )
+//            }
+//        )
     }
 }
 
-suspend fun getContentPreview(data: String): HttpResponse {
+private suspend fun getContentPreviewRaw(data: String): Result<HttpResponse> = runCatching {
     clientJson.use {
-        return it.get(Routes.SERVER.REQUESTS.BASE_URL + CONTENT_PAGE){
+        return@use it.get(Routes.SERVER.REQUESTS.BASE_URL + CONTENT_PAGE){
             contentType(ContentType.Application.Json)
-            headers[BuildConfig.Authorization] = MainPreference.Token
+            AuthHeader
             parameter("idPageProfile", data)
         }
     }

@@ -36,12 +36,20 @@ enum class SideScreen {
 //    var onValueSelected: (NavHostController) -> Unit = {}
 //)
 
+//data class ItemSwappableMenu(
+//    var Image: Int,
+//    var isAnimate: Boolean = false,
+//    var animationImages: List<Int> = emptyList(),
+//    var position: SwappableMenu.PositionsIcons,
+//    var onValueSelected: (NavHostController) -> Unit = {}
+//)
+
 data class ItemSwappableMenu(
     var Image: Int,
     var isAnimate: Boolean = false,
     var animationImages: List<Int> = emptyList(),
     var position: SwappableMenu.PositionsIcons,
-    var onValueSelected: (NavHostController) -> Unit = {}
+    var onValueSelected: () -> Unit = {}
 )
 
 //data class SwappableIconSetting(
@@ -204,9 +212,7 @@ class SwappableMenu() : CircularSelector() {
                         val minDistance = listDistance.minOrNull()
 
                         if (minDistance!! < radiusCircle) {
-                            listIcon[listDistance.indexOf(minDistance)].onValueSelected.invoke(
-                                navController
-                            )
+                            listIcon[listDistance.indexOf(minDistance)].onValueSelected()
                         }
                         isTappedScreen = false
                         CoroutineScope(Dispatchers.IO).launch {

@@ -80,8 +80,39 @@ object Routes {
 
             //            const val FILE_LOAD = "/subscribes/fileLoad"
             const val FILE_LOAD = "/fileLoad"
+            const val UPLOADING_FILE = "/uploadingFile"
 
         }
+    }
+
+    object AuthServer{
+
+        const val port = 22221
+
+        const val BASE_URL = "http://" + BuildConfig.BaseIP + ":" + port
+
+        const val authSession = "/authSession"
+        const val verifyToken = "/verifyToken"
+
+        const val requestAuthSession = BASE_URL + authSession
+        const val requestVerifyToken = BASE_URL + verifyToken
+
+    }
+
+    object UploadSever{
+        const val port = 38142
+
+        const val BASE_URL = "http://" + BuildConfig.BaseIP + ":" + port
+
+        const val registrationUpload = "/registrationUpload"
+        const val uploadingFile = "/uploadingFile"
+        const val finishUpload = "/finishUpload"
+        const val route = "/uploading"
+
+        const val requestRegistration = BASE_URL + route + registrationUpload
+        const val requestUploading = BASE_URL + route + uploadingFile
+        const val requestFinish = BASE_URL + route + finishUpload
+
     }
 
     object FILE {

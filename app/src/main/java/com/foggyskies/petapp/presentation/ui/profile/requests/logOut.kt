@@ -5,6 +5,8 @@ import com.foggyskies.petapp.BuildConfig
 import com.foggyskies.petapp.cRequest
 import com.foggyskies.petapp.checkInternet
 import com.foggyskies.petapp.data.sharedpreference.MainPreference
+import com.foggyskies.petapp.httpRequest
+import com.foggyskies.petapp.presentation.ui.authorization.client.AuthHeader
 import com.foggyskies.petapp.presentation.ui.authorization.client.clientJson
 import com.foggyskies.petapp.presentation.ui.navigationtree.NavTree
 import com.foggyskies.petapp.presentation.ui.profile.ProfileViewModel
@@ -18,26 +20,33 @@ import kotlinx.coroutines.withContext
 
 fun ProfileViewModel.logOut(nav_controller: NavHostController){
     backgroundScope.launch {
-        checkInternet(
-            request = {
-                cRequest<Unit>(
-                    response = logOutRequest(),
-                    onOk = {
-                        withContext(Main){
-                            nav_controller.navigate(NavTree.Authorization.name)
-                            MainPreference.clearPreference()
-                        }
-                    }
-                )
+        val response = httpRequest<Unit>(logOutRaw())
+        response.onSuccess {
+            withContext(Main){
+                nav_controller.navigate(NavTree.Authorization.name)
+                MainPreference.clearPreference()
             }
-        )
+        }
+//        checkInternet(
+//            request = {
+//                cRequest<Unit>(
+//                    response = logOutRequest(),
+//                    onOk = {
+//                        withContext(Main){
+//                            nav_controller.navigate(NavTree.Authorization.name)
+//                            MainPreference.clearPreference()
+//                        }
+//                    }
+//                )
+//            }
+//        )
     }
 }
 
-suspend fun logOutRequest(): HttpResponse {
+private suspend fun logOutRaw(): Result<HttpResponse> = runCatching {
     clientJson.use {
-        return it.get(BASE_URL + LOG_OUT){
-            header(BuildConfig.Authorization, MainPreference.Token)
+        return@use it.get(BASE_URL + LOG_OUT){
+           AuthHeader
         }
     }
 }

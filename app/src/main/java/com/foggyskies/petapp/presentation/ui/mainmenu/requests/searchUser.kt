@@ -4,14 +4,14 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.foggyskies.petapp.BuildConfig
 import com.foggyskies.petapp.data.sharedpreference.MainPreference
 import com.foggyskies.petapp.presentation.ui.authorization.client.clientJson
-import com.foggyskies.petapp.presentation.ui.globalviews.UsersSearch
 import com.foggyskies.petapp.presentation.ui.mainmenu.MenuViewModel
-import com.foggyskies.petapp.request
 import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.routs.Routes.SERVER.REQUESTS.UserRoute.SEARCH_USER
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import kotlinx.coroutines.launch
 
 fun <T> SnapshotStateList<T>.autoAddAndRemove(newData: List<T>){
@@ -23,16 +23,16 @@ fun <T> SnapshotStateList<T>.autoAddAndRemove(newData: List<T>){
 
 fun MenuViewModel.searchUser(username: String) {
     backgroundScope.launch {
-        request<String, List<UsersSearch>>(
-            data = username,
-            request = ::searchUserRequest,
-            onOk = {
-                listFoundedUsers.autoAddAndRemove(it)
-            },
-            onError = {
-
-            }
-        )
+//        request<String, List<UsersSearch>>(
+//            data = username,
+//            request = ::searchUserRequest,
+//            onOk = {
+//                listFoundedUsers.autoAddAndRemove(it)
+//            },
+//            onError = {
+//
+//            }
+//        )
     }
 }
 

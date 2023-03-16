@@ -298,6 +298,9 @@ fun LoadingApp(nav_controller: NavHostController) {
     val mainSocketViewModel =
         viewModelProvider["MainSocketViewModel", (MainSocketViewModel::class.java)]
 
+    val uploadFileViewModel =
+        viewModelProvider["UploadFileViewModel", (UploadFileViewModel::class.java)]
+
     NavHost(navController = nav_controller, startDestination = NavTree.Splash.name) {
         composable(NavTree.Splash.name) {
             SplashScreen(nav_controller = nav_controller)
@@ -371,7 +374,8 @@ fun LoadingApp(nav_controller: NavHostController) {
 //            }
             ProfileScreen(
                 nav_controller = nav_controller,
-                viewModel
+                viewModel,
+                uploadFileViewModel
             )
         }
     }

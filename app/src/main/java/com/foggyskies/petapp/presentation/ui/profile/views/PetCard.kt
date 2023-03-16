@@ -43,6 +43,7 @@ import com.foggyskies.petapp.presentation.ui.profile.requests.newPageProfile
 import com.foggyskies.petapp.routs.Routes
 import com.foggyskies.petapp.workers.PathUtil
 import com.foggyskies.petapp.workers.TypeLoadFile
+import com.foggyskies.petapp.workers.UploadFileViewModel
 import com.foggyskies.petapp.workers.uploadFile
 import java.io.File
 
@@ -52,7 +53,8 @@ fun PetCard(
     item: PageProfileFormattedDC,
     onClickPetCard: (String, String) -> Unit,
     viewModel: ProfileViewModel,
-    creatingModifier: Modifier? = null
+    creatingModifier: Modifier? = null,
+    uploadFileViewModel: UploadFileViewModel
 ) {
     val context = LocalContext.current.applicationContext
     val density = LocalDensity.current.density
@@ -223,7 +225,8 @@ fun PetCard(
                                         description = item.description,
                                         image = ""
                                     ),
-                                    path
+                                    path,
+                                    uploadFileViewModel = uploadFileViewModel
                                 )
 
 //                                uploadFile(

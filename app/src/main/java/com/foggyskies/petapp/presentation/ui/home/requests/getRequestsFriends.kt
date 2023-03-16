@@ -12,23 +12,23 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
-suspend fun HomeMVIModel.requestFriends() {
-    requestGet<List<UserIUSI>>(
-        response = getRequestsFriends(),
-        onOk = {
-            listRequestsFriends = it.toMutableStateList()
-        },
-        onError = {
-
-        }
-    )
-}
-
-suspend fun getRequestsFriends(): HttpResponse {
-    clientJson.use {
-        return it.get(Routes.SERVER.REQUESTS.BASE_URL + "/getRequestsFriends") {
-            contentType(ContentType.Application.Json)
-            headers[BuildConfig.Authorization] = MainPreference.Token
-        }
-    }
-}
+//suspend fun HomeMVIModel.requestFriends() {
+//    requestGet<List<UserIUSI>>(
+//        response = getRequestsFriends(),
+//        onOk = {
+//            listRequestsFriends = it.toMutableStateList()
+//        },
+//        onError = {
+//
+//        }
+//    )
+//}
+//
+//suspend fun getRequestsFriends(): HttpResponse {
+//    clientJson.use {
+//        return it.get(Routes.SERVER.REQUESTS.BASE_URL + "/getRequestsFriends") {
+//            contentType(ContentType.Application.Json)
+//            headers[BuildConfig.Authorization] = MainPreference.Token
+//        }
+//    }
+//}

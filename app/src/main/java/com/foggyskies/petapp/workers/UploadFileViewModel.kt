@@ -30,7 +30,7 @@ data class SecondState(
 @OptIn(ExperimentalCoroutinesApi::class)
 class UploadFileViewModel : ViewModel() {
 
-    private val uploadScope = CoroutineScope(IO + SupervisorJob())
+    val uploadScope = CoroutineScope(IO + SupervisorJob())
 
     val sharedFiles = MutableSharedFlow<BodyFileQueue>(
         replay = 0,
@@ -150,7 +150,7 @@ class UploadFileViewModel : ViewModel() {
                     name = nameWithoutExtension,
                     size = getSizeFile(length()),
                     type = extension,
-                    path = readyPath
+                    path = "readyPath"
                 )
             }
         }
@@ -178,9 +178,10 @@ class UploadFileViewModel : ViewModel() {
 
                 messageWithContent(
                     message = MessageDC(
-                        listImages = readyPaths,
+                        listImages = emptyList(),
                         message = message
                     ),
+//                    "readyPaths"
                     idChat
                 )
             } catch (e: java.lang.Exception) {

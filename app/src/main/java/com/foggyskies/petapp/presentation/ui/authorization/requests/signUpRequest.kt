@@ -27,8 +27,8 @@ fun AuthorizationViewModel.registration(
                     onOk = { token ->
                         saveData(
                             SaveAuthData(
-                                idToken = token.id,
-                                idUser = token.idUser,
+                                idToken = token.token,
+//                                idUser = token.idUser,
                                 username = login.value,
                                 password = password.value
                             )

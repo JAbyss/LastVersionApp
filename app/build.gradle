@@ -44,7 +44,7 @@ android {
 //                    "proguard-rules.pro"
 //            )
 
-            buildConfigField "String", "Authorization", "\"Auth\""
+            buildConfigField "String", "Authorization", "\"Authorization\""
             buildConfigField "String", "BaseIP", "\"109.195.147.44\""
             buildConfigField "String", "BasePort", "\"2525\""
         }
@@ -57,7 +57,7 @@ android {
             versionNameSuffix = "-debugTest"
             applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("debug")
-            buildConfigField "String", "Authorization", "\"Auth\""
+            buildConfigField "String", "Authorization", "\"Authorization\""
             buildConfigField "String", "BaseIP", "\"109.195.147.44\""
             buildConfigField "String", "BasePort", "\"2525\""
         }
@@ -67,7 +67,7 @@ android {
 //                    getDefaultProguardFile("proguard-android.txt"),
 //                    "proguard-rules.pro"
 //            )
-            buildConfigField "String", "Authorization", "Auth"
+            buildConfigField "String", "Authorization", "Authorization"
         }
 //        beta {
 //            minifyEnabled = true

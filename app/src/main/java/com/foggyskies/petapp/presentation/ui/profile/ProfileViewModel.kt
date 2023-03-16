@@ -153,13 +153,13 @@ class ProfileViewModel : ViewModel() {
             Image = R.drawable.ic_menu_back,
             position = SwappableMenu.PositionsIcons.TOP,
             onValueSelected = {
-                it.navigate(it.backQueue[1].destination.route!!)
+//                it.navigate(it.backQueue[1].destination.route!!)
             }),
         ItemSwappableMenu(
             Image = R.drawable.ic_menu_ads,
            position = SwappableMenu.PositionsIcons.TOP_LEFT,
             onValueSelected = {
-                it.navigate("AdsHomeless")
+//                it.navigate("AdsHomeless")
             }
         ),
         ItemSwappableMenu(
@@ -172,7 +172,7 @@ class ProfileViewModel : ViewModel() {
             isAnimate = true,
             position = SwappableMenu.PositionsIcons.LEFT,
             onValueSelected = {
-                it.navigate("Home")
+//                it.navigate("Home")
             })
     )
 
@@ -181,13 +181,13 @@ class ProfileViewModel : ViewModel() {
             Image = R.drawable.ic_menu_back,
             position = SwappableMenu.PositionsIcons.TOP,
             onValueSelected = {
-                it.navigate(it.backQueue[1].destination.route!!)
+//                it.navigate(it.backQueue[1].destination.route!!)
             }),
         ItemSwappableMenu(
             Image = R.drawable.ic_menu_ads,
             position = SwappableMenu.PositionsIcons.TOP_LEFT,
             onValueSelected = {
-                it.navigate("AdsHomeless")
+//                it.navigate("AdsHomeless")
             }
         ),
         ItemSwappableMenu(
@@ -200,13 +200,13 @@ class ProfileViewModel : ViewModel() {
             isAnimate = true,
             position = SwappableMenu.PositionsIcons.LEFT,
             onValueSelected = {
-                it.navigate("Home")
+//                it.navigate("Home")
             }),
         ItemSwappableMenu(
             Image = R.drawable.ic_menu_logout,
             position = SwappableMenu.PositionsIcons.RIGHT,
             onValueSelected = {
-                logOut(it)
+//                logOut(it)
             }
         )
     )
